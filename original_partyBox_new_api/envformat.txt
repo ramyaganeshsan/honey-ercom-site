@@ -1,0 +1,30 @@
+# Copy to .env and fill values for local demo
+
+# Basic config
+PORT=5000
+
+# JWT secrect
+JWT_SECRECT=
+
+# Database connection
+DATABASE_HOST=127.0.0.1
+DATABASE_NAME=
+DATABASE_USERNAME=
+DATABASE_PASSWORD=
+
+# Log backup
+LOG_BACKUP=15d
+
+# Enviornment
+NODE_ENV=development
+
+# Server URL — use localhost for local images (avoids SSL errors on remote API host)
+DASHBOARD_URL=http://localhost:5000/
+API_URL=http://localhost:5000/
+# Optional override for public images only:
+# ASSETS_URL=http://localhost:5000/
+
+APP_SECRECT_KEY=
+
+# Payment Token
+TOKEN=

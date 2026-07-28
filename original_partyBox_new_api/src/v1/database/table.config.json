@@ -1,0 +1,19 @@
+{
+    "product" : "product",
+    "rate_review" : "rate_review",
+    "category": "category",
+    "banner_image" : "banner_image",
+    "cart_items" : "cart_items",
+    "cart" : "cart",
+    "sub_products" : "sub_products",
+    "size" : "size",
+    "users" : "users",
+    "state" : "state",
+    "city" : "city",
+    "country" : "country",
+    "promocodes" : "promocodes",
+    "hesabe_payment_log" : "hesabe_payment_log",
+    "order_cancel" : "order_cancel",
+    "sessions" : "sessions",
+     "settings": "settings"
+}

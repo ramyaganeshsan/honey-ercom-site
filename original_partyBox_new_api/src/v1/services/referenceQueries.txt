@@ -1,0 +1,504 @@
+GET PRODUCTS QUERY
+
+    SELECT deal_id, deal_title, deal_price, AVG(rate_review.rating) AS avg_rating FROM product 
+    LEFT JOIN rate_review ON product.deal_id=rate_review.type_id AND rate_review.approve_status=1
+    GROUP BY deal_id HAVING avg_rating IS NULL OR avg_rating >= 4;
+
+    SELECT deal_id, deal_title, deal_price, CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, AVG(rate_review.rating) AS avg_rating FROM product 
+    LEFT JOIN rate_review ON product.deal_id=rate_review.type_id AND rate_review.approve_status=1
+    GROUP BY deal_id HAVING avg_rating IS NULL OR avg_rating >= 4;
+
+    SELECT deal_id, deal_key, deal_value, deal_title, deal_price, CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, AVG(rate_review.rating) AS avg_rating FROM product 
+    LEFT JOIN rate_review ON product.deal_id=rate_review.type_id AND rate_review.approve_status=1 WHERE deal_value BETWEEN 0 AND 250
+    GROUP BY deal_id HAVING avg_rating IS NULL OR avg_rating >= 0 LIMIT 20 OFFSET 0;
+
+    SELECT deal_id, deal_key, deal_value, deal_title, deal_price, CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, -- AVG(rate_review.rating) AS avg_rating, CEILING(AVG(rate_review.rating)) as avg_rating -- COUNT(type_id) as total_review, -- SUM(rate_review.rating) as sumo, -- (SUM(rate_review.rating) / COUNT(type_id)) as avgdd
+    FROM product LEFT JOIN rate_review ON product.deal_id=rate_review.type_id AND rate_review.approve_status=1 WHERE deal_value BETWEEN 0 AND 250
+    GROUP BY deal_id HAVING avg_rating IS NULL OR avg_rating >= 0 LIMIT 20 OFFSET 0;
+
+GET PRODUCT DETAIL
+    SELECT 
+        product.deal_title,
+        product.deal_id,
+        product.deal_description, 
+        product.deal_value, 
+        product.deal_price, 
+        product.delivery_period,
+        product.category_id,
+        product.sub_category_id,
+        product.sec_category_id,
+        CASE WHEN product.user_limit_quantity > 0 THEN true ELSE false END AS inStock,
+        AVG(rate_review.rating) as ratings, 
+        COUNT(rate_review.id) as total_reviews,
+        COUNT(cart_items.deal_id) as in_cart,
+        main_category.category_name as main_category_name,
+        sub_category.category_name as sub_category_name,
+        second_level_category.category_name as second_level_category_name
+    FROM product 
+    LEFT JOIN rate_review ON rate_review.type_id = product.deal_id AND rate_review.approve_status = 1
+    LEFT JOIN category AS main_category ON main_category.category_id = product.category_id
+    LEFT JOIN category AS sub_category ON sub_category.category_id = product.sub_category_id
+    LEFT JOIN category AS second_level_category ON second_level_category.category_id = product.sec_category_id
+    LEFT JOIN ( SELECT deal_id FROM cart_items JOIN cart ON cart_items.cart_id = cart.cart_id WHERE cart.cart_transaction_status != 1 ) AS cart_items ON cart_items.deal_id = product.deal_id
+    WHERE product.deal_status = 1 AND product.deal_key = "yyN3Nl4A";
+
+    SELECT * FROM product where (category_id = 706 OR sub_category_id = 707 OR sec_category_id = 711) AND deal_id != 2770 ORDER BY RAND() LIMIT 5;
+
+    SELECT 
+        product.deal_title,
+        product.deal_id,
+        product.deal_description, 
+        product.deal_value, 
+        product.deal_price, 
+        product.delivery_period,
+        product.category_id,
+        product.sub_category_id,
+        product.sec_category_id,
+        product.related_products,
+        product.having_size_color,
+        CASE WHEN product.user_limit_quantity > 0 THEN true ELSE false END AS inStock,
+        AVG(rate_review.rating) as ratings, 
+        COUNT(rate_review.id) as total_reviews,
+        main_category.category_name as main_category_name,
+        sub_category.category_name as sub_category_name,
+        second_level_category.category_name as second_level_category_name,
+        concat('[', GROUP_CONCAT(concat('"',sub_product.size_id, '"')), ']') as sizeAndQuantity
+    FROM product 
+    LEFT JOIN rate_review ON rate_review.type_id = product.deal_id AND rate_review.approve_status = 1
+    LEFT JOIN category AS main_category ON main_category.category_id = product.category_id
+    LEFT JOIN category AS sub_category ON sub_category.category_id = product.sub_category_id
+    LEFT JOIN category AS second_level_category ON second_level_category.category_id = product.sec_category_id
+    LEFT JOIN ( SELECT product_id, size_id FROM sub_products WHERE product_id = 7574 GROUP BY product_id ) AS sub_product ON sub_product.product_id = product.deal_id
+    WHERE product.deal_status = 1 AND product.deal_key = "4tMBwtdV"
+
+    // get size and quantity if having_size_color
+    SELECT 
+        size_name,
+        sub_products.size_id, 
+        sub_products.quantity,
+        sub_products.price,
+        sub_products.discount,
+        CASE WHEN quantity > 0 THEN true ELSE false END AS inStock
+    FROM sub_products 
+    JOIN size ON sub_products.size_id = size.size_id
+    WHERE product_id = 7574 ORDER BY size_name ASC;
+
+GET PRODUCT REVIEWS
+    SELECT review_description, created_date FROM rate_review WHERE user_id = 8719 AND type_id = 7574;
+    
+    SELECT review_description, created_date, users.firstname, users.lastname FROM rate_review 
+    JOIN users ON users.user_id = rate_review.user_id
+    WHERE rate_review.user_id != 8719 AND rate_review.type_id = 7574 LIMIT 10;
+
+
+GET WISHLIST PRODUCTS 
+    SELECT 
+        deal_id,
+        deal_title,
+        deal_key,
+        deal_value,
+        deal_price,
+        CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock,
+        AVG(rate_review.rating) as ratings, 
+        COUNT(rate_review.id) as total_reviews
+    FROM product
+    LEFT JOIN rate_review ON rate_review.type_id = product.deal_id AND rate_review.approve_status = 1
+    WHERE deal_id IN (7571,7567)
+    GROUP BY deal_id
+
+    SELECT 
+        deal_id,
+        deal_title,
+        deal_key,
+        deal_value,
+        deal_price,
+        CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock,
+        AVG(rate_review.rating) as ratings, 
+        COUNT(rate_review.id) as total_reviews
+    FROM product
+    LEFT JOIN rate_review ON rate_review.type_id = product.deal_id AND rate_review.approve_status = 1
+    WHERE deal_id IN (7571,7567) AND deal_status = 1
+    GROUP BY deal_id;
+
+    SELECT 
+        deal_id,
+        deal_title,
+        deal_key,
+        deal_value,
+        deal_price,
+        CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock,
+        AVG(rate_review.rating) as ratings, 
+        COUNT(rate_review.id) as total_reviews
+    FROM product
+    LEFT JOIN rate_review ON rate_review.type_id = product.deal_id AND rate_review.approve_status = 1
+    WHERE deal_id IN (7571,7567);
+
+GET CART PRODUCTS
+    SELECT 
+        cart_items.deal_id,
+        cart_items.deal_key,
+        cart_items.deal_value,
+        cart_items.item_quantity,
+        products.deal_value as currentPrice,
+        products.deal_title
+    FROM cart
+    LEFT JOIN cart_items ON cart_items.cart_id = cart.cart_id
+    LEFT JOIN ( SELECT deal_id, deal_title, deal_value FROM product WHERE deal_status = 1 ) AS products ON products.deal_id = cart_items.deal_id
+    WHERE cart.user_id = 8719 AND cart.cart_transaction_status != 1
+    GROUP BY cart_items.item_id 
+    ORDER BY cart_items.item_id DESC;
+
+    // Using sub product
+    SELECT 
+        cart_items.deal_id,
+        cart_items.deal_key,
+        cart_items.deal_value,
+        cart_items.item_quantity,
+        sub_products.discount as currentPrice,
+        products.deal_title,
+        CASE WHEN sub_products.quantity > 0 THEN true ELSE false END AS inStock,
+        CONCAT("${PRODUCT_THUMP_DISPLAY_IMAGE}",cart_items.deal_key,"_1.png") as image
+    FROM cart
+    LEFT JOIN cart_items ON cart_items.cart_id = cart.cart_id
+    LEFT JOIN sub_products ON sub_products.product_id = cart_items.sub_product_id 
+    LEFT JOIN ( SELECT deal_id, deal_title FROM product WHERE deal_status = 1 ) AS products ON products.deal_id = cart_items.deal_id 
+    WHERE cart.user_id = 8719 AND cart.cart_transaction_status != 1
+    GROUP BY cart_items.item_id 
+    ORDER BY cart_items.item_id DESC;
+
+    `SELECT 
+        ${tableConfig.cart_items}.deal_id,
+        ${tableConfig.cart_items}.deal_key,
+        ${tableConfig.cart_items}.cart_id,
+        ${tableConfig.cart_items}.item_id,
+        ${tableConfig.cart_items}.deal_value,
+        ${tableConfig.cart_items}.item_quantity,
+        ${tableConfig.cart_items}.sub_product_id,
+        ${tableConfig.sub_products}.discount as currentPrice,
+        products.deal_title,
+        CASE WHEN ${tableConfig.sub_products}.quantity > 0 THEN true ELSE false END AS inStock,
+        CONCAT("${PRODUCT_THUMP_DISPLAY_IMAGE}",${tableConfig.cart_items}.deal_key,"_1.png") as image
+    FROM ${tableConfig.cart}
+    LEFT JOIN ${tableConfig.cart_items} ON ${tableConfig.cart_items}.cart_id = ${tableConfig.cart}.cart_id
+    LEFT JOIN ${tableConfig.sub_products} ON ${tableConfig.sub_products}.id = ${tableConfig.cart_items}.sub_product_id 
+    LEFT JOIN ${tableConfig.sub_products} ON ${tableConfig.sub_products}.product_id = ${tableConfig.cart_items}.deal_id AND size_id = ${tableConfig.cart_items}.item_size
+    LEFT JOIN ( SELECT deal_id, deal_title FROM ${tableConfig.product} WHERE deal_status = 1 ) AS products ON products.deal_id = ${tableConfig.cart_items}.deal_id
+    WHERE ${tableConfig.cart}.user_id = ${userId} AND ${tableConfig.cart}.cart_transaction_status != 1
+    GROUP BY ${tableConfig.cart_items}.item_id 
+    ORDER BY ${tableConfig.cart_items}.item_id DESC;`;
+
+SOME IMPORTANT TEST QURIES
+    SELECT cart_id ,discount_amount, promocode_dump, total_cart_price, grand_total_price, delivery_price FROM cart WHERE promocode_dump != "" AND is_cancel != 1 LIMIT 10;
+    SELECT deal_value, item_quantity FROM cart_items WHERE cart_id = 5233;
+    SELECT * FROM cart_items WHERE cart_id = 124;
+
+CHECK IF CART_ITEM EXISTS
+    SELECT 
+        count(item_id) AS productCount
+    FROM cart_items
+    WHERE item_id = 2692 AND cart_transaction_status != 1;
+
+UPDATE CART TOTAL PRICE AND CART TOTAL ITEMS COUNT
+    UPDATE cart 
+    SET 
+        total_cart_items = total_cart_items +  1,
+        total_cart_price = total_cart_price +  1,
+        grand_total_price =  grand_total_price + 1
+    WHERE cart_id = 79142 AND cart_transaction_status = 0;
+
+GET SUB PRODUCTS DETAILS
+    SELECT 
+        product_id,
+        sub_products.discount AS sub_product_value,
+        sub_products.price AS sub_product_price,
+        sub_products.quantity AS sub_product_quantity
+    FROM sub_products
+    WHERE sub_products.id IN (87163, 87162, 87161, 87175, 87171);
+
+GET CHECKOUT COUNTRY DETAILS 
+    SELECT * FROM state WHERE state_country_id = 139;
+    UPDATE state SET statestatus = 1 WHERE state_country_id = 139;
+
+    SELECT * FROM city WHERE country_id = 139;
+    UPDATE state SET statestatus = 1 WHERE state_country_id = 139;
+
+    SELECT 
+        country_name,
+        country_status,
+        concat('[', 
+            GROUP_CONCAT(
+                concat(
+                    '{state_id:',state.state_id,','
+                    'state_name:','"',state.state_name,'"','}'
+                )
+            ), 
+        ']') as states,
+        concat('[', 
+            GROUP_CONCAT(
+                concat(
+                    '{',
+                        'city_id:',city.city_id,',',
+                        'country_id:',city.country_id,',',
+                        'state_id:','"',city.stateid,'"',
+                        'city_name:','"',city.city_name,'"',
+                        'delivery_charge:','"',city.delivery_charge,'"'
+                    '}'
+                )
+            ), 
+        ']') as cities
+    FROM country
+    LEFT JOIN state ON state.state_country_id = country.country_id AND state.statestatus = 1
+    LEFT JOIN city ON city.country_id = country.country_id AND city.city_status = 1
+    WHERE country_status = 1;
+
+    SELECT 
+        ${tableConfig.cart_items}.deal_id,
+        ${tableConfig.cart_items}.deal_key,
+        ${tableConfig.cart_items}.cart_id,
+        ${tableConfig.cart_items}.item_id,
+        ${tableConfig.cart_items}.item_quantity,
+        ${tableConfig.cart_items}.sub_product_id,
+        ${tableConfig.sub_products}.discount as currentPrice,
+        products.deal_title,
+        CASE WHEN ${tableConfig.sub_products}.quantity > 0 THEN true ELSE false END AS inStock,
+        CONCAT("${PRODUCT_THUMP_DISPLAY_IMAGE}",${tableConfig.cart_items}.deal_key,"_1.png") as image
+    FROM ${tableConfig.cart}
+    LEFT JOIN ${tableConfig.cart_items} ON ${tableConfig.cart_items}.cart_id = ${tableConfig.cart}.cart_id
+    LEFT JOIN ${tableConfig.sub_products} ON ${tableConfig.sub_products}.id = ${tableConfig.cart_items}.sub_product_id 
+    LEFT JOIN ( SELECT deal_id, deal_title FROM ${tableConfig.product} WHERE deal_status = 1 ) AS products ON products.deal_id = ${tableConfig.cart_items}.deal_id
+    WHERE ${tableConfig.cart}.user_id = ${userId} AND ${tableConfig.cart}.cart_transaction_status != 1
+    GROUP BY ${tableConfig.cart_items}.item_id 
+    ORDER BY ${tableConfig.cart_items}.item_id DESC;
+
+GET PROMOCODE DETAILS
+    SELECT * FROM promocodes WHERE code = "TESTPROMO" AND status = 1 AND starts_at <= DATE("2023-09-26 00:00:00") AND expires_at >= DATE("2023-09-26 00:00:00");
+    SELECT 
+        discount,
+        type,
+        usage_count,
+        usage_limit,
+        minpromotype,
+        minimum_total
+    FROM promocodes 
+    WHERE 
+        code = "TESTPROMO" 
+        AND status = 1 
+        AND starts_at <= DATE("2023-09-26 00:00:00") 
+        AND expires_at >= DATE("2023-09-26 00:00:00");
+    
+GET CART PRODUCTS CHECKOUT
+    SELECT 
+        cart_items.cart_transaction_status, 
+        sub_products.quantity,
+        sub_products.price,
+        sub_products.discount,
+        cart_items.deal_id,
+        cart.total_cart_items,
+        cart.total_cart_price,
+        cart_items.item_quantity
+    FROM cart
+    JOIN cart_items ON cart_items.cart_id = cart.cart_id
+    JOIN sub_products ON sub_products.id = cart_items.sub_product_id
+    WHERE cart.cart_id = 8971;
+
+GET TRANSACTION id
+    SELECT transaction_id FROM cart ORDER BY transaction_id DESC LIMIT 1;
+
+
+UPDATE CART AFTER CHECKOUT
+    UPDATE ${tableConfig.cart}
+    SET
+      tracking_id= '${cartUpdateDetails.tracking_id}',
+      cart_transaction_status= ${Number(
+        cartUpdateDetails.cart_transaction_status
+      )},
+      total_cart_price= ${cartUpdateDetails.total_cart_price},
+      total_cart_items= ${cartUpdateDetails.total_cart_items},
+      delivery_price= ${cartUpdateDetails.delivery_price},
+      discount_amount= ${cartUpdateDetails.discount_amount},
+      transaction_id= ${cartUpdateDetails.transaction_id},
+      transaction_date= ${cartUpdateDetails.transaction_date},
+      grand_total_price= ${cartUpdateDetails.grand_total_price},
+      coupon_code= '${cartUpdateDetails.coupon_code}',
+      coupon_apply= ${cartUpdateDetails.coupon_apply},
+      coupon_percentage= ${cartUpdateDetails.coupon_percentage},
+      payment_status= ${cartUpdateDetails.payment_status},
+      promocode_dump= '${cartUpdateDetails.promocode_dump}'
+    WHERE cart_id = ${Number(cartId)};
+
+
+GET MY ORDER DETAILS 
+    SELECT cart_id FROM cart WHERE user_id = 8719 AND cart_transaction_status = 1 ORDER BY cart_id DESC LIMIT 3;
+    SELECT 
+        cart.cart_id, 
+        transaction_id, 
+        total_cart_price, 
+        grand_total_price,
+        cart_items.sub_product_id,
+        product.deal_title,
+        product.deal_title_french,
+        cart_items.deal_value,
+        cart_items.deal_price
+    FROM cart 
+    JOIN cart_items ON cart_items.cart_id = cart.cart_id
+    JOIN sub_products ON sub_products.id = cart_items.sub_product_id
+    JOIN product ON product.deal_id = sub_products.product_id
+    WHERE cart.cart_id IN (8983, 8981, 8976);
+
+/* Transaction */
+INSERT INTO transaction
+( 
+    user_id, 
+    product_id, 
+    firstname, 
+    lastname, 
+    order_date, 
+    amount, 
+    payment_status, 
+    pending_reason, 
+    country_code, 
+    currency_code, 
+    transaction_id, 
+    referral_amount, 
+    transaction_type, 
+    quantity, 
+    type, 
+    captured, 
+    transaction_date, 
+    deal_merchant_commission, 
+    friend_gift_status, 
+    product_size, 
+    product_color, 
+    shipping_amount, 
+    tax_amount, 
+    shipping_methods, 
+    aramex_currencycode, 
+    merchantId, 
+    package_number, 
+    coupon_percentage, 
+    coupon_apply, 
+    grand_total,
+    coupon_code
+) VALUES (
+    8719,
+    26,
+    "Test",
+    "User",
+    1700184752,
+    39.64,
+    "Pending",
+    "Cash on delivery",
+    "+91",
+    "UAD",
+    "8719_1700183757_n72R",
+    0,
+    "COD",
+    2,
+    5,
+    0,
+    1700184752,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1.982,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    41.622,
+    ""
+);
+
+INSERT INTO transaction_mapping
+( 
+    product_id, 
+    user_id, 
+    transaction_id, 
+    coupon_code, 
+    coupon_code_status, 
+    transaction_date, 
+    friend_name, 
+    friend_email, 
+    product_size, 
+    product_color
+) VALUES (
+    26,
+    8719,
+    1,
+    "63ydhd34",
+    1,
+    1700184752,
+    "Test",
+    "testuser@gmail.com",
+    1,
+    1
+);
+
+INSERT INTO shipping_info
+( 
+    transaction_id, 
+    user_id, 
+    adderss1, 
+    address2, 
+    city, 
+    state, 
+    country, 
+    name, 
+    postal_code, 
+    phone, 
+    shipping_date
+) VALUES (
+    1,
+    8719,
+    "address1",
+    "address2",
+    132,
+    22,
+    254,
+    "Test",
+    "38494",
+    "984375874",
+    1700184752
+);
+
+/* GET CART INFO FROM SESSION */
+SELECT 
+    product.deal_id,
+    product.deal_key,
+    product.deal_value, 
+    product.deal_title,
+    product.deal_title_french,
+    sub_products.id as sub_product_id,
+    sub_products.discount as currentPrice,
+    CASE WHEN sub_products.quantity > 0 THEN true ELSE false END AS inStock,
+    CONCAT("http://34.237.145.32//cloud/uploads/products/80_80/",product.deal_key,"_1.png") as image
+FROM product
+LEFT JOIN ( SELECT * FROM sub_products WHERE product_id IN (7574, 7570) AND size_id IN (0, 66) ) AS sub_products ON sub_products.product_id = product.deal_id
+WHERE product.deal_id IN (7574, 7570);
+
+SELECT 
+    product.deal_id,
+    product.deal_key,
+    product.deal_value, 
+    product.deal_title,
+    product.deal_title_french,
+    sub_products.id as sub_product_id,
+    sub_products.discount as currentPrice,
+    CASE WHEN sub_products.quantity > 0 THEN true ELSE false END AS inStock,
+    CONCAT("http://34.237.145.32//cloud/uploads/products/80_80/",product.deal_key,"_1.png") as image
+FROM product
+LEFT JOIN 
+    ( 
+        SELECT * 
+        FROM sub_products 
+        WHERE 
+            product_id = 7574 AND size_id = 66 OR
+            product_id = 7570 AND size_id = 0 OR
+            product_id = 7574 AND size_id = 38
+    )
+    AS sub_products ON sub_products.product_id = product.deal_id
+WHERE product.deal_id IN (7574, 7570);

@@ -1,0 +1,12 @@
+{
+    "apps": [
+      {
+        "name": "honey-ecommerce-api",
+        "script": "app.js",
+        "instances": 1,
+        "autorestart": true,
+        "watch": false,
+        "time": true
+      }
+    ]
+}
