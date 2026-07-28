@@ -98,10 +98,12 @@ app.use("/public", express.static("assets"));
 
 app.use((err, req, res, next) => {
   logger.error(err ?? "Something went wrong");
-  res.send({
-    status: getStatusCode("server_error"),
-    message: getMessage("server_error"),
-  });
+  if (!res.headersSent) {
+    res.send({
+      status: getStatusCode("server_error"),
+      message: getMessage("server_error"),
+    });
+  }
 });
 
 const { connectDatabase } = require("./src/v1/database/sequelize");

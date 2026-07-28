@@ -251,6 +251,15 @@ exports.getShippingStateCityInfo = async () => {
 
   let response = await country.findAll(filters);
 
+  // Normalize for older UI code that still reads ISO_country_code
+  response = (response || []).map((row) => {
+    const plain = typeof row?.toJSON === "function" ? row.toJSON() : row;
+    return {
+      ...plain,
+      ISO_country_code: plain?.ISO_country_code ?? plain?.country_code ?? "",
+    };
+  });
+
   let stringifyResponse = stringifyData(response);
   if (stringifyResponse?.status) {
     await setValueRedis("state_and_city_info", stringifyResponse?.data, 1800);

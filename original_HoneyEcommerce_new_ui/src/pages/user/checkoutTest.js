@@ -145,7 +145,7 @@ const CheckoutTest = () => {
             countries.push({
               country_name: country["country_name"],
               country_id: country["country_id"],
-              country_iso_code: country["ISO_country_code"],
+              country_iso_code: country["ISO_country_code"] ?? country["country_code"],
             });
           }
 
