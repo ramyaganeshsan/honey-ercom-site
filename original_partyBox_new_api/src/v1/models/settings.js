@@ -250,6 +250,23 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    minimumProductQuantityToNotify: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 5,
+      comment: "Notify admin when product stock falls to this quantity"
+    },
+    adminEmailAddress: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: "Admin email for out-of-stock notifications"
+    },
+    sendOutOfStockNotification: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: false,
+      comment: "Whether to send out-of-stock notification emails"
+    },
     cancel_process: {
       type: DataTypes.INTEGER,
       allowNull: false,

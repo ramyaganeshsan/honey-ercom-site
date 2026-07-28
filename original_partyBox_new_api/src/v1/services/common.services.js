@@ -58,6 +58,75 @@ exports.checkUserPhoneNumberExists = async (phoneNumber, id = "") => {
   return response;
 };
 
+const SITE_SETTINGS_ATTRIBUTES = [
+  "phone1",
+  "contact_email",
+  "site_name",
+  "title",
+  "default_language",
+  "address1",
+  "address2",
+  "zipcode",
+  "country",
+  "city",
+  "facebook_page",
+  "instagram_page",
+  "twitter_page",
+  "linkedin_page",
+  "android_page",
+  "iphone_page",
+  "youtube_url",
+  "currency_symbol",
+  "currency_code",
+  "time_zone",
+  "pagination_count",
+  "latitude",
+  "longitude",
+  "tax_percentage",
+];
+
+const OPTIONAL_SITE_SETTINGS_ATTRIBUTES = [
+  "minimumProductQuantityToNotify",
+  "adminEmailAddress",
+  "sendOutOfStockNotification",
+];
+
+const DUMMY_SITE_SETTINGS = {
+  phone1: "+0000000000",
+  contact_email: "admin@example.com",
+  site_name: "Honey Shop",
+  title: "Honey Shop",
+  default_language: "en",
+  address1: "Demo Address",
+  address2: "",
+  zipcode: "00000",
+  country: "SA",
+  city: "Riyadh",
+  facebook_page: "",
+  instagram_page: "",
+  twitter_page: "",
+  linkedin_page: "",
+  android_page: "",
+  iphone_page: "",
+  youtube_url: "",
+  currency_symbol: "SAR",
+  currency_code: "SAR",
+  time_zone: "Asia/Riyadh",
+  pagination_count: 12,
+  latitude: "0",
+  longitude: "0",
+  tax_percentage: 15,
+  minimumProductQuantityToNotify: 5,
+  adminEmailAddress: "admin@example.com",
+  sendOutOfStockNotification: false,
+};
+
+const isUnknownColumnError = (err) =>
+  Boolean(
+    err?.message &&
+      /Unknown column|does not exist|no such column/i.test(err.message)
+  );
+
 exports.getSiteInfo = async () => {
   let siteSettingsDetails = await getValueFromRedis("site_settings");
   if (siteSettingsDetails) {
@@ -65,39 +134,47 @@ exports.getSiteInfo = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let response = await settings.findOne({
-    attributes: [
-      "phone1",
-      "contact_email",
-      "site_name",
-      "title",
-      "default_language",
-      "address1",
-      "address2",
-      "zipcode",
-      "country",
-      "city",
-      "facebook_page",
-      "instagram_page",
-      "twitter_page",
-      "linkedin_page",
-      "facebook_page",
-      "android_page",
-      "iphone_page",
-      "youtube_url",
-      "currency_symbol",
-      "currency_code",
-      "time_zone",
-      "pagination_count",
-      "latitude",
-      "longitude",
-      "tax_percentage",
-      "minimumProductQuantityToNotify",
-      "adminEmailAddress",
-      "sendOutOfStockNotification",
-    ],
-    raw: true,
-  });
+  let response = null;
+  try {
+    response = await settings.findOne({
+      attributes: [
+        ...SITE_SETTINGS_ATTRIBUTES,
+        ...OPTIONAL_SITE_SETTINGS_ATTRIBUTES,
+      ],
+      raw: true,
+    });
+  } catch (err) {
+    // Older DBs may not have the optional notification columns yet.
+    if (isUnknownColumnError(err)) {
+      response = await settings.findOne({
+        attributes: SITE_SETTINGS_ATTRIBUTES,
+        raw: true,
+      });
+    } else {
+      throw err;
+    }
+  }
+
+  if (!response) {
+    response = { ...DUMMY_SITE_SETTINGS };
+  }
+
+  response.minimumProductQuantityToNotify =
+    response.minimumProductQuantityToNotify ??
+    DUMMY_SITE_SETTINGS.minimumProductQuantityToNotify;
+  response.adminEmailAddress =
+    response.adminEmailAddress ?? DUMMY_SITE_SETTINGS.adminEmailAddress;
+  response.sendOutOfStockNotification =
+    response.sendOutOfStockNotification ??
+    DUMMY_SITE_SETTINGS.sendOutOfStockNotification;
+  response.tax_percentage =
+    response.tax_percentage ?? DUMMY_SITE_SETTINGS.tax_percentage;
+  response.site_name = response.site_name || DUMMY_SITE_SETTINGS.site_name;
+  response.title = response.title || DUMMY_SITE_SETTINGS.title;
+  response.currency_symbol =
+    response.currency_symbol || DUMMY_SITE_SETTINGS.currency_symbol;
+  response.currency_code =
+    response.currency_code || DUMMY_SITE_SETTINGS.currency_code;
 
   // let googleMapUrl = `http://maps.google.com/maps?q=${response?.latitude},${response?.longitude}`;
   let googleMapUrl =
