@@ -1,0 +1,26 @@
+# Basic config
+PORT=
+
+# JWT secrect
+JWT_SECRECT= # key is MD5 encryption of indipro_technologies.
+
+# Database connection
+DATABASE_HOST=
+DATABASE_NAME=
+DATABASE_USERNAME=
+DATABASE_PASSWORD=
+
+# Log backup
+LOG_BACKUP=15d 
+
+# Enviornment
+NODE_ENV=development
+
+# Server URL
+DASHBOARD_URL=
+API_URL=
+
+APP_SECRECT_KEY=
+
+# Payment Token
+TOKEN =
