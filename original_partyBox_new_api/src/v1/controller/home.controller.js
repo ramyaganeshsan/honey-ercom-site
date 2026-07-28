@@ -17,6 +17,9 @@ const {
 } = require("../services/home.services");
 
 const { getSiteInfo } = require("../services/common.services");
+const { getDummyHomeData } = require("../utils/dummyHomeData");
+
+const isEmptyList = (value) => !Array.isArray(value) || value.length === 0;
 
 exports.getHomePageContents = async (req, res, next) => {
   try {
@@ -52,6 +55,30 @@ exports.getHomePageContents = async (req, res, next) => {
       totalCartCount,
       userWishList,
     ] = await Promise.all(promises);
+
+    // Local/demo fallback when DB has no catalog content yet
+    const useDummy =
+      process.env.USE_DUMMY_DATA === "true" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.USE_DUMMY_DATA === "1";
+
+    if (
+      useDummy &&
+      (isEmptyList(bannerImages) ||
+        isEmptyList(newProducts) ||
+        isEmptyList(bestSellingProducts) ||
+        isEmptyList(offerProducts) ||
+        isEmptyList(categories))
+    ) {
+      const dummy = getDummyHomeData();
+      if (isEmptyList(bannerImages)) bannerImages = dummy.bannerImages;
+      if (isEmptyList(newProducts)) newProducts = dummy.newProducts;
+      if (isEmptyList(bestSellingProducts)) {
+        bestSellingProducts = dummy.bestSellingProducts;
+      }
+      if (isEmptyList(offerProducts)) offerProducts = dummy.offerProducts;
+      if (isEmptyList(categories)) categories = dummy.categories;
+    }
 
     if (userDetails && userDetails?.user_id) {
       let totalWishlistCount = 0;

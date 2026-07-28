@@ -8,6 +8,8 @@
 !/assets/images/no_profile.png
 !/assets/images/footer-logo.svg
 !/assets/images/dummy-product-*.png
+!/assets/images/banner-*.png
+!/assets/images/product-*.png
 
 .env
 dump.rdb

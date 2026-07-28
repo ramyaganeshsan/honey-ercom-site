@@ -46,24 +46,15 @@ npm install
 npm start
 ```
 
-Open `http://localhost:3000` — home should load instead of Error 500.
+Open `http://localhost:3000` — home should load with banners, products, and categories
+(dummy data fills in automatically when the DB catalog is empty).
 
-## If Header crashes with `Cannot read properties of undefined (reading 'Category')`
+## Fix `/public/public/` image 404s
 
-Pull latest `main`. That crash was empty `categories` in Header; it is guarded now.
-
-## If images fail with `ERR_CERT_COMMON_NAME_INVALID` for api.thunyanhoneyuae.com
-
-Your UI/API `.env` is still pointing at production. Set local URLs:
+In API `.env`, set:
 
 ```bash
-# UI .env
-REACT_APP_BASE_URL=http://localhost:5000/api/
-REACT_APP_ASSETS_URL=http://localhost:5000/public
-
-# API .env
 API_URL=http://localhost:5000/
-NODE_ENV=development
 ```
 
-Restart both servers after changing `.env`.
+Do **not** set `API_URL=http://localhost:5000/public` — that doubles the path.

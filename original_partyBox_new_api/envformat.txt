@@ -18,11 +18,14 @@ LOG_BACKUP=15d
 # Enviornment
 NODE_ENV=development
 
-# Server URL — use localhost for local images (avoids SSL errors on remote API host)
+# IMPORTANT: API_URL must be the server root WITHOUT /public
+# Good:  http://localhost:5000/
+# Bad:   http://localhost:5000/public   (causes /public/public/ image 404s)
 DASHBOARD_URL=http://localhost:5000/
 API_URL=http://localhost:5000/
-# Optional override for public images only:
-# ASSETS_URL=http://localhost:5000/
+
+# Optional: force dummy banners/products/categories when DB is empty
+USE_DUMMY_DATA=true
 
 APP_SECRECT_KEY=
 

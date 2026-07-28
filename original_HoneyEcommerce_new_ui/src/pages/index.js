@@ -169,7 +169,7 @@ const Home = () => {
             "/images/no_image_available.png"
           )}
           alt={t("offer_poster")}
-          onError={(e) => handleAssetImageError(e, "/images/no_image_available.png")}
+          onError={(e) => handleAssetImageError(e, "/images/poster.png")}
         />
         <div className="cyr-poster-blk">
           <div className="container">

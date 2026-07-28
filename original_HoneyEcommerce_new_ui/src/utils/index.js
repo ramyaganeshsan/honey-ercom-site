@@ -437,10 +437,12 @@ exports.checkProductIsAlreadyWishlisted = (wishList, productId) => {
 
 /**
  * Prefer local/public assets when remote CDN/API certs fail (local demo).
- * Rewrites known production API hosts to REACT_APP_ASSETS_URL or localhost.
+ * Also fixes accidental `/public/public/` path doubling.
  */
 exports.resolveAssetUrl = (url, fallbackPath = "/images/no_image_available.png") => {
   if (!url || typeof url !== "string") return fallbackPath;
+
+  let resolved = url.replace(/\/public\/public\//gi, "/public/");
 
   const assetsBase = (process.env.REACT_APP_ASSETS_URL || "").replace(/\/$/, "");
   const knownBrokenHosts = [
@@ -449,15 +451,32 @@ exports.resolveAssetUrl = (url, fallbackPath = "/images/no_image_available.png")
     "https://www.thunyanhoneyuae.com",
   ];
 
-  let resolved = url;
   for (const host of knownBrokenHosts) {
     if (resolved.startsWith(host)) {
       const path = resolved.slice(host.length);
+      // If assetsBase already ends with /public, strip leading /public from path
+      let nextPath = path.startsWith("/") ? path : `/${path}`;
+      if (assetsBase.endsWith("/public") && nextPath.startsWith("/public/")) {
+        nextPath = nextPath.slice("/public".length);
+      }
       resolved = assetsBase
-        ? `${assetsBase}${path.startsWith("/") ? path : `/${path}`}`
-        : `http://localhost:5000${path.startsWith("/") ? path : `/${path}`}`;
+        ? `${assetsBase}${nextPath}`
+        : `http://localhost:5000${nextPath.startsWith("/public") ? nextPath : `/public${nextPath}`}`;
       break;
     }
+  }
+
+  // Map API public image paths to UI public fallbacks when useful
+  try {
+    const parsed = new URL(resolved, "http://localhost:3000");
+    if (parsed.pathname.includes("/images/")) {
+      const fileName = parsed.pathname.split("/").pop();
+      if (fileName && !resolved.includes("localhost:5000") && !assetsBase) {
+        // keep resolved
+      }
+    }
+  } catch (e) {
+    return fallbackPath;
   }
 
   return resolved || fallbackPath;
@@ -465,7 +484,20 @@ exports.resolveAssetUrl = (url, fallbackPath = "/images/no_image_available.png")
 
 exports.handleAssetImageError = (event, fallbackPath = "/images/no_image_available.png") => {
   if (!event?.currentTarget) return;
+  const current = event.currentTarget.src || "";
   event.currentTarget.onerror = null;
+
+  // Prefer matching local public image by filename
+  try {
+    const fileName = current.split("/").pop()?.split("?")[0];
+    if (fileName) {
+      event.currentTarget.src = `/images/${fileName}`;
+      return;
+    }
+  } catch (e) {
+    // ignore
+  }
+
   event.currentTarget.src = fallbackPath;
 };
 
