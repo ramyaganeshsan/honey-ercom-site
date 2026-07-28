@@ -221,7 +221,7 @@ exports.getShippingStateCityInfo = async () => {
   };
   let filters = {
     where: condition,
-    attributes: ["country_name", "country_id", "ISO_country_code"],
+    attributes: ["country_name", "country_id", "country_code"],
     // attributes: ["country_name", "country_id"],
 
     include: [

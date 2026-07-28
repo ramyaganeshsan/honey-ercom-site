@@ -55,12 +55,13 @@ exports.getStatesAndCountries = async (req, res, next) => {
   } catch (err) {
     console.log(err);
     logger.error(err);
-    res.status(500).send({
-      status: getStatusCode("failed"),
-      message: getMessage("something_went_wrong_error", req.lang),
-      data: [],
-    });
-    next(err);
+    if (!res.headersSent) {
+      res.status(500).send({
+        status: getStatusCode("failed"),
+        message: getMessage("something_went_wrong_error", req.lang),
+        data: [],
+      });
+    }
   }
 };
 

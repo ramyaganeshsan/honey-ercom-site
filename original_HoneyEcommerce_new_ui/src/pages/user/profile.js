@@ -139,14 +139,16 @@ const UserProfile = () => {
 
       if (userProfile?.country_id) {
         let response = statesAndCities?.data?.data;
-        for (let i = 0; i < response.length; i++) {
-          if (
-            Number(response[i]["country_id"]) ===
-            Number(userProfile?.country_id)
-          ) {
-            states = response[i]["states"];
-            citiesArray = response[i]["cities"];
-            break;
+        if (Array.isArray(response)) {
+          for (let i = 0; i < response.length; i++) {
+            if (
+              Number(response[i]["country_id"]) ===
+              Number(userProfile?.country_id)
+            ) {
+              states = response[i]["states"] ?? [];
+              citiesArray = response[i]["cities"] ?? [];
+              break;
+            }
           }
         }
       }
