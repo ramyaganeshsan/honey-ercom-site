@@ -1,6 +1,13 @@
 /node_modules
 /logs
-/assets/images
+/assets/images/*
+!/assets/images/img-500.png
+!/assets/images/login-image.png
+!/assets/images/poster.png
+!/assets/images/no_image_available.png
+!/assets/images/no_profile.png
+!/assets/images/footer-logo.svg
+!/assets/images/dummy-product-*.png
 
 .env
 dump.rdb
