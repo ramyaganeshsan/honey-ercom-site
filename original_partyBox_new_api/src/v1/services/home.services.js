@@ -50,7 +50,7 @@ exports.getCategories = async () => {
 
   let categories = {};
   let subSubCategories = [];
-  response.forEach((element) => {
+  (Array.isArray(response) ? response : []).forEach((element) => {
     if (
       Number(element?.main_category_id) === 0 &&
       Number(element?.sub_category_id) === 0
@@ -62,6 +62,9 @@ exports.getCategories = async () => {
       categories[element?.main_category_id] !== undefined
     ) {
       element["category"] = [];
+      if (!categories[element?.main_category_id]["category"]) {
+        categories[element?.main_category_id]["category"] = {};
+      }
       categories[element?.main_category_id]["category"][element?.category_id] =
         element;
     } else if (
@@ -72,10 +75,15 @@ exports.getCategories = async () => {
         element?.sub_category_id
       ] !== undefined
     ) {
+      const parentSub =
+        categories[element?.main_category_id]["category"][
+          element?.sub_category_id
+        ];
+      if (!Array.isArray(parentSub["category"])) {
+        parentSub["category"] = [];
+      }
       element["category"] = [];
-      categories[element?.main_category_id]["category"][
-        element?.sub_category_id
-      ]["category"].push(element);
+      parentSub["category"].push(element);
     } else {
       subSubCategories.push(element);
     }

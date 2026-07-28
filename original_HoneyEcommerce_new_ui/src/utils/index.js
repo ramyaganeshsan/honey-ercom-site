@@ -434,3 +434,38 @@ exports.checkProductIsAlreadyWishlisted = (wishList, productId) => {
   }
   return false;
 };
+
+/**
+ * Prefer local/public assets when remote CDN/API certs fail (local demo).
+ * Rewrites known production API hosts to REACT_APP_ASSETS_URL or localhost.
+ */
+exports.resolveAssetUrl = (url, fallbackPath = "/images/no_image_available.png") => {
+  if (!url || typeof url !== "string") return fallbackPath;
+
+  const assetsBase = (process.env.REACT_APP_ASSETS_URL || "").replace(/\/$/, "");
+  const knownBrokenHosts = [
+    "https://api.thunyanhoneyuae.com",
+    "http://api.thunyanhoneyuae.com",
+    "https://www.thunyanhoneyuae.com",
+  ];
+
+  let resolved = url;
+  for (const host of knownBrokenHosts) {
+    if (resolved.startsWith(host)) {
+      const path = resolved.slice(host.length);
+      resolved = assetsBase
+        ? `${assetsBase}${path.startsWith("/") ? path : `/${path}`}`
+        : `http://localhost:5000${path.startsWith("/") ? path : `/${path}`}`;
+      break;
+    }
+  }
+
+  return resolved || fallbackPath;
+};
+
+exports.handleAssetImageError = (event, fallbackPath = "/images/no_image_available.png") => {
+  if (!event?.currentTarget) return;
+  event.currentTarget.onerror = null;
+  event.currentTarget.src = fallbackPath;
+};
+

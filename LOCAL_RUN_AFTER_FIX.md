@@ -47,3 +47,23 @@ npm start
 ```
 
 Open `http://localhost:3000` — home should load instead of Error 500.
+
+## If Header crashes with `Cannot read properties of undefined (reading 'Category')`
+
+Pull latest `main`. That crash was empty `categories` in Header; it is guarded now.
+
+## If images fail with `ERR_CERT_COMMON_NAME_INVALID` for api.thunyanhoneyuae.com
+
+Your UI/API `.env` is still pointing at production. Set local URLs:
+
+```bash
+# UI .env
+REACT_APP_BASE_URL=http://localhost:5000/api/
+REACT_APP_ASSETS_URL=http://localhost:5000/public
+
+# API .env
+API_URL=http://localhost:5000/
+NODE_ENV=development
+```
+
+Restart both servers after changing `.env`.

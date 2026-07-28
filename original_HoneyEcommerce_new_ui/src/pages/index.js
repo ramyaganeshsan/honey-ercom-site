@@ -4,7 +4,7 @@ import { siteSettingsContext } from "../contexts";
 import { t } from "i18next";
 import { Link } from "react-router-dom";
 import Corousel from "../components/utils/carousel";
-import { changeActiveLink } from "../utils";
+import { changeActiveLink, resolveAssetUrl, handleAssetImageError } from "../utils";
 import ProductCard from "../components/utils/productCard";
 import ProductCarouselContainer from "../components/utils/productCarouselContainer";
 import $ from "jquery";
@@ -164,8 +164,12 @@ const Home = () => {
       </section>
       <section className="cyr-poster">
         <img
-          src={homePage?.siteSettings?.offer_poster}
+          src={resolveAssetUrl(
+            homePage?.siteSettings?.offer_poster,
+            "/images/no_image_available.png"
+          )}
           alt={t("offer_poster")}
+          onError={(e) => handleAssetImageError(e, "/images/no_image_available.png")}
         />
         <div className="cyr-poster-blk">
           <div className="container">

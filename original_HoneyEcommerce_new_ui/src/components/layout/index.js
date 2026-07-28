@@ -22,7 +22,7 @@ const ApplicationLayout = () => {
       <Header
         contact_email={siteCongifurationDetails?.siteSettings?.contact_email}
         phone1={siteCongifurationDetails?.siteSettings?.phone1}
-        site_name={siteCongifurationDetails.siteSettings?.site_name}
+        site_name={siteCongifurationDetails?.siteSettings?.site_name}
         wishListCount={
           siteCongifurationDetails?.userCartDetails?.wishListCount ?? 0
         }

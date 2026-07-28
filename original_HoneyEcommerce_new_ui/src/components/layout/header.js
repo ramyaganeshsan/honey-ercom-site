@@ -21,13 +21,26 @@ const Header = ({
   let pathName = new URL(window.location).pathname ?? "";
   let navigate = useNavigate();
 
-  const [initialsubCategory, setInitialSubCategory] = useState(
-    categories[0]["category"] ?? []
+  const getInitialSubCategories = (cats) => {
+    const firstLevel = Array.isArray(cats) && cats.length > 0
+      ? cats[0]?.category
+      : [];
+    return Array.isArray(firstLevel) ? firstLevel : [];
+  };
+
+  const [initialsubCategory, setInitialSubCategory] = useState(() =>
+    getInitialSubCategories(categories)
   );
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 768);
 
-  const handleCategoryChange = (categories) => {
-    setInitialSubCategory(categories ?? []);
+  useEffect(() => {
+    setInitialSubCategory(getInitialSubCategories(categories));
+  }, [categories]);
+
+  const handleCategoryChange = (nextCategories) => {
+    setInitialSubCategory(
+      Array.isArray(nextCategories) ? nextCategories : []
+    );
   };
   const handleResize = () => {
     setIsSmallScreen(window.innerWidth <= 768);

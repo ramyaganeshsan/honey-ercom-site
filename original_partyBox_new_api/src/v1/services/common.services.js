@@ -185,18 +185,14 @@ exports.getSiteInfo = async () => {
   response["shopTiming1"] = shopOpensAtTime;
   response["shopTitle2"] = shopOpensAtWeekendTitle;
   response["shopTiming2"] = shopOpensAtWeekendTime;
-  response["footer_logo"] = `${PUBLIC_IMAGE_FOLDER}/footer-logo.svg`;
+  response["footer_logo"] = `${PUBLIC_IMAGE_FOLDER}footer-logo.svg`;
   response["copy_right"] = `Copyright © ${new Date().getFullYear()} ${
     response["site_name"]
   }. All rights reserved.`;
   response["pinterest"] = "https://www.pinterest.com/";
-  response["offer_poster"] = `${process.env.API_URL}public/images/poster.png`;
-  response[
-    "login_page_image"
-  ] = `${process.env.API_URL}public/images/login-image.png`;
-  response[
-    "signin_page_image"
-  ] = `${process.env.API_URL}public/images/login-image.png`;
+  response["offer_poster"] = `${PUBLIC_IMAGE_FOLDER}poster.png`;
+  response["login_page_image"] = `${PUBLIC_IMAGE_FOLDER}login-image.png`;
+  response["signin_page_image"] = `${PUBLIC_IMAGE_FOLDER}login-image.png`;
   response["offer_text"] = "UP TO 70 % OFF";
   response["payment_types"] = [
     { name: "online_payment", value: 1 },

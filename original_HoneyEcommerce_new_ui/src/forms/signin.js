@@ -19,6 +19,8 @@ import {
   handleResponse,
   removeSessionID,
   toastConfig,
+  resolveAssetUrl,
+  handleAssetImageError,
 } from "../utils";
 import { toast } from "react-toastify";
 import { siteSettingsContext } from "../contexts";
@@ -178,7 +180,13 @@ const SignIn = ({ loginImage }) => {
             ></button>
             <div className="login-wrapper">
               <div className="login-lft">
-                <img src={loginImage} alt={t("sign_in_image_alt_text")} />
+                <img
+                  src={resolveAssetUrl(loginImage, "/images/no_image_available.png")}
+                  alt={t("sign_in_image_alt_text")}
+                  onError={(e) =>
+                    handleAssetImageError(e, "/images/no_image_available.png")
+                  }
+                />
               </div>
               <div className="login-rgt">
                 <h2 className="mb-2">{t("signin")}</h2>
