@@ -1,6 +1,13 @@
 import Corousel from "./carousel";
+import { resolveAssetUrl, handleAssetImageError } from "../../utils";
 
 const Banner = ({ bannerImages }) => {
+  const images = Array.isArray(bannerImages) ? bannerImages : [];
+
+  if (images.length === 0) {
+    return null;
+  }
+
   return (
     <section className="banner">
       <div className="main_slider owl-theme">
@@ -13,11 +20,20 @@ const Banner = ({ bannerImages }) => {
           loop={true}
           autoplay={true}
         >
-          {bannerImages.map((image) => {
+          {images.map((image) => {
             if (image?.url) {
               return (
                 <div key={image?.banner_id} className="item">
-                  <img src={image.url} alt={image?.image_title} />
+                  <img
+                    src={resolveAssetUrl(
+                      image.url,
+                      "/images/no_image_available.png"
+                    )}
+                    alt={image?.image_title || "Banner"}
+                    onError={(e) =>
+                      handleAssetImageError(e, "/images/no_image_available.png")
+                    }
+                  />
                 </div>
               );
             }
