@@ -563,3 +563,87 @@ exports.twitterCallback = async (req, res) => {
       .json({ message: "Twitter callback processing failed", error });
   }
 };
+
+const {
+  createAndStoreOtp,
+  verifyStoredOtp,
+} = require("../services/otp.services");
+
+/**
+ * POST /api/auth/send_otp
+ * body: { email_or_phone: "..." }
+ * Stores hashed OTP in `otp` and plain value in `original_otp`.
+ */
+exports.sendOtp = async (req, res, next) => {
+  try {
+    const emailOrPhone =
+      req.body?.email_or_phone ||
+      req.body?.email ||
+      req.body?.phone_number ||
+      "";
+
+    if (!emailOrPhone) {
+      return res.send({
+        status: getStatusCode("validation_error"),
+        message: getMessage("something_went_wrong_error", req.lang),
+        data: {},
+      });
+    }
+
+    const result = await createAndStoreOtp(emailOrPhone);
+
+    // In development, return OTP so local testing works without SMS gateway.
+    const includePlainOtp =
+      process.env.NODE_ENV === "development" ||
+      process.env.RETURN_OTP_IN_RESPONSE === "true";
+
+    return res.send({
+      status: getStatusCode("success"),
+      message: getMessage("success", req.lang) || "OTP sent",
+      data: {
+        otp_id: result.otp_id,
+        ...(includePlainOtp ? { otp: result.otp } : {}),
+      },
+    });
+  } catch (err) {
+    logger.error(err?.message || err);
+    next(err);
+  }
+};
+
+/**
+ * POST /api/auth/verify_otp
+ * body: { email_or_phone: "...", otp: "123456" }
+ */
+exports.verifyOtp = async (req, res, next) => {
+  try {
+    const emailOrPhone =
+      req.body?.email_or_phone ||
+      req.body?.email ||
+      req.body?.phone_number ||
+      "";
+    const otp = req.body?.otp || "";
+
+    if (!emailOrPhone || !otp) {
+      return res.send({
+        status: getStatusCode("validation_error"),
+        message: getMessage("something_went_wrong_error", req.lang),
+        data: { verified: false },
+      });
+    }
+
+    const result = await verifyStoredOtp(emailOrPhone, otp);
+    return res.send({
+      status: result.valid
+        ? getStatusCode("success")
+        : getStatusCode("failed"),
+      message: result.valid
+        ? "OTP verified"
+        : getMessage("something_went_wrong_error", req.lang),
+      data: { verified: Boolean(result.valid) },
+    });
+  } catch (err) {
+    logger.error(err?.message || err);
+    next(err);
+  }
+};

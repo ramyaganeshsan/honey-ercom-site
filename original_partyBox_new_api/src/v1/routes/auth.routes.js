@@ -12,6 +12,8 @@ const {
   facebookCallback,
   twitterSignin,
   twitterCallback,
+  sendOtp,
+  verifyOtp,
 } = require("../controller/auth.controller");
 
 authRouter.post("/signup", validateParams(signupSchema), signup);
@@ -20,5 +22,7 @@ authRouter.post("/google_signin", googleSignIn);
 authRouter.post("/facebook_signin", facebookSignin);
 authRouter.get("/twitter_signin", twitterSignin);
 authRouter.post("/twitter_callback", twitterCallback);
+authRouter.post("/send_otp", sendOtp);
+authRouter.post("/verify_otp", verifyOtp);
 
 module.exports = authRouter;

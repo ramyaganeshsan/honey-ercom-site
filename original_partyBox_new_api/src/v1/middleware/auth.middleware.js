@@ -45,6 +45,8 @@ exports.validateJwtToken = (req, res, next) => {
       path === "/api/auth/facebook_signin" ||
       path === "/api/auth/twitter_signin" ||
       path === "/api/auth/twitter_callback" ||
+      path === "/api/auth/send_otp" ||
+      path === "/api/auth/verify_otp" ||
       path === "/api/checkout/" ||
       path === "/api/checkout/initiateTabbyPayment" ||
       path === "/api/checkout/webhooks/tabby" ||
