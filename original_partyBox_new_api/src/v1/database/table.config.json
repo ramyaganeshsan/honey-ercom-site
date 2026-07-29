@@ -15,5 +15,6 @@
     "hesabe_payment_log" : "hesabe_payment_log",
     "order_cancel" : "order_cancel",
     "sessions" : "sessions",
-     "settings": "settings"
+     "settings": "settings",
+     "sms_otp": "sms_otp"
 }
