@@ -46,6 +46,10 @@ export default function Layout() {
     }
   }, [])
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [location.pathname])
+
   const name =
     admin?.firstname ||
     admin?.name ||

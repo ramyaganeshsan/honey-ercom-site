@@ -1,3 +1,9 @@
+import { useEffect } from 'react'
+
+/**
+ * Full-page add/edit screen (replaces popup dialogs).
+ * Kept as `Modal` so existing page imports keep working.
+ */
 export default function Modal({
   open,
   title,
@@ -6,26 +12,34 @@ export default function Modal({
   footer,
   wide = false,
 }) {
+  useEffect(() => {
+    if (!open) return undefined
+    const main = document.querySelector('.page-content')
+    if (main) {
+      main.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return undefined
+  }, [open])
+
   if (!open) return null
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="presentation">
-      <div
-        className={`modal${wide ? ' wide' : ''}`}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-      >
-        <div className="modal-header">
-          <h3>{title}</h3>
+    <section
+      className={`form-page${wide ? ' wide' : ''}`}
+      role="region"
+      aria-label={title}
+    >
+      <div className="form-page-header">
+        <div className="form-page-heading">
           <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
-            Close
+            ← Back
           </button>
+          <h2>{title}</h2>
         </div>
-        <div className="modal-body">{children}</div>
-        {footer ? <div className="modal-footer">{footer}</div> : null}
+        {footer ? <div className="form-page-actions">{footer}</div> : null}
       </div>
-    </div>
+      <div className="form-page-body panel">{children}</div>
+    </section>
   )
 }

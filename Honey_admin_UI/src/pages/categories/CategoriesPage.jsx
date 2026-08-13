@@ -158,29 +158,10 @@ export default function CategoriesPage() {
     (c) => (c.category_id ?? c.id) !== editingId
   )
 
-  return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h2>Categories</h2>
-          <p>Root categories and linked sub categories for products</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={openCreate}>
-          Add category
-        </button>
-      </div>
-
-      <div className="panel">
-        <DataTable
-          columns={columns}
-          rows={rows}
-          rowKey={(r) => r.category_id ?? r.id}
-          loading={loading}
-        />
-      </div>
-
+  if (open) {
+    return (
       <Modal
-        open={open}
+        open
         title={editing ? 'Edit category' : 'New category'}
         onClose={() => setOpen(false)}
         footer={
@@ -252,6 +233,29 @@ export default function CategoriesPage() {
           </div>
         </div>
       </Modal>
+    )
+  }
+
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <h2>Categories</h2>
+          <p>Root categories and linked sub categories for products</p>
+        </div>
+        <button type="button" className="btn btn-primary" onClick={openCreate}>
+          Add category
+        </button>
+      </div>
+
+      <div className="panel">
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowKey={(r) => r.category_id ?? r.id}
+          loading={loading}
+        />
+      </div>
     </div>
   )
 }

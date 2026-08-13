@@ -178,6 +178,40 @@ export default function ShippingPage() {
     },
   ]
 
+  if (open) {
+    return (
+      <Modal
+        open
+        title={`${editing ? 'Edit' : 'New'} ${tab.slice(0, -1)}`}
+        onClose={() => setOpen(false)}
+        footer={
+          <>
+            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </button>
+            <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </>
+        }
+      >
+        <div className="form-grid">
+          {Object.keys(EMPTY[tab]).map((key) => (
+            <div className="form-field" key={key}>
+              <label>{key.replace(/_/g, ' ')}</label>
+              <input
+                name={key}
+                type={typeof EMPTY[tab][key] === 'number' ? 'number' : 'text'}
+                value={form[key] ?? ''}
+                onChange={onChange}
+              />
+            </div>
+          ))}
+        </div>
+      </Modal>
+    )
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -211,36 +245,6 @@ export default function ShippingPage() {
           loading={loading}
         />
       </div>
-
-      <Modal
-        open={open}
-        title={`${editing ? 'Edit' : 'New'} ${tab.slice(0, -1)}`}
-        onClose={() => setOpen(false)}
-        footer={
-          <>
-            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
-              Cancel
-            </button>
-            <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-          </>
-        }
-      >
-        <div className="form-grid">
-          {Object.keys(EMPTY[tab]).map((key) => (
-            <div className="form-field" key={key}>
-              <label>{key.replace(/_/g, ' ')}</label>
-              <input
-                name={key}
-                type={typeof EMPTY[tab][key] === 'number' ? 'number' : 'text'}
-                value={form[key] ?? ''}
-                onChange={onChange}
-              />
-            </div>
-          ))}
-        </div>
-      </Modal>
     </div>
   )
 }

@@ -208,29 +208,10 @@ export default function BannersPage() {
     },
   ]
 
-  return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h2>Banners</h2>
-          <p>Homepage and promotional banner images</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={openCreate}>
-          Add banner
-        </button>
-      </div>
-
-      <div className="panel">
-        <DataTable
-          columns={columns}
-          rows={rows}
-          rowKey={(r) => r.banner_id ?? r.id}
-          loading={loading}
-        />
-      </div>
-
+  if (open) {
+    return (
       <Modal
-        open={open}
+        open
         title={editing ? 'Edit banner' : 'New banner'}
         onClose={() => setOpen(false)}
         wide
@@ -320,6 +301,29 @@ export default function BannersPage() {
           </div>
         </div>
       </Modal>
+    )
+  }
+
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <h2>Banners</h2>
+          <p>Homepage and promotional banner images</p>
+        </div>
+        <button type="button" className="btn btn-primary" onClick={openCreate}>
+          Add banner
+        </button>
+      </div>
+
+      <div className="panel">
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowKey={(r) => r.banner_id ?? r.id}
+          loading={loading}
+        />
+      </div>
     </div>
   )
 }

@@ -136,24 +136,10 @@ export default function PromocodesPage() {
     },
   ]
 
-  return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h2>Promocodes</h2>
-          <p>Create and manage discount codes</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={openCreate}>
-          Add promocode
-        </button>
-      </div>
-
-      <div className="panel">
-        <DataTable columns={columns} rows={rows} rowKey="id" loading={loading} />
-      </div>
-
+  if (open) {
+    return (
       <Modal
-        open={open}
+        open
         title={editing ? 'Edit promocode' : 'New promocode'}
         onClose={() => setOpen(false)}
         footer={
@@ -228,6 +214,24 @@ export default function PromocodesPage() {
           </div>
         </div>
       </Modal>
+    )
+  }
+
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <h2>Promocodes</h2>
+          <p>Create and manage discount codes</p>
+        </div>
+        <button type="button" className="btn btn-primary" onClick={openCreate}>
+          Add promocode
+        </button>
+      </div>
+
+      <div className="panel">
+        <DataTable columns={columns} rows={rows} rowKey="id" loading={loading} />
+      </div>
     </div>
   )
 }

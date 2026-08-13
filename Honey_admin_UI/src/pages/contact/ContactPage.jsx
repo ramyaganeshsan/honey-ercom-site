@@ -79,6 +79,32 @@ export default function ContactPage() {
     },
   ]
 
+  if (selected) {
+    return (
+      <Modal
+        open
+        title="Message"
+        onClose={() => setSelected(null)}
+        footer={
+          <button type="button" className="btn btn-ghost" onClick={() => setSelected(null)}>
+            Back to inbox
+          </button>
+        }
+      >
+        <dl className="detail-grid">
+          <dt>Name</dt>
+          <dd>{selected.name}</dd>
+          <dt>Email</dt>
+          <dd>{selected.email}</dd>
+          <dt>Phone</dt>
+          <dd>{selected.phone_number || selected.phone || '—'}</dd>
+          <dt>Message</dt>
+          <dd style={{ whiteSpace: 'pre-wrap' }}>{selected.message}</dd>
+        </dl>
+      </Modal>
+    )
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -99,30 +125,6 @@ export default function ContactPage() {
           loading={loading}
         />
       </div>
-
-      <Modal
-        open={!!selected}
-        title="Message"
-        onClose={() => setSelected(null)}
-        footer={
-          <button type="button" className="btn btn-ghost" onClick={() => setSelected(null)}>
-            Close
-          </button>
-        }
-      >
-        {selected ? (
-          <dl className="detail-grid">
-            <dt>Name</dt>
-            <dd>{selected.name}</dd>
-            <dt>Email</dt>
-            <dd>{selected.email}</dd>
-            <dt>Phone</dt>
-            <dd>{selected.phone_number || selected.phone || '—'}</dd>
-            <dt>Message</dt>
-            <dd style={{ whiteSpace: 'pre-wrap' }}>{selected.message}</dd>
-          </dl>
-        ) : null}
-      </Modal>
     </div>
   )
 }
