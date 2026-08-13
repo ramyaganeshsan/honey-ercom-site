@@ -52,7 +52,8 @@ exports.validateJwtToken = (req, res, next) => {
       isUnprotectedPrefix("/api/auth/twitter_callback") ||
       isUnprotectedPrefix("/api/auth/send_otp") ||
       isUnprotectedPrefix("/api/auth/verify_otp") ||
-      isUnprotectedPrefix("/api/checkout")
+      isUnprotectedPrefix("/api/checkout") ||
+      isUnprotectedPrefix("/api/admin/auth")
     ) {
       return next();
     }

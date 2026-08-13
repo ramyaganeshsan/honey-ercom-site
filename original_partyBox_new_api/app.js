@@ -54,6 +54,7 @@ const commonRoutes = require(`./src/${version}/routes/common.routes.js`);
 const ordersRoutes = require(`./src/${version}/routes/orders.routes.js`);
 const cronRoutes = require(`./src/${version}/routes/cron.routes.js`);
 const checkoutTestRoutes = require(`./src/${version}/routes/checkoutTest.routes.js`);
+const adminRoutes = require(`./src/${version}/admin/routes/index.js`);
 
 console.log = () => {};
 
@@ -84,6 +85,7 @@ app.use(`${baseAPIurl}/cms`, cmsRoutes);
 app.use(`${baseAPIurl}/common`, commonRoutes);
 app.use(`${baseAPIurl}/orders`, ordersRoutes);
 app.use(`${baseAPIurl}/cron`, cronRoutes);
+app.use(`${baseAPIurl}/admin`, adminRoutes);
 
 /* Sharing asset's */
 app.use("/public", express.static("assets"));
