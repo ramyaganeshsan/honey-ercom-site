@@ -1,5 +1,5 @@
 const { findOne, updateOne, count, findAll } = require("../../mongo/repo");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 
 async function useTransactionsAsOrders() {
   const txnCount = await count("transaction", {});

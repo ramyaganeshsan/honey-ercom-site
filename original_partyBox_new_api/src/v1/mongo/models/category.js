@@ -1,34 +1,35 @@
 const mongoose = require("mongoose");
 const { getNextSequence } = require("../counters");
+const { optionalString } = require("../schemaHelpers");
 
 const categorySchema = new mongoose.Schema(
   {
     category_id: { type: Number, required: false },
-    main_category_id: { type: Number, required: true },
-    sub_category_id: { type: Number, required: true },
+    main_category_id: { type: Number, required: true, default: 0 },
+    sub_category_id: { type: Number, required: true, default: 0 },
     category_name: { type: String, required: true },
-    category_name_french: { type: String, required: true },
-    category_description: { type: String, required: true },
-    category_description_french: { type: String, required: true },
-    submenu_content: { type: String },
+    category_name_french: optionalString,
+    category_description: optionalString,
+    category_description_french: optionalString,
+    submenu_content: optionalString,
     category_url: { type: String, required: true },
-    category_icon: { type: String, required: true },
-    category_image: { type: String, required: true },
-    color_code: { type: String, required: true },
-    category_mapping: { type: String, required: true },
-    home_category_order: { type: Number, required: true },
+    category_icon: optionalString,
+    category_image: optionalString,
+    color_code: optionalString,
+    category_mapping: optionalString,
+    home_category_order: { type: Number, required: true, default: 0 },
     home_category: { type: Number, required: true, default: 0 },
     category_status: { type: Number, required: true, default: 1 },
-    product: { type: Number, required: true },
-    customize_type: { type: Number, required: true },
-    type: { type: Number, required: true },
-    sort_order: { type: Number, required: true },
-    menu_sort_order: { type: Number, required: true },
-    category_list_title: { type: String, required: true },
-    category_list_description: { type: String, required: true },
-    category_list_image: { type: String, required: true },
-    home_banner_image: { type: String },
-    home_banner_url: { type: String },
+    product: { type: Number, required: true, default: 1 },
+    customize_type: { type: Number, required: true, default: 0 },
+    type: { type: Number, required: true, default: 0 },
+    sort_order: { type: Number, required: true, default: 0 },
+    menu_sort_order: { type: Number, required: true, default: 0 },
+    category_list_title: optionalString,
+    category_list_description: optionalString,
+    category_list_image: optionalString,
+    home_banner_image: optionalString,
+    home_banner_url: optionalString,
     discount_type: { type: Number, required: true, default: 0 },
     discount_value: { type: Number, required: true, default: 0 },
   },
@@ -37,6 +38,16 @@ const categorySchema = new mongoose.Schema(
     timestamps: false,
   }
 );
+
+categorySchema.pre("validate", function (next) {
+  if (!this.category_name_french) {
+    this.category_name_french = this.category_name || "";
+  }
+  if (!this.category_list_title) {
+    this.category_list_title = this.category_name || "";
+  }
+  next();
+});
 
 categorySchema.pre("save", async function (next) {
   if (this.category_id == null) {

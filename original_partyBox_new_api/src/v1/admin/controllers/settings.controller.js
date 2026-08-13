@@ -1,5 +1,5 @@
 const { findOne, updateOne, create, getModel } = require("../../mongo/repo");
-const { ok, fail } = require("../services/admin.helpers");
+const { ok, fail, failFromError } = require("../services/admin.helpers");
 
 exports.getSettings = async (req, res) => {
   try {

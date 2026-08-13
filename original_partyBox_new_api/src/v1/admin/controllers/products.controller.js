@@ -1,6 +1,6 @@
 const { findOne, create, updateOne, findAll } = require("../../mongo/repo");
 const { getCurrentTime, generateRandomString } = require("../../utils/index");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 const { saveProductImage } = require("../services/upload.service");
 
 function slugify(text) {
@@ -202,13 +202,7 @@ exports.createProduct = async (req, res) => {
     return res.send(ok({ ...product, sub_products: subProducts }, "Product created"));
   } catch (err) {
     console.error(err);
-    const details =
-      err?.name === "ValidationError"
-        ? Object.values(err.errors || {})
-            .map((e) => e.message)
-            .join("; ")
-        : err?.message;
-    return res.send(fail(details || "Failed to create product"));
+    return res.send(failFromError(err, "Failed to create product"));
   }
 };
 
@@ -264,7 +258,7 @@ exports.updateProduct = async (req, res) => {
     return res.send(ok({ ...updated, sub_products: subProducts }, "Product updated"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to update product"));
+    return res.send(failFromError(err, "Failed to update product"));
   }
 };
 

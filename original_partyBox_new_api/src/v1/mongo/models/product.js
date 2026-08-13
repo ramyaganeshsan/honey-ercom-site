@@ -8,7 +8,7 @@ const productSchema = new mongoose.Schema(
   {
     deal_id: { type: Number, required: false },
     deal_title: { type: String, required: true },
-    deal_title_french: { type: String, required: true, default: "" },
+    deal_title_french: optionalString,
     url_title: { type: String, required: true },
     deal_key: { type: String, required: true },
     deal_description: optionalString,
@@ -59,6 +59,13 @@ const productSchema = new mongoose.Schema(
     timestamps: false,
   }
 );
+
+productSchema.pre("validate", function (next) {
+  if (!this.deal_title_french) {
+    this.deal_title_french = this.deal_title || "";
+  }
+  next();
+});
 
 productSchema.pre("save", async function (next) {
   if (this.deal_id == null) {

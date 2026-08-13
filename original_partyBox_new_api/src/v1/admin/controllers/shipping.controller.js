@@ -1,5 +1,5 @@
 const { findOne, create, updateOne, findAll } = require("../../mongo/repo");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 
 function slugify(text) {
   return String(text || "")
@@ -52,7 +52,7 @@ exports.createCountry = async (req, res) => {
     return res.send(ok(item, "Country created"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to create country"));
+    return res.send(failFromError(err, "Failed to create country"));
   }
 };
 
@@ -69,7 +69,7 @@ exports.updateCountry = async (req, res) => {
     return res.send(ok(updated, "Country updated"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to update country"));
+    return res.send(failFromError(err, "Failed to update country"));
   }
 };
 
@@ -134,7 +134,7 @@ exports.createState = async (req, res) => {
     return res.send(ok(item, "State created"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to create state"));
+    return res.send(failFromError(err, "Failed to create state"));
   }
 };
 
@@ -151,7 +151,7 @@ exports.updateState = async (req, res) => {
     return res.send(ok(updated, "State updated"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to update state"));
+    return res.send(failFromError(err, "Failed to update state"));
   }
 };
 
@@ -224,7 +224,7 @@ exports.createCity = async (req, res) => {
     return res.send(ok(item, "City created"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to create city"));
+    return res.send(failFromError(err, "Failed to create city"));
   }
 };
 
@@ -245,7 +245,7 @@ exports.updateCity = async (req, res) => {
     return res.send(ok(updated, "City updated"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to update city"));
+    return res.send(failFromError(err, "Failed to update city"));
   }
 };
 

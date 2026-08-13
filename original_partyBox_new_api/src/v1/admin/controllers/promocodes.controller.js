@@ -1,5 +1,5 @@
 const { findOne, create, updateOne, deleteOne } = require("../../mongo/repo");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 
 exports.listPromocodes = async (req, res) => {
   try {
@@ -69,7 +69,7 @@ exports.createPromocode = async (req, res) => {
     return res.send(ok(item, "Promocode created"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to create promocode"));
+    return res.send(failFromError(err, "Failed to create promocode"));
   }
 };
 
@@ -90,7 +90,7 @@ exports.updatePromocode = async (req, res) => {
     return res.send(ok(updated, "Promocode updated"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to update promocode"));
+    return res.send(failFromError(err, "Failed to update promocode"));
   }
 };
 

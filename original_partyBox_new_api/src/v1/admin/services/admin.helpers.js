@@ -1,4 +1,5 @@
 const { findAll, count, create, updateOne, deleteOne, findOne } = require("../../mongo/repo");
+const { errorMessage } = require("../../mongo/schemaHelpers");
 
 exports.ok = (data = null, message = "") => ({
   status: 1,
@@ -11,6 +12,12 @@ exports.fail = (message = "Request failed", status = 0) => ({
   message,
   data: null,
 });
+
+/** Convert thrown errors (esp. Mongoose ValidationError) into API fail payloads */
+exports.failFromError = (err, fallback = "Request failed") => {
+  console.error(err);
+  return exports.fail(errorMessage(err, fallback));
+};
 
 exports.parsePaging = (query = {}) => {
   let page = Number(query.page) || 1;

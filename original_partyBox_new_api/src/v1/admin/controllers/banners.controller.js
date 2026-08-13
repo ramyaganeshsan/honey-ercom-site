@@ -1,5 +1,5 @@
 const { findOne, create, updateOne } = require("../../mongo/repo");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 const { saveBannerImage } = require("../services/upload.service");
 
 exports.listBanners = async (req, res) => {
@@ -57,7 +57,7 @@ exports.createBanner = async (req, res) => {
     return res.send(ok(item, "Banner created"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to create banner"));
+    return res.send(failFromError(err, "Failed to create banner"));
   }
 };
 
@@ -78,7 +78,7 @@ exports.updateBanner = async (req, res) => {
     return res.send(ok(updated, "Banner updated"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to update banner"));
+    return res.send(failFromError(err, "Failed to update banner"));
   }
 };
 

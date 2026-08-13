@@ -1,5 +1,5 @@
 const { findOne, create, updateOne } = require("../../mongo/repo");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 
 function slugify(text) {
   return String(text || "")
@@ -57,7 +57,7 @@ exports.createCms = async (req, res) => {
     return res.send(ok(item, "CMS page created"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to create CMS page"));
+    return res.send(failFromError(err, "Failed to create CMS page"));
   }
 };
 
@@ -74,7 +74,7 @@ exports.updateCms = async (req, res) => {
     return res.send(ok(updated, "CMS page updated"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to update CMS page"));
+    return res.send(failFromError(err, "Failed to update CMS page"));
   }
 };
 

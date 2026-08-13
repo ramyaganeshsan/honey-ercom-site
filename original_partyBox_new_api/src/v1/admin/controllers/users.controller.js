@@ -1,7 +1,7 @@
 const md5 = require("md5");
 const { getCurrentTime } = require("../../utils/index");
 const { findOne, create, updateOne } = require("../../mongo/repo");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 
 const CUSTOMER_TYPE = 4;
 

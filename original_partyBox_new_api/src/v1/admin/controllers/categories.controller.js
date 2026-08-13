@@ -1,5 +1,5 @@
 const { findOne, create, updateOne, findAll } = require("../../mongo/repo");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 
 function slugify(text) {
   return String(text || "")
@@ -70,7 +70,7 @@ exports.createCategory = async (req, res) => {
     return res.send(ok(category, "Category created"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to create category"));
+    return res.send(failFromError(err, "Failed to create category"));
   }
 };
 
@@ -88,7 +88,7 @@ exports.updateCategory = async (req, res) => {
     return res.send(ok(updated, "Category updated"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to update category"));
+    return res.send(failFromError(err, "Failed to update category"));
   }
 };
 

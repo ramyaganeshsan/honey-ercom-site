@@ -1,5 +1,5 @@
 const { findOne, updateOne, deleteOne } = require("../../mongo/repo");
-const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
 
 exports.listReviews = async (req, res) => {
   try {
