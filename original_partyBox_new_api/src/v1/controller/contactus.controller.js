@@ -22,15 +22,17 @@ exports.addContact = async (req, res, next) => {
       let notes = response?.message;
       let email = response?.email;
       let adminEmail = await getAdminEmail();
-      notifyContactUsToAdminEmail(
-        name,
-        contactId,
-        phone,
-        email,
-        notes,
-        adminEmail,
-        req.lang
-      );
+      Promise.resolve(
+        notifyContactUsToAdminEmail(
+          name,
+          contactId,
+          phone,
+          email,
+          notes,
+          adminEmail,
+          req.lang
+        )
+      ).catch((err) => logger.error(err));
     } else {
       res.send({
         status: getStatusCode("failed"),

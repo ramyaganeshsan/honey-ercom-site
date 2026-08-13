@@ -566,9 +566,13 @@ exports.validateCheckoutDetails = async (req, res, next) => {
 
         if (status === 1) {
           if (!sessionID || sessionID == "") {
-            sendOrderSuccessEmail(transactionId, userDetails, req.lang);
+            Promise.resolve(
+              sendOrderSuccessEmail(transactionId, userDetails, req.lang)
+            ).catch((err) => logger.error(err));
             let adminEmail = await getAdminEmail();
-            sendOrderSuccessEmailToAdmin(transactionId, adminEmail, req.lang);
+            Promise.resolve(
+              sendOrderSuccessEmailToAdmin(transactionId, adminEmail, req.lang)
+            ).catch((err) => logger.error(err));
           }
           response["status"] = getStatusCode("order_placed_cod");
           response["message"] = getMessage("your_order_is_created", req.lang);
@@ -679,7 +683,9 @@ exports.getPaymentStatus = async (req, res, next) => {
               cartDetails &&
               (!cartDetails.sessionID || cartDetails.sessionID == "")
             ) {
-              sendOrderSuccessEmail(transactionId, userDetails, req.lang);
+              Promise.resolve(
+                sendOrderSuccessEmail(transactionId, userDetails, req.lang)
+              ).catch((err) => logger.error(err));
             }
             response["status"] = getStatusCode("success");
             response["message"] = getMessage("your_order_is_created", req.lang);

@@ -82,6 +82,8 @@ async function wipeDemoCollections() {
     "cms",
     "users",
     "sessions",
+    "notification_template",
+    "email_settings",
     "counters",
   ];
   for (const name of names) {
@@ -648,6 +650,88 @@ async function seed() {
     refference_key: String(now),
   });
 
+  await models.email_settings.collection.insertOne({
+    settings_id: 1,
+    sendgrid_host: "",
+    sendgrid_port: 587,
+    sendgrid_username: "",
+    sendgrid_password: "",
+    smtp_host: "smtp.gmail.com",
+    smtp_port: 465,
+    smtp_type: "ssl",
+    // Dummy placeholders — leave blank so local order email is skipped safely
+    smtp_username: "",
+    smtp_password: "",
+    api_key: "",
+    list_id: "",
+    replay_to_mail: "noreply@thunayanhoneyuae.com",
+    from_name: "Thunayyan Honey UAE",
+    status: 1,
+  });
+
+  await models.notification_template.collection.insertMany([
+    {
+      id: 20,
+      email_from: "noreply@thunayanhoneyuae.com",
+      template_index: "order_success",
+      send_email: true,
+      subject: "Your order ##ORDER_ID## is confirmed",
+      subject_ar: "تم تأكيد طلبك ##ORDER_ID##",
+      template_content:
+        "<p>Thank you for your order.</p><p>Order ID: <strong>##ORDER_ID##</strong></p>",
+      template_content_ar:
+        "<p>شكراً لطلبك.</p><p>رقم الطلب: <strong>##ORDER_ID##</strong></p>",
+    },
+    {
+      id: 21,
+      email_from: "noreply@thunayanhoneyuae.com",
+      template_index: "order_cancelled",
+      send_email: true,
+      subject: "Your order ##ORDER_ID## was cancelled",
+      subject_ar: "تم إلغاء طلبك ##ORDER_ID##",
+      template_content:
+        "<p>Your order <strong>##ORDER_ID##</strong> has been cancelled.</p>",
+      template_content_ar:
+        "<p>تم إلغاء طلبك <strong>##ORDER_ID##</strong>.</p>",
+    },
+    {
+      id: 22,
+      email_from: "noreply@thunayanhoneyuae.com",
+      template_index: "order_return",
+      send_email: true,
+      subject: "Return request for order ##ORDER_ID##",
+      subject_ar: "طلب إرجاع للطلب ##ORDER_ID##",
+      template_content:
+        "<p>We received a return request for order <strong>##ORDER_ID##</strong>.</p>",
+      template_content_ar:
+        "<p>استلمنا طلب إرجاع للطلب <strong>##ORDER_ID##</strong>.</p>",
+    },
+    {
+      id: 23,
+      email_from: "noreply@thunayanhoneyuae.com",
+      template_index: "order_placed_admin",
+      send_email: true,
+      subject: "New order placed ##ORDER_ID##",
+      subject_ar: "طلب جديد ##ORDER_ID##",
+      template_content:
+        "<p>A new order was placed.</p><p>Order ID: <strong>##ORDER_ID##</strong></p>",
+      template_content_ar:
+        "<p>تم إنشاء طلب جديد.</p><p>رقم الطلب: <strong>##ORDER_ID##</strong></p>",
+    },
+    {
+      id: 24,
+      email_from: "noreply@thunayanhoneyuae.com",
+      template_index: "contact_us_admin",
+      send_email: true,
+      subject: "New contact us message from ##NAME##",
+      subject_ar: "رسالة تواصل جديدة من ##NAME##",
+      template_content:
+        "<p>New contact request (##CONTACTID##).</p>##CONTENTTABLE##",
+      template_content_ar:
+        "<p>طلب تواصل جديد (##CONTACTID##).</p>##CONTENTTABLE##",
+    },
+  ]);
+
   await Counter.insertMany([
     { _id: "settings", seq: 1 },
     { _id: "banner_image", seq: 2 },
@@ -659,6 +743,8 @@ async function seed() {
     { _id: "city", seq: 132 },
     { _id: "cms", seq: 2 },
     { _id: "users", seq: 1 },
+    { _id: "email_settings", seq: 1 },
+    { _id: "notification_template", seq: 24 },
   ]);
 
   setupImages(products, banners);
@@ -666,6 +752,9 @@ async function seed() {
   console.log("Demo seed complete.");
   console.log("  Login: demo@thunayanhoney.com / Demo@123");
   console.log(`  Products: ${products.length}, Categories: ${categories.length}`);
+  console.log(
+    "  Seeded notification_template (20-24) + email_settings placeholders."
+  );
   console.log(
     "  Note: all mapped collections now exist in MongoDB; demo data is filled for catalog/auth/geo/cms. Other collections stay empty until used by the app (cart, orders, etc.)."
   );

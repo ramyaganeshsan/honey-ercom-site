@@ -143,7 +143,9 @@ exports.cancelMyOrder = async (req, res, next) => {
             : getMessage("failed_to_cancel_order", req.lang),
       };
     } else {
-      sendOrderCancelEmail(orderId, req.userDetails, req.lang);
+      Promise.resolve(
+        sendOrderCancelEmail(orderId, req.userDetails, req.lang)
+      ).catch((err) => logger.error(err));
     }
 
     res.send(response);
