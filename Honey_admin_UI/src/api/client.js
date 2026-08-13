@@ -53,20 +53,27 @@ client.interceptors.response.use(
   }
 )
 
-/** Safe request wrapper — never throws; returns { ok, data, message, status } */
+/**
+ * Safe request wrapper — never throws.
+ * Success only when API body.status is 1/true (not merely HTTP 200).
+ */
 export async function apiRequest(fn, { silent = false } = {}) {
   try {
     const res = await fn()
     const body = res?.data ?? {}
-    const ok = body.status === 1 || body.status === true || res.status < 400
+    const hasBodyStatus = Object.prototype.hasOwnProperty.call(body, 'status')
+    const ok = hasBodyStatus
+      ? body.status === 1 || body.status === true
+      : res.status >= 200 && res.status < 300
+
     if (!ok && !silent) {
       toast.error(body.message || 'Request failed')
     }
     return {
       ok,
       data: body.data ?? null,
-      message: body.message || '',
-      status: body.status,
+      message: body.message || (ok ? '' : 'Request failed'),
+      status: hasBodyStatus ? body.status : res.status,
       raw: body,
     }
   } catch (err) {

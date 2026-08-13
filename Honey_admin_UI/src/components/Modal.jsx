@@ -11,6 +11,7 @@ export default function Modal({
   children,
   footer,
   wide = false,
+  busy = false,
 }) {
   useEffect(() => {
     if (!open) return undefined
@@ -32,7 +33,12 @@ export default function Modal({
     >
       <div className="form-page-header">
         <div className="form-page-heading">
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={onClose}
+            disabled={busy}
+          >
             ← Back
           </button>
           <h2>{title}</h2>

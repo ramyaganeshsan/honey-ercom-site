@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { cmsApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
+import Field from '../../components/Field'
 import Modal from '../../components/Modal'
+import { collectErrors, firstError, requiredText } from '../../utils/form'
 import { isActiveStatus, pickList } from '../../utils/format'
 
 const emptyForm = {
@@ -17,15 +19,24 @@ const emptyForm = {
 export default function CmsPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [listError, setListError] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [errors, setErrors] = useState({})
+  const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setListError('')
     const res = await cmsApi.list({ page: 1, limit: 50 })
-    setRows(pickList(res.data))
+    if (!res.ok) {
+      setRows([])
+      setListError(res.message || 'Failed to load CMS pages')
+    } else {
+      setRows(pickList(res.data))
+    }
     setLoading(false)
   }, [])
 
@@ -33,9 +44,18 @@ export default function CmsPage() {
     load()
   }, [load])
 
+  const closeForm = () => {
+    if (saving) return
+    setOpen(false)
+    setErrors({})
+    setFormError('')
+  }
+
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setErrors({})
+    setFormError('')
     setOpen(true)
   }
 
@@ -49,6 +69,8 @@ export default function CmsPage() {
       cms_desc_french: row.cms_desc_french || '',
       cms_status: row.cms_status ?? 1,
     })
+    setErrors({})
+    setFormError('')
     setOpen(true)
   }
 
@@ -58,24 +80,37 @@ export default function CmsPage() {
       ...f,
       [name]: name === 'cms_status' ? Number(value) : value,
     }))
+    setErrors((prev) => ({ ...prev, [name]: '' }))
+    setFormError('')
   }
 
   const save = async () => {
-    if (!form.cms_title.trim()) {
-      toast.error('Title is required')
+    const next = collectErrors({
+      cms_title: requiredText(form.cms_title, 'Title (EN)'),
+      cms_url: requiredText(form.cms_url, 'URL'),
+    })
+    setErrors(next)
+    if (Object.keys(next).length) {
+      const msg = firstError(next)
+      setFormError(msg)
+      toast.error(msg)
       return
     }
+
     setSaving(true)
+    setFormError('')
     const id = editing?.cms_id ?? editing?.id
     const res = editing
       ? await cmsApi.update(id, form)
       : await cmsApi.create(form)
     setSaving(false)
-    if (res.ok) {
-      toast.success(editing ? 'Page updated' : 'Page created')
-      setOpen(false)
-      load()
+    if (!res.ok) {
+      setFormError(res.message || 'Failed to save page')
+      return
     }
+    toast.success(editing ? 'Page updated successfully' : 'Page created successfully')
+    setOpen(false)
+    load()
   }
 
   const remove = async (row) => {
@@ -127,11 +162,17 @@ export default function CmsPage() {
       <Modal
         open
         title={editing ? 'Edit CMS page' : 'New CMS page'}
-        onClose={() => setOpen(false)}
+        onClose={closeForm}
         wide
+        busy={saving}
         footer={
           <>
-            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={closeForm}
+              disabled={saving}
+            >
               Cancel
             </button>
             <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
@@ -140,42 +181,41 @@ export default function CmsPage() {
           </>
         }
       >
+        <p className="legend-required">
+          <span className="req-star">*</span> Required fields
+        </p>
+        {formError ? <div className="form-alert">{formError}</div> : null}
+
         <div className="form-grid">
-          <div className="form-field">
-            <label>Title (EN)</label>
+          <Field label="Title (EN)" required error={errors.cms_title}>
             <input name="cms_title" value={form.cms_title} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Title (AR)</label>
+          </Field>
+          <Field label="Title (AR)">
             <input
               name="cms_title_french"
               value={form.cms_title_french}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field full">
-            <label>URL</label>
+          </Field>
+          <Field label="URL" required className="full" error={errors.cms_url}>
             <input name="cms_url" value={form.cms_url} onChange={onChange} />
-          </div>
-          <div className="form-field full">
-            <label>Content (EN)</label>
+          </Field>
+          <Field label="Content (EN)" className="full">
             <textarea name="cms_desc" value={form.cms_desc} onChange={onChange} />
-          </div>
-          <div className="form-field full">
-            <label>Content (AR)</label>
+          </Field>
+          <Field label="Content (AR)" className="full">
             <textarea
               name="cms_desc_french"
               value={form.cms_desc_french}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field">
-            <label>Status</label>
+          </Field>
+          <Field label="Status" required>
             <select name="cms_status" value={form.cms_status} onChange={onChange}>
               <option value={1}>Active</option>
               <option value={0}>Inactive</option>
             </select>
-          </div>
+          </Field>
         </div>
       </Modal>
     )
@@ -199,6 +239,9 @@ export default function CmsPage() {
           rows={rows}
           rowKey={(r) => r.cms_id ?? r.id}
           loading={loading}
+          error={listError}
+          onRetry={load}
+          emptyMessage="No CMS pages yet."
         />
       </div>
     </div>

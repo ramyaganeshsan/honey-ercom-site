@@ -2,14 +2,17 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { authApi } from '../api/adminApi'
+import Field from '../components/Field'
 import { getToken, setToken } from '../api/client'
+import { collectErrors, firstError, requiredText } from '../utils/form'
 
 export default function Login() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('admin@thunayanhoney.com')
-  const [password, setPassword] = useState('Admin@123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState({})
+  const [formError, setFormError] = useState('')
 
   if (getToken()) {
     return <Navigate to="/" replace />
@@ -17,21 +20,32 @@ export default function Login() {
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    setFormError('')
+    const next = collectErrors({
+      email: requiredText(email, 'Email'),
+      password: requiredText(password, 'Password'),
+    })
+    setErrors(next)
+    if (Object.keys(next).length) {
+      toast.error(firstError(next))
+      return
+    }
+
     setLoading(true)
-    const res = await authApi.login({ email, password })
+    const res = await authApi.login({ email: email.trim(), password })
     setLoading(false)
 
     if (!res.ok) {
-      setError(res.message || 'Login failed')
-      toast.error(res.message || 'Login failed')
+      const msg = res.message || 'Login failed'
+      setFormError(msg)
       return
     }
 
     const token = res.data?.token || res.raw?.token
     if (!token) {
-      setError('No token returned from server')
-      toast.error('No token returned from server')
+      const msg = 'Login failed: no token returned from server'
+      setFormError(msg)
+      toast.error(msg)
       return
     }
 
@@ -48,30 +62,36 @@ export default function Login() {
         </h1>
         <p className="login-sub">Sign in to the admin panel</p>
 
-        <form onSubmit={onSubmit}>
-          <div className="form-field">
-            <label htmlFor="email">Email</label>
+        <form onSubmit={onSubmit} noValidate>
+          <p className="legend-required">
+            <span className="req-star">*</span> Required fields
+          </p>
+          {formError ? <div className="form-alert">{formError}</div> : null}
+
+          <Field label="Email" required error={errors.email}>
             <input
               id="email"
               type="email"
               autoComplete="username"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setErrors((prev) => ({ ...prev, email: '' }))
+              }}
             />
-          </div>
-          <div className="form-field">
-            <label htmlFor="password">Password</label>
+          </Field>
+          <Field label="Password" required error={errors.password}>
             <input
               id="password"
               type="password"
               autoComplete="current-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setErrors((prev) => ({ ...prev, password: '' }))
+              }}
             />
-          </div>
-          {error ? <p className="error-text">{error}</p> : null}
+          </Field>
           <button
             type="submit"
             className="btn btn-primary"
@@ -81,11 +101,6 @@ export default function Login() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-
-        <div className="login-hint">
-          Default login: <strong>admin@thunayanhoney.com</strong> /{' '}
-          <strong>Admin@123</strong>
-        </div>
       </div>
     </div>
   )

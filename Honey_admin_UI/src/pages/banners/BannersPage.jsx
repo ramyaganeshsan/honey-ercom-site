@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { bannersApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
+import Field from '../../components/Field'
 import Modal from '../../components/Modal'
 import { bannerImageUrl } from '../../utils/assets'
+import { collectErrors, firstError, requiredText } from '../../utils/form'
 import { isActiveStatus, pickList } from '../../utils/format'
 
 const emptyForm = {
@@ -21,9 +23,12 @@ const emptyForm = {
 export default function BannersPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [listError, setListError] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [errors, setErrors] = useState({})
+  const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState('')
@@ -31,8 +36,14 @@ export default function BannersPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setListError('')
     const res = await bannersApi.list({ page: 1, limit: 50 })
-    setRows(pickList(res.data))
+    if (!res.ok) {
+      setRows([])
+      setListError(res.message || 'Failed to load banners')
+    } else {
+      setRows(pickList(res.data))
+    }
     setLoading(false)
   }, [])
 
@@ -56,9 +67,18 @@ export default function BannersPage() {
     setImagePreview('')
   }
 
+  const closeForm = () => {
+    if (saving) return
+    setOpen(false)
+    setErrors({})
+    setFormError('')
+  }
+
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setErrors({})
+    setFormError('')
     resetImage()
     setOpen(true)
   }
@@ -76,6 +96,8 @@ export default function BannersPage() {
       status: row.status ?? 1,
       product: row.product ?? 0,
     })
+    setErrors({})
+    setFormError('')
     resetImage()
     const id = row.banner_id ?? row.id
     setImagePreview(bannerImageUrl(id, Date.now()))
@@ -94,6 +116,8 @@ export default function BannersPage() {
           ? Number(value)
           : value,
     }))
+    setErrors((prev) => ({ ...prev, [name]: '' }))
+    setFormError('')
   }
 
   const onImageChange = (e) => {
@@ -104,19 +128,24 @@ export default function BannersPage() {
     }
     setImageFile(file)
     setImagePreview(URL.createObjectURL(file))
+    setErrors((prev) => ({ ...prev, image: '' }))
   }
 
   const save = async () => {
-    if (!form.image_title.trim()) {
-      toast.error('Title is required')
-      return
-    }
-    if (!editing && !imageFile) {
-      toast.error('Banner image is required')
+    const next = collectErrors({
+      image_title: requiredText(form.image_title, 'Title (EN)'),
+      image: !editing && !imageFile ? 'Banner image is required' : '',
+    })
+    setErrors(next)
+    if (Object.keys(next).length) {
+      const msg = firstError(next)
+      setFormError(msg)
+      toast.error(msg)
       return
     }
 
     setSaving(true)
+    setFormError('')
     const id = editing?.banner_id ?? editing?.id
     const res = editing
       ? await bannersApi.update(id, form)
@@ -124,15 +153,23 @@ export default function BannersPage() {
 
     if (!res.ok) {
       setSaving(false)
+      setFormError(res.message || 'Failed to save banner')
       return
     }
 
     const savedId = res.data?.banner_id ?? id
-    if (imageFile && savedId) {
+    if (imageFile) {
+      if (!savedId) {
+        setSaving(false)
+        toast.error('Banner saved, but image could not be uploaded (missing ID)')
+        setOpen(false)
+        load()
+        return
+      }
       const up = await bannersApi.uploadImage(savedId, imageFile)
       if (!up.ok) {
         setSaving(false)
-        toast.error('Banner saved, but image upload failed')
+        toast.error(up.message || 'Banner saved, but image upload failed')
         setOpen(false)
         load()
         return
@@ -141,7 +178,7 @@ export default function BannersPage() {
     }
 
     setSaving(false)
-    toast.success(editing ? 'Banner updated' : 'Banner created')
+    toast.success(editing ? 'Banner updated successfully' : 'Banner created successfully')
     setOpen(false)
     load()
   }
@@ -201,7 +238,7 @@ export default function BannersPage() {
             Edit
           </button>
           <button type="button" className="btn btn-danger btn-sm" onClick={() => remove(r)}>
-            Delete
+            Deactivate
           </button>
         </div>
       ),
@@ -213,22 +250,38 @@ export default function BannersPage() {
       <Modal
         open
         title={editing ? 'Edit banner' : 'New banner'}
-        onClose={() => setOpen(false)}
+        onClose={closeForm}
         wide
+        busy={saving}
         footer={
           <>
-            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={closeForm}
+              disabled={saving}
+            >
               Cancel
             </button>
             <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? 'Saving…' : 'Save banner'}
             </button>
           </>
         }
       >
+        <p className="legend-required">
+          <span className="req-star">*</span> Required fields
+        </p>
+        {formError ? <div className="form-alert">{formError}</div> : null}
+
         <div className="form-grid">
-          <div className="form-field full">
-            <label>Banner image</label>
+          <Field
+            label="Banner image"
+            required={!editing}
+            className="full"
+            error={errors.image}
+            hint="Saved as {banner_id}.png under cloud/uploads/banner_images/"
+          >
             <div className="image-upload">
               {imagePreview ? (
                 <img className="image-preview wide" src={imagePreview} alt="Banner preview" />
@@ -237,68 +290,51 @@ export default function BannersPage() {
               )}
               <div>
                 <input type="file" accept="image/*" onChange={onImageChange} />
-                <p className="field-hint">
-                  Saved as {'{banner_id}.png'} under cloud/uploads/banner_images/
-                </p>
               </div>
             </div>
-          </div>
+          </Field>
 
-          <div className="form-field">
-            <label>Title (EN)</label>
+          <Field label="Title (EN)" required error={errors.image_title}>
             <input name="image_title" value={form.image_title} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Title (AR)</label>
+          </Field>
+          <Field label="Title (AR)">
             <input
               name="image_title_french"
               value={form.image_title_french}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field full">
-            <label>Info (EN)</label>
+          </Field>
+          <Field label="Info (EN)" className="full">
             <textarea name="image_info" value={form.image_info} onChange={onChange} />
-          </div>
-          <div className="form-field full">
-            <label>Info (AR)</label>
+          </Field>
+          <Field label="Info (AR)" className="full">
             <textarea
               name="image_info_french"
               value={form.image_info_french}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field">
-            <label>Redirect URL</label>
+          </Field>
+          <Field label="Redirect URL">
             <input name="redirect_url" value={form.redirect_url} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Linked product ID</label>
+          </Field>
+          <Field label="Linked product ID">
             <input name="product" type="number" value={form.product} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Position</label>
-            <input
-              name="position"
-              type="number"
-              value={form.position}
-              onChange={onChange}
-            />
-          </div>
-          <div className="form-field">
-            <label>Home banner</label>
+          </Field>
+          <Field label="Position">
+            <input name="position" type="number" value={form.position} onChange={onChange} />
+          </Field>
+          <Field label="Home banner" required>
             <select name="home" value={form.home} onChange={onChange}>
               <option value={1}>Yes</option>
               <option value={0}>No</option>
             </select>
-          </div>
-          <div className="form-field">
-            <label>Status</label>
+          </Field>
+          <Field label="Status" required>
             <select name="status" value={form.status} onChange={onChange}>
               <option value={1}>Active</option>
               <option value={0}>Inactive</option>
             </select>
-          </div>
+          </Field>
         </div>
       </Modal>
     )
@@ -322,6 +358,9 @@ export default function BannersPage() {
           rows={rows}
           rowKey={(r) => r.banner_id ?? r.id}
           loading={loading}
+          error={listError}
+          onRetry={load}
+          emptyMessage="No banners yet. Add your first banner."
         />
       </div>
     </div>

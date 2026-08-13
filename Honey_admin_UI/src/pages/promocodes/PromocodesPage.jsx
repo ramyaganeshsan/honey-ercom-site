@@ -2,7 +2,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { promocodesApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
+import Field from '../../components/Field'
 import Modal from '../../components/Modal'
+import {
+  collectErrors,
+  firstError,
+  requiredNumber,
+  requiredText,
+} from '../../utils/form'
 import { formatDate, isActiveStatus, pickList } from '../../utils/format'
 
 const emptyForm = {
@@ -19,15 +26,24 @@ const emptyForm = {
 export default function PromocodesPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [listError, setListError] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [errors, setErrors] = useState({})
+  const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setListError('')
     const res = await promocodesApi.list({ page: 1, limit: 50 })
-    setRows(pickList(res.data))
+    if (!res.ok) {
+      setRows([])
+      setListError(res.message || 'Failed to load promocodes')
+    } else {
+      setRows(pickList(res.data))
+    }
     setLoading(false)
   }, [])
 
@@ -35,9 +51,18 @@ export default function PromocodesPage() {
     load()
   }, [load])
 
+  const closeForm = () => {
+    if (saving) return
+    setOpen(false)
+    setErrors({})
+    setFormError('')
+  }
+
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setErrors({})
+    setFormError('')
     setOpen(true)
   }
 
@@ -53,22 +78,47 @@ export default function PromocodesPage() {
       starts_at: row.starts_at ? String(row.starts_at).slice(0, 10) : '',
       expires_at: row.expires_at ? String(row.expires_at).slice(0, 10) : '',
     })
+    setErrors({})
+    setFormError('')
     setOpen(true)
   }
 
   const onChange = (e) => {
     const { name, value } = e.target
     setForm((f) => ({ ...f, [name]: value }))
+    setErrors((prev) => ({ ...prev, [name]: '' }))
+    setFormError('')
   }
 
   const save = async () => {
-    if (!form.code.trim() || !form.title.trim()) {
-      toast.error('Title and code are required')
+    const next = collectErrors({
+      title: requiredText(form.title, 'Title'),
+      code: requiredText(form.code, 'Code'),
+      discount: requiredNumber(form.discount, 'Discount', {
+        min: 0,
+        allowZero: false,
+      }),
+    })
+    if (Number(form.type) === 1 && Number(form.discount) > 100) {
+      next.discount = 'Percentage discount cannot exceed 100'
+    }
+    if (form.starts_at && form.expires_at && form.starts_at > form.expires_at) {
+      next.expires_at = 'Expiry date must be after start date'
+    }
+    setErrors(next)
+    if (Object.keys(next).length) {
+      const msg = firstError(next)
+      setFormError(msg)
+      toast.error(msg)
       return
     }
+
     setSaving(true)
+    setFormError('')
     const payload = {
       ...form,
+      title: form.title.trim(),
+      code: form.code.trim(),
       discount: Number(form.discount) || 0,
       type: Number(form.type),
       status: Number(form.status),
@@ -79,11 +129,13 @@ export default function PromocodesPage() {
       ? await promocodesApi.update(id, payload)
       : await promocodesApi.create(payload)
     setSaving(false)
-    if (res.ok) {
-      toast.success(editing ? 'Promocode updated' : 'Promocode created')
-      setOpen(false)
-      load()
+    if (!res.ok) {
+      setFormError(res.message || 'Failed to save promocode')
+      return
     }
+    toast.success(editing ? 'Promocode updated successfully' : 'Promocode created successfully')
+    setOpen(false)
+    load()
   }
 
   const remove = async (row) => {
@@ -141,10 +193,16 @@ export default function PromocodesPage() {
       <Modal
         open
         title={editing ? 'Edit promocode' : 'New promocode'}
-        onClose={() => setOpen(false)}
+        onClose={closeForm}
+        busy={saving}
         footer={
           <>
-            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={closeForm}
+              disabled={saving}
+            >
               Cancel
             </button>
             <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
@@ -153,65 +211,47 @@ export default function PromocodesPage() {
           </>
         }
       >
+        <p className="legend-required">
+          <span className="req-star">*</span> Required fields
+        </p>
+        {formError ? <div className="form-alert">{formError}</div> : null}
+
         <div className="form-grid">
-          <div className="form-field">
-            <label>Title</label>
+          <Field label="Title" required error={errors.title}>
             <input name="title" value={form.title} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Code</label>
+          </Field>
+          <Field label="Code" required error={errors.code}>
             <input name="code" value={form.code} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Discount</label>
-            <input
-              name="discount"
-              type="number"
-              value={form.discount}
-              onChange={onChange}
-            />
-          </div>
-          <div className="form-field">
-            <label>Type</label>
+          </Field>
+          <Field label="Discount" required error={errors.discount}>
+            <input name="discount" type="number" value={form.discount} onChange={onChange} />
+          </Field>
+          <Field label="Type" required>
             <select name="type" value={form.type} onChange={onChange}>
               <option value={1}>Percentage</option>
               <option value={2}>Fixed amount</option>
             </select>
-          </div>
-          <div className="form-field">
-            <label>Minimum total</label>
+          </Field>
+          <Field label="Minimum total">
             <input
               name="minimum_total"
               type="number"
               value={form.minimum_total}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field">
-            <label>Status</label>
+          </Field>
+          <Field label="Status" required>
             <select name="status" value={form.status} onChange={onChange}>
               <option value={1}>Active</option>
               <option value={0}>Inactive</option>
             </select>
-          </div>
-          <div className="form-field">
-            <label>Starts</label>
-            <input
-              name="starts_at"
-              type="date"
-              value={form.starts_at}
-              onChange={onChange}
-            />
-          </div>
-          <div className="form-field">
-            <label>Expires</label>
-            <input
-              name="expires_at"
-              type="date"
-              value={form.expires_at}
-              onChange={onChange}
-            />
-          </div>
+          </Field>
+          <Field label="Starts">
+            <input name="starts_at" type="date" value={form.starts_at} onChange={onChange} />
+          </Field>
+          <Field label="Expires" error={errors.expires_at}>
+            <input name="expires_at" type="date" value={form.expires_at} onChange={onChange} />
+          </Field>
         </div>
       </Modal>
     )
@@ -230,7 +270,15 @@ export default function PromocodesPage() {
       </div>
 
       <div className="panel">
-        <DataTable columns={columns} rows={rows} rowKey="id" loading={loading} />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowKey="id"
+          loading={loading}
+          error={listError}
+          onRetry={load}
+          emptyMessage="No promocodes yet."
+        />
       </div>
     </div>
   )

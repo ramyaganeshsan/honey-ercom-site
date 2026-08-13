@@ -8,12 +8,19 @@ import { formatDate, formatMoney, pickList } from '../../utils/format'
 export function OrdersListPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [listError, setListError] = useState('')
   const navigate = useNavigate()
 
   const load = useCallback(async () => {
     setLoading(true)
+    setListError('')
     const res = await ordersApi.list({ page: 1, limit: 50 })
-    setRows(pickList(res.data))
+    if (!res.ok) {
+      setRows([])
+      setListError(res.message || 'Failed to load orders')
+    } else {
+      setRows(pickList(res.data))
+    }
     setLoading(false)
   }, [])
 
@@ -85,6 +92,9 @@ export function OrdersListPage() {
           rows={rows}
           rowKey={(r) => r.order_id || r.id || r.cart_id}
           loading={loading}
+          error={listError}
+          onRetry={load}
+          emptyMessage="No orders found."
         />
       </div>
     </div>
@@ -97,13 +107,19 @@ export function OrderDetailPage() {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     let alive = true
     ;(async () => {
       const res = await ordersApi.get(id)
       if (!alive) return
-      setOrder(res.ok ? res.data : null)
+      if (!res.ok) {
+        setOrder(null)
+        setLoading(false)
+        return
+      }
+      setOrder(res.data)
       setStatus(res.data?.payment_status || res.data?.status || '')
       setLoading(false)
     })()
@@ -113,11 +129,19 @@ export function OrderDetailPage() {
   }, [id])
 
   const saveStatus = async () => {
-    const res = await ordersApi.updateStatus(id, { status, payment_status: status })
-    if (res.ok) {
-      toast.success('Order status updated')
-      setOrder(res.data || { ...order, payment_status: status, status })
+    if (!status) {
+      toast.error('Select a status first')
+      return
     }
+    setSaving(true)
+    const res = await ordersApi.updateStatus(id, { payment_status: status, status })
+    setSaving(false)
+    if (!res.ok) {
+      toast.error(res.message || 'Failed to update order status')
+      return
+    }
+    toast.success('Order status updated successfully')
+    setOrder(res.data || { ...order, payment_status: status, status })
   }
 
   if (loading) return <div className="loading-block">Loading order…</div>
@@ -188,8 +212,13 @@ export function OrderDetailPage() {
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
-            <button type="button" className="btn btn-primary" onClick={saveStatus}>
-              Update status
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={saveStatus}
+              disabled={saving}
+            >
+              {saving ? 'Updating…' : 'Update status'}
             </button>
           </div>
         </div>

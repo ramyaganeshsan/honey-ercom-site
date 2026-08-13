@@ -44,6 +44,7 @@ export default function ShippingPage() {
   const [tab, setTab] = useState('countries')
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [listError, setListError] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY.countries)
@@ -53,8 +54,14 @@ export default function ShippingPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setListError('')
     const res = await shippingApi[tab].list({ page: 1, limit: 100 })
-    setRows(pickList(res.data))
+    if (!res.ok) {
+      setRows([])
+      setListError(res.message || 'Failed to load shipping data')
+    } else {
+      setRows(pickList(res.data))
+    }
     setLoading(false)
   }, [tab])
 
@@ -90,15 +97,28 @@ export default function ShippingPage() {
   }
 
   const save = async () => {
+    const nameKey =
+      tab === 'countries'
+        ? 'country_name'
+        : tab === 'states'
+          ? 'state_name'
+          : 'city_name'
+    if (!String(form[nameKey] || '').trim()) {
+      toast.error('Name is required')
+      return
+    }
     setSaving(true)
     const id = idOf(editing)
-    const res = editing ? await api.update(id, form) : await api.create(form)
+    const payload = { ...EMPTY[tab], ...form }
+    const res = editing ? await api.update(id, payload) : await api.create(payload)
     setSaving(false)
-    if (res.ok) {
-      toast.success(editing ? 'Updated' : 'Created')
-      setOpen(false)
-      load()
+    if (!res.ok) {
+      toast.error(res.message || 'Failed to save')
+      return
     }
+    toast.success(editing ? 'Updated successfully' : 'Created successfully')
+    setOpen(false)
+    load()
   }
 
   const remove = async (row) => {
@@ -243,6 +263,9 @@ export default function ShippingPage() {
           rows={rows}
           rowKey={(r) => idOf(r)}
           loading={loading}
+          error={listError}
+          onRetry={load}
+          emptyMessage={`No ${tab} found.`}
         />
       </div>
     </div>

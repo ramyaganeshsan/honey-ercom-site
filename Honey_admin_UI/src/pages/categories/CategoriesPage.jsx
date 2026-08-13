@@ -3,7 +3,14 @@ import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { categoriesApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
+import Field from '../../components/Field'
 import Modal from '../../components/Modal'
+import {
+  collectErrors,
+  firstError,
+  requiredSelect,
+  requiredText,
+} from '../../utils/form'
 import { isActiveStatus, pickList } from '../../utils/format'
 
 const emptyCategory = {
@@ -34,18 +41,27 @@ function slugify(text) {
 }
 
 export default function CategoriesPage() {
-  const [tab, setTab] = useState('categories') // categories | subcategories
+  const [tab, setTab] = useState('categories')
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [listError, setListError] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyCategory)
+  const [errors, setErrors] = useState({})
+  const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setListError('')
     const res = await categoriesApi.list({ page: 1, limit: 200 })
-    setRows(pickList(res.data))
+    if (!res.ok) {
+      setRows([])
+      setListError(res.message || 'Failed to load categories')
+    } else {
+      setRows(pickList(res.data))
+    }
     setLoading(false)
   }, [])
 
@@ -68,6 +84,13 @@ export default function CategoriesPage() {
     return p?.category_name || `Category #${parentId}`
   }
 
+  const closeForm = () => {
+    if (saving) return
+    setOpen(false)
+    setErrors({})
+    setFormError('')
+  }
+
   const openCreate = (mode = tab, parentId = '') => {
     const nextTab = mode === 'subcategories' ? 'subcategories' : 'categories'
     if (nextTab === 'subcategories' && categories.length === 0) {
@@ -77,6 +100,8 @@ export default function CategoriesPage() {
     }
     setTab(nextTab)
     setEditing(null)
+    setErrors({})
+    setFormError('')
     setForm(
       nextTab === 'categories'
         ? { ...emptyCategory }
@@ -89,6 +114,8 @@ export default function CategoriesPage() {
     const isSub = Number(row.main_category_id) > 0
     setTab(isSub ? 'subcategories' : 'categories')
     setEditing(row)
+    setErrors({})
+    setFormError('')
     setForm({
       category_name: row.category_name || '',
       category_name_french: row.category_name_french || '',
@@ -111,21 +138,31 @@ export default function CategoriesPage() {
           ? Number(value)
           : value,
     }))
+    setErrors((prev) => ({ ...prev, [name]: '' }))
+    setFormError('')
   }
 
   const save = async () => {
-    if (!form.category_name.trim()) {
-      toast.error('Name is required')
-      return
-    }
-
     const isSubTab = tab === 'subcategories'
-    if (isSubTab && !Number(form.main_category_id)) {
-      toast.error('Select the parent Category for this Sub category')
+    const next = collectErrors({
+      category_name: requiredText(
+        form.category_name,
+        isSubTab ? 'Sub category name' : 'Category name'
+      ),
+      main_category_id: isSubTab
+        ? requiredSelect(form.main_category_id, 'Parent category')
+        : '',
+    })
+    setErrors(next)
+    if (Object.keys(next).length) {
+      const msg = firstError(next)
+      setFormError(msg)
+      toast.error(msg)
       return
     }
 
     setSaving(true)
+    setFormError('')
     const id = editing?.category_id ?? editing?.id
     const parentId = isSubTab ? Number(form.main_category_id) : 0
     const payload = {
@@ -143,30 +180,36 @@ export default function CategoriesPage() {
       ? await categoriesApi.update(id, payload)
       : await categoriesApi.create(payload)
     setSaving(false)
-    if (res.ok) {
-      toast.success(
-        editing
-          ? isSubTab
-            ? 'Sub category updated'
-            : 'Category updated'
-          : isSubTab
-            ? 'Sub category created'
-            : 'Category created'
-      )
-      setOpen(false)
-      load()
+    if (!res.ok) {
+      setFormError(res.message || 'Failed to save')
+      return
     }
+    toast.success(
+      editing
+        ? isSubTab
+          ? 'Sub category updated successfully'
+          : 'Category updated successfully'
+        : isSubTab
+          ? 'Sub category created successfully'
+          : 'Category created successfully'
+    )
+    setOpen(false)
+    load()
   }
 
   const remove = async (row) => {
     const isSub = Number(row.main_category_id) > 0
-    if (!window.confirm(`Delete this ${isSub ? 'sub category' : 'category'}?`)) {
+    if (
+      !window.confirm(
+        `Deactivate this ${isSub ? 'sub category' : 'category'}?`
+      )
+    ) {
       return
     }
     const id = row.category_id ?? row.id
     const res = await categoriesApi.remove(id)
     if (res.ok) {
-      toast.success(isSub ? 'Sub category deleted' : 'Category deleted')
+      toast.success(isSub ? 'Sub category deactivated' : 'Category deactivated')
       load()
     }
   }
@@ -183,10 +226,8 @@ export default function CategoriesPage() {
       header: 'Sub categories',
       render: (r) => {
         const id = r.category_id ?? r.id
-        const count = subcategories.filter(
-          (s) => Number(s.main_category_id) === Number(id)
-        ).length
-        return count
+        return subcategories.filter((s) => Number(s.main_category_id) === Number(id))
+          .length
       },
     },
     { key: 'category_url', header: 'URL' },
@@ -216,7 +257,7 @@ export default function CategoriesPage() {
             Add sub
           </button>
           <button type="button" className="btn btn-danger btn-sm" onClick={() => remove(r)}>
-            Delete
+            Deactivate
           </button>
         </div>
       ),
@@ -255,7 +296,7 @@ export default function CategoriesPage() {
             Edit
           </button>
           <button type="button" className="btn btn-danger btn-sm" onClick={() => remove(r)}>
-            Delete
+            Deactivate
           </button>
         </div>
       ),
@@ -279,10 +320,16 @@ export default function CategoriesPage() {
               ? 'Add sub category'
               : 'Add category'
         }
-        onClose={() => setOpen(false)}
+        onClose={closeForm}
+        busy={saving}
         footer={
           <>
-            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={closeForm}
+              disabled={saving}
+            >
               Cancel
             </button>
             <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
@@ -291,6 +338,11 @@ export default function CategoriesPage() {
           </>
         }
       >
+        <p className="legend-required">
+          <span className="req-star">*</span> Required fields
+        </p>
+        {formError ? <div className="form-alert">{formError}</div> : null}
+
         <div className="flow-steps compact">
           <span className={!isSubForm ? 'active' : 'done'}>1. Category</span>
           <span className={isSubForm ? 'active' : ''}>2. Sub category</span>
@@ -299,8 +351,13 @@ export default function CategoriesPage() {
 
         <div className="form-grid">
           {isSubForm ? (
-            <div className="form-field full">
-              <label>1. Parent category (required)</label>
+            <Field
+              label="1. Parent category"
+              required
+              className="full"
+              error={errors.main_category_id}
+              hint="Sub category must belong to one Category. Example: Honey → Natural Honey"
+            >
               <select
                 name="main_category_id"
                 value={form.main_category_id || ''}
@@ -313,44 +370,35 @@ export default function CategoriesPage() {
                   </option>
                 ))}
               </select>
-              <p className="field-hint">
-                Sub category must belong to one Category. Example: Honey → Natural Honey
-              </p>
-            </div>
+            </Field>
           ) : null}
 
-          <div className="form-field">
-            <label>{isSubForm ? '2. Sub category name (EN)' : 'Category name (EN)'}</label>
+          <Field
+            label={isSubForm ? '2. Sub category name (EN)' : 'Category name (EN)'}
+            required
+            error={errors.category_name}
+          >
             <input name="category_name" value={form.category_name} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>{isSubForm ? 'Sub category name (AR)' : 'Category name (AR)'}</label>
+          </Field>
+          <Field label={isSubForm ? 'Sub category name (AR)' : 'Category name (AR)'}>
             <input
               name="category_name_french"
               value={form.category_name_french}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field">
-            <label>URL slug</label>
-            <input
-              name="category_url"
-              value={form.category_url}
-              onChange={onChange}
-              placeholder="auto from name if empty"
-            />
-          </div>
-          <div className="form-field">
-            <label>Sort order</label>
+          </Field>
+          <Field label="URL slug" hint="Auto from name if empty">
+            <input name="category_url" value={form.category_url} onChange={onChange} />
+          </Field>
+          <Field label="Sort order">
             <input
               name="sort_order"
               type="number"
               value={form.sort_order}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field">
-            <label>Status</label>
+          </Field>
+          <Field label="Status" required>
             <select
               name="category_status"
               value={form.category_status}
@@ -359,7 +407,7 @@ export default function CategoriesPage() {
               <option value={1}>Active</option>
               <option value={0}>Inactive</option>
             </select>
-          </div>
+          </Field>
         </div>
       </Modal>
     )
@@ -442,6 +490,13 @@ export default function CategoriesPage() {
             rows={listRows}
             rowKey={(r) => r.category_id ?? r.id}
             loading={loading}
+            error={listError}
+            onRetry={load}
+            emptyMessage={
+              isSubForm
+                ? 'No sub categories yet. Add one under a Category.'
+                : 'No categories yet. Add your first Category.'
+            }
           />
         </div>
       )}

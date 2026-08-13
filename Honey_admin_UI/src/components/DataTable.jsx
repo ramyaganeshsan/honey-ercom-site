@@ -3,10 +3,25 @@ export default function DataTable({
   rows = [],
   rowKey = 'id',
   loading = false,
+  error = '',
   emptyMessage = 'No records found',
+  onRetry,
 }) {
   if (loading) {
     return <div className="loading-block">Loading…</div>
+  }
+
+  if (error) {
+    return (
+      <div className="empty-state error-state">
+        <p>{error}</p>
+        {onRetry ? (
+          <button type="button" className="btn btn-primary btn-sm" onClick={onRetry}>
+            Retry
+          </button>
+        ) : null}
+      </div>
+    )
   }
 
   if (!rows.length) {
@@ -35,9 +50,7 @@ export default function DataTable({
             <tr key={getKey(row, index)}>
               {columns.map((col) => (
                 <td key={col.key || col.header}>
-                  {col.render
-                    ? col.render(row, index)
-                    : (row[col.key] ?? '—')}
+                  {col.render ? col.render(row, index) : (row[col.key] ?? '—')}
                 </td>
               ))}
             </tr>

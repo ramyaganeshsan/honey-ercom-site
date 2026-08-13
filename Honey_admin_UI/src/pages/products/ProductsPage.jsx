@@ -3,8 +3,16 @@ import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { categoriesApi, productsApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
+import Field from '../../components/Field'
 import Modal from '../../components/Modal'
 import { productImageUrl } from '../../utils/assets'
+import {
+  collectErrors,
+  firstError,
+  requiredNumber,
+  requiredSelect,
+  requiredText,
+} from '../../utils/form'
 import { formatMoney, isActiveStatus, pickList } from '../../utils/format'
 
 const emptyForm = {
@@ -71,11 +79,14 @@ export default function ProductsPage() {
   const [rows, setRows] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [listError, setListError] = useState('')
   const [search, setSearch] = useState('')
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [errors, setErrors] = useState({})
+  const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState('')
@@ -83,12 +94,18 @@ export default function ProductsPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setListError('')
     const [prodRes, catRes] = await Promise.all([
       productsApi.list({ search: q || undefined, page: 1, limit: 50 }),
       categoriesApi.list({ page: 1, limit: 200 }),
     ])
-    setRows(pickList(prodRes.data))
-    setCategories(pickList(catRes.data))
+    if (!prodRes.ok) {
+      setRows([])
+      setListError(prodRes.message || 'Failed to load products')
+    } else {
+      setRows(pickList(prodRes.data))
+    }
+    if (catRes.ok) setCategories(pickList(catRes.data))
     setLoading(false)
   }, [q])
 
@@ -131,9 +148,18 @@ export default function ProductsPage() {
     setImagePreview('')
   }
 
+  const closeForm = () => {
+    if (saving) return
+    setOpen(false)
+    setErrors({})
+    setFormError('')
+  }
+
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setErrors({})
+    setFormError('')
     resetImage()
     setOpen(true)
   }
@@ -141,6 +167,8 @@ export default function ProductsPage() {
   const openEdit = (row) => {
     setEditing(row)
     setForm(mapRowToForm(row))
+    setErrors({})
+    setFormError('')
     resetImage()
     setImagePreview(productImageUrl(row.deal_key, Date.now()))
     setOpen(true)
@@ -164,6 +192,8 @@ export default function ProductsPage() {
       }
       return { ...f, [name]: value }
     })
+    setErrors((prev) => ({ ...prev, [name]: '' }))
+    setFormError('')
   }
 
   const onImageChange = (e) => {
@@ -174,6 +204,7 @@ export default function ProductsPage() {
     }
     setImageFile(file)
     setImagePreview(URL.createObjectURL(file))
+    setErrors((prev) => ({ ...prev, image: '' }))
   }
 
   const buildPayload = () => {
@@ -218,24 +249,45 @@ export default function ProductsPage() {
     }
   }
 
-  const save = async () => {
-    if (!form.deal_title.trim()) {
-      toast.error('Title is required')
-      return
-    }
-    if (!Number(form.category_id)) {
-      toast.error('Select Category first (step 1)')
-      return
-    }
-    if (subCategories.length > 0 && !Number(form.sub_category_id)) {
-      toast.error('Select Sub category (step 2) under the chosen Category')
-      return
-    }
+  const validate = () => {
+    const next = collectErrors({
+      category_id: requiredSelect(form.category_id, 'Category'),
+      sub_category_id:
+        subCategories.length > 0
+          ? requiredSelect(form.sub_category_id, 'Sub category')
+          : '',
+      deal_title: requiredText(form.deal_title, 'Title (EN)'),
+      deal_value: requiredNumber(form.deal_value, 'Original price', { min: 0 }),
+      deal_price: requiredNumber(form.deal_price, 'Sale price', { min: 0 }),
+      user_limit_quantity: requiredNumber(form.user_limit_quantity, 'Stock', {
+        min: 0,
+      }),
+    })
     if (parentCategories.length === 0) {
-      toast.error('Create a Category first in Categories menu')
+      next.category_id = 'Create a Category first in Categories menu'
+    }
+    if (
+      form.deal_value !== '' &&
+      form.deal_price !== '' &&
+      Number(form.deal_price) > Number(form.deal_value)
+    ) {
+      next.deal_price = 'Sale price cannot be higher than original price'
+    }
+    return next
+  }
+
+  const save = async () => {
+    const next = validate()
+    setErrors(next)
+    if (Object.keys(next).length) {
+      const msg = firstError(next)
+      setFormError(msg)
+      toast.error(msg)
       return
     }
+
     setSaving(true)
+    setFormError('')
     const payload = buildPayload()
     const id = editing?.deal_id ?? editing?.id
     const res = editing
@@ -244,17 +296,23 @@ export default function ProductsPage() {
 
     if (!res.ok) {
       setSaving(false)
+      setFormError(res.message || 'Failed to save product')
       return
     }
 
     const savedId = res.data?.deal_id ?? id
-    const dealKey = res.data?.deal_key || form.deal_key
-
-    if (imageFile && savedId) {
+    if (imageFile) {
+      if (!savedId) {
+        setSaving(false)
+        toast.error('Product saved, but image could not be uploaded (missing ID)')
+        setOpen(false)
+        load()
+        return
+      }
       const up = await productsApi.uploadImage(savedId, imageFile)
       if (!up.ok) {
         setSaving(false)
-        toast.error('Product saved, but image upload failed')
+        toast.error(up.message || 'Product saved, but image upload failed')
         setOpen(false)
         load()
         return
@@ -263,14 +321,16 @@ export default function ProductsPage() {
     }
 
     setSaving(false)
-    toast.success(editing ? 'Product updated' : 'Product created')
+    toast.success(editing ? 'Product updated successfully' : 'Product created successfully')
     setOpen(false)
-    if (dealKey) setImgBust(Date.now())
+    setImgBust(Date.now())
     load()
   }
 
   const remove = async (row) => {
-    if (!window.confirm('Deactivate this product?')) return
+    if (!window.confirm('Deactivate this product? It will be hidden from the storefront.')) {
+      return
+    }
     const id = row.deal_id ?? row.id
     const res = await productsApi.remove(id)
     if (res.ok) {
@@ -290,6 +350,10 @@ export default function ProductsPage() {
     if (!subId) return parent
     return `${parent} / ${catName(subId)}`
   }
+
+  const step3Active =
+    Boolean(form.category_id) &&
+    (subCategories.length === 0 || Boolean(form.sub_category_id))
 
   const columns = [
     {
@@ -358,7 +422,7 @@ export default function ProductsPage() {
             Edit
           </button>
           <button type="button" className="btn btn-danger btn-sm" onClick={() => remove(r)}>
-            Delete
+            Deactivate
           </button>
         </div>
       ),
@@ -370,36 +434,61 @@ export default function ProductsPage() {
       <Modal
         open
         title={editing ? 'Edit product' : 'New product'}
-        onClose={() => setOpen(false)}
+        onClose={closeForm}
         wide
+        busy={saving}
         footer={
           <>
-            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={closeForm}
+              disabled={saving}
+            >
               Cancel
             </button>
             <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? 'Saving…' : 'Save product'}
             </button>
           </>
         }
       >
+        <p className="legend-required">
+          <span className="req-star">*</span> Required fields
+        </p>
+        {formError ? <div className="form-alert">{formError}</div> : null}
+
         <div className="flow-steps compact">
           <span className={form.category_id ? 'done' : 'active'}>1. Category</span>
           <span
             className={
-              form.sub_category_id ? 'done' : form.category_id ? 'active' : ''
+              form.sub_category_id || (form.category_id && !subCategories.length)
+                ? 'done'
+                : form.category_id
+                  ? 'active'
+                  : ''
             }
           >
             2. Sub category
           </span>
-          <span className={form.category_id && form.sub_category_id ? 'active' : ''}>
-            3. Product
-          </span>
+          <span className={step3Active ? 'active' : ''}>3. Product</span>
         </div>
 
         <div className="form-grid">
-          <div className="form-field">
-            <label>1. Category</label>
+          <Field
+            label="1. Category"
+            required
+            error={errors.category_id}
+            hint={
+              parentCategories.length === 0 ? (
+                <>
+                  No categories yet. <Link to="/categories">Create Category first</Link>
+                </>
+              ) : (
+                ''
+              )
+            }
+          >
             <select name="category_id" value={form.category_id} onChange={onChange}>
               <option value="">Select category</option>
               {parentCategories.map((c) => (
@@ -408,15 +497,23 @@ export default function ProductsPage() {
                 </option>
               ))}
             </select>
-            {parentCategories.length === 0 ? (
-              <p className="field-hint">
-                No categories yet.{' '}
-                <Link to="/categories">Create Category first</Link>
-              </p>
-            ) : null}
-          </div>
-          <div className="form-field">
-            <label>2. Sub category</label>
+          </Field>
+
+          <Field
+            label="2. Sub category"
+            required={subCategories.length > 0}
+            error={errors.sub_category_id}
+            hint={
+              form.category_id && subCategories.length === 0 ? (
+                <>
+                  <Link to="/categories">Add a Sub category</Link> under this Category, then
+                  return here.
+                </>
+              ) : (
+                'Shows only children of the selected Category.'
+              )
+            }
+          >
             <select
               name="sub_category_id"
               value={form.sub_category_id}
@@ -428,7 +525,7 @@ export default function ProductsPage() {
                   ? 'Select category first'
                   : subCategories.length
                     ? 'Select sub category'
-                    : 'No sub categories — add under Categories'}
+                    : 'No sub categories for this category'}
               </option>
               {subCategories.map((c) => (
                 <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
@@ -436,20 +533,9 @@ export default function ProductsPage() {
                 </option>
               ))}
             </select>
-            {form.category_id && subCategories.length === 0 ? (
-              <p className="field-hint">
-                <Link to="/categories">Add a Sub category</Link> under this Category, then
-                return here.
-              </p>
-            ) : (
-              <p className="field-hint">
-                Sub category list shows only children of the selected Category.
-              </p>
-            )}
-          </div>
+          </Field>
 
-          <div className="form-field full">
-            <label>3. Product image</label>
+          <Field label="3. Product image" className="full" error={errors.image}>
             <div className="image-upload">
               {imagePreview ? (
                 <img className="image-preview" src={imagePreview} alt="Product preview" />
@@ -459,65 +545,51 @@ export default function ProductsPage() {
               <div>
                 <input type="file" accept="image/*" onChange={onImageChange} />
                 <p className="field-hint">
-                  Uploads as {'{deal_key}_1.png'} into product image sizes (1000×800, 160×180,
-                  80×80).
+                  Optional. Saved as {'{deal_key}_1.png'} in product image sizes.
                 </p>
               </div>
             </div>
-          </div>
+          </Field>
 
-          <div className="form-field">
-            <label>Title (EN)</label>
+          <Field label="Title (EN)" required error={errors.deal_title}>
             <input name="deal_title" value={form.deal_title} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Title (AR)</label>
+          </Field>
+          <Field label="Title (AR)">
             <input
               name="deal_title_french"
               value={form.deal_title_french}
               onChange={onChange}
             />
-          </div>
+          </Field>
 
-          <div className="form-field">
-            <label>URL slug</label>
-            <input
-              name="url_title"
-              value={form.url_title}
-              onChange={onChange}
-              placeholder="auto from title if empty"
-            />
-          </div>
-          <div className="form-field">
-            <label>Deal key (image filename base)</label>
+          <Field label="URL slug" hint="Auto from title if empty">
+            <input name="url_title" value={form.url_title} onChange={onChange} />
+          </Field>
+          <Field label="Deal key" hint="Image filename base; auto if empty">
             <input
               name="deal_key"
               value={form.deal_key}
               onChange={onChange}
-              placeholder="auto if empty"
               disabled={!!editing}
             />
-          </div>
+          </Field>
 
-          <div className="form-field full">
-            <label>Description (EN)</label>
+          <Field label="Description (EN)" className="full">
             <textarea
               name="deal_description"
               value={form.deal_description}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field full">
-            <label>Description (AR)</label>
+          </Field>
+          <Field label="Description (AR)" className="full">
             <textarea
               name="deal_description_french"
               value={form.deal_description_french}
               onChange={onChange}
             />
-          </div>
+          </Field>
 
-          <div className="form-field">
-            <label>Original price (MRP)</label>
+          <Field label="Original price (MRP)" required error={errors.deal_value}>
             <input
               name="deal_value"
               type="number"
@@ -526,9 +598,8 @@ export default function ProductsPage() {
               value={form.deal_value}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field">
-            <label>Sale / discount price</label>
+          </Field>
+          <Field label="Sale / discount price" required error={errors.deal_price}>
             <input
               name="deal_price"
               type="number"
@@ -537,16 +608,14 @@ export default function ProductsPage() {
               value={form.deal_price}
               onChange={onChange}
             />
-          </div>
+          </Field>
           <div className="form-field full">
             <p className="field-hint">
-              Savings: {formatMoney(savings.amount)} ({savings.pct}%) — saved as deal_savings /
-              deal_percentage
+              Savings: {formatMoney(savings.amount)} ({savings.pct}%)
             </p>
           </div>
 
-          <div className="form-field">
-            <label>Stock (user limit qty)</label>
+          <Field label="Stock" required error={errors.user_limit_quantity}>
             <input
               name="user_limit_quantity"
               type="number"
@@ -554,29 +623,21 @@ export default function ProductsPage() {
               value={form.user_limit_quantity}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field">
-            <label>Status</label>
+          </Field>
+          <Field label="Status" required>
             <select name="deal_status" value={form.deal_status} onChange={onChange}>
               <option value={1}>Active</option>
               <option value={0}>Inactive</option>
             </select>
-          </div>
+          </Field>
 
-          <div className="form-field">
-            <label>Brand name</label>
+          <Field label="Brand name">
             <input name="brand_names" value={form.brand_names} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Brand ID</label>
-            <input name="brand_id" type="number" value={form.brand_id} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Delivery period</label>
+          </Field>
+          <Field label="Delivery period">
             <input name="delivery_period" value={form.delivery_period} onChange={onChange} />
-          </div>
-          <div className="form-field">
-            <label>Shipping fee</label>
+          </Field>
+          <Field label="Shipping fee">
             <input
               name="shipping"
               type="number"
@@ -584,10 +645,8 @@ export default function ProductsPage() {
               value={form.shipping}
               onChange={onChange}
             />
-          </div>
-
-          <div className="form-field">
-            <label>Has size / color</label>
+          </Field>
+          <Field label="Has size / color">
             <select
               name="having_size_color"
               value={form.having_size_color}
@@ -596,56 +655,34 @@ export default function ProductsPage() {
               <option value={0}>No</option>
               <option value={1}>Yes</option>
             </select>
-          </div>
-          <div className="form-field">
-            <label>Tags (comma separated)</label>
+          </Field>
+          <Field label="Tags (comma separated)">
             <input name="tags" value={form.tags} onChange={onChange} />
-          </div>
-          <div className="form-field full">
-            <label>Related product IDs (comma separated)</label>
+          </Field>
+          <Field label="Related product IDs" className="full">
             <input
               name="related_products"
               value={form.related_products}
               onChange={onChange}
             />
-          </div>
-
-          <div className="form-field full">
-            <label>Meta description (EN)</label>
+          </Field>
+          <Field label="Meta description (EN)" className="full">
             <textarea
               name="meta_description"
               value={form.meta_description}
               onChange={onChange}
             />
-          </div>
-          <div className="form-field full">
-            <label>Meta keywords (EN)</label>
+          </Field>
+          <Field label="Meta keywords (EN)" className="full">
             <input name="meta_keywords" value={form.meta_keywords} onChange={onChange} />
-          </div>
-          <div className="form-field full">
-            <label>Meta description (AR)</label>
-            <textarea
-              name="meta_description_french"
-              value={form.meta_description_french}
-              onChange={onChange}
-            />
-          </div>
-          <div className="form-field full">
-            <label>Meta keywords (AR)</label>
-            <input
-              name="meta_keywords_french"
-              value={form.meta_keywords_french}
-              onChange={onChange}
-            />
-          </div>
-          <div className="form-field full">
-            <label>Terms &amp; conditions</label>
+          </Field>
+          <Field label="Terms & conditions" className="full">
             <textarea
               name="terms_conditions"
               value={form.terms_conditions}
               onChange={onChange}
             />
-          </div>
+          </Field>
         </div>
       </Modal>
     )
@@ -699,6 +736,9 @@ export default function ProductsPage() {
           rows={rows}
           rowKey={(r) => r.deal_id ?? r.id}
           loading={loading}
+          error={listError}
+          onRetry={load}
+          emptyMessage="No products yet. Add a product after Category and Sub category are set."
         />
       </div>
     </div>
