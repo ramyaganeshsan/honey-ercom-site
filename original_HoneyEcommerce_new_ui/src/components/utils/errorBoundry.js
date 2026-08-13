@@ -1,6 +1,7 @@
 import React from "react";
 import { t } from "i18next";
 import { Link } from "react-router-dom";
+import { env } from "../../env";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -30,7 +31,7 @@ class ErrorBoundary extends React.Component {
                 <div className="error-page-blk">
                   <img
                     src={`${
-                      process.env.REACT_APP_ASSETS_URL || ""
+                      env.ASSETS_URL || ""
                     }/images/img-500.png`}
                     alt="Error 500"
                     onError={(e) => {

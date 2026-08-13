@@ -1,7 +1,8 @@
 import { t } from "i18next";
+import { env } from "../../env";
 
 const SomethingWentWrong = () => {
-  const assetsUrl = process.env.REACT_APP_ASSETS_URL;
+  const assetsUrl = env.ASSETS_URL;
   const imageSrc = assetsUrl
     ? `${assetsUrl}/images/img-500.png`
     : "/images/img-500.png";

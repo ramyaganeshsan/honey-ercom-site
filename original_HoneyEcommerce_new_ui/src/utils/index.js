@@ -1,6 +1,7 @@
-var CryptoJS = require("crypto-js");
-var base64 = require("base-64");
-var dayjs = require("dayjs");
+import CryptoJS from "crypto-js";
+import base64 from "base-64";
+import dayjs from "dayjs";
+import { env } from "../env";
 
 const toastConfiguration = {
   position: "top-center",
@@ -13,12 +14,12 @@ const toastConfiguration = {
   theme: "light",
 };
 
-exports.toastConfig = toastConfiguration;
+export const toastConfig = toastConfiguration;
 
-exports.encrypteString = (string) => {
+export const encrypteString = (string) => {
   var encryptedData = CryptoJS.AES.encrypt(
     string,
-    process.env.REACT_APP_SECRECT_KEY
+    env.SECRECT_KEY
   ).toString();
   return encryptedData;
 };
@@ -26,13 +27,13 @@ exports.encrypteString = (string) => {
 const decrypteString = (string) => {
   var decryptBytes = CryptoJS.AES.decrypt(
     string,
-    process.env.REACT_APP_SECRECT_KEY
+    env.SECRECT_KEY
   );
   var decryptData = decryptBytes.toString(CryptoJS.enc.Utf8);
   return decryptData;
 };
 
-exports.decrypteData = (string) => {
+export const decrypteData = (string) => {
   if (!string) return {};
 
   try {
@@ -43,12 +44,12 @@ exports.decrypteData = (string) => {
   }
 };
 
-exports.getUserInfo = () => {
+export const getUserInfo = () => {
   let userDetails = localStorage.getItem("user_details");
   return userDetails ? JSON.parse(decrypteString(userDetails)) : {};
 };
 
-exports.getToken = () => {
+export const getToken = () => {
   let userDetails = localStorage.getItem("user_details");
   if (userDetails) {
     userDetails = JSON.parse(decrypteString(userDetails));
@@ -57,7 +58,7 @@ exports.getToken = () => {
   return "";
 };
 
-exports.getSessionID = () => {
+export const getSessionID = () => {
   let sessionID = localStorage.getItem("sessionID");
   if (sessionID) {
     return sessionID;
@@ -65,7 +66,7 @@ exports.getSessionID = () => {
   return "";
 };
 
-exports.setSessionID = (sessionID) => {
+export const setSessionID = (sessionID) => {
   if (
     sessionID &&
     sessionID !== "" &&
@@ -75,11 +76,11 @@ exports.setSessionID = (sessionID) => {
   }
 };
 
-exports.removeSessionID = () => {
+export const removeSessionID = () => {
   localStorage.removeItem("sessionID");
 };
 
-exports.handleResponse = (response, toast, navigate, refetch = null) => {
+export const handleResponse = (response, toast, navigate, refetch = null) => {
   let status = Number(response?.status) ?? "";
   if (status === "" && status !== 0) return;
 
@@ -108,7 +109,7 @@ exports.handleResponse = (response, toast, navigate, refetch = null) => {
   }
 };
 
-exports.objectToFormData = (values) => {
+export const objectToFormData = (values) => {
   var formData = new FormData();
   for (var key in values) {
     let data = values[key];
@@ -127,13 +128,13 @@ exports.objectToFormData = (values) => {
   return formData;
 };
 
-exports.getDate = () => {
+export const getDate = () => {
   var today = new Date();
   return today.getDate();
 };
 
-exports.getUrl = (url) => {
-  return `${process.env.REACT_APP_BASE_URL}${url}`;
+export const getUrl = (url) => {
+  return `${env.BASE_URL}${url}`;
 };
 
 /* 
@@ -149,7 +150,7 @@ exports.getUrl = (url) => {
   };
 */
 
-exports.changeActiveLink = (pathName) => {
+export const changeActiveLink = (pathName) => {
   const navElements = document.querySelectorAll(".nav_link_top_bar");
   if (navElements) {
     navElements?.forEach((element) => {
@@ -212,7 +213,7 @@ exports.changeActiveLink = (pathName) => {
   }
 };
 
-exports.encrypteQueryData = (string) => {
+export const encrypteQueryData = (string) => {
   if (!string) return "";
   try {
     return base64.encode(string);
@@ -222,7 +223,7 @@ exports.encrypteQueryData = (string) => {
   }
 };
 
-exports.decrypteQueryData = (string) => {
+export const decrypteQueryData = (string) => {
   if (!string) return {};
   try {
     return JSON.parse(base64.decode(string));
@@ -232,7 +233,7 @@ exports.decrypteQueryData = (string) => {
   }
 };
 
-exports.convertJSONToQueryString = (filters) => {
+export const convertJSONToQueryString = (filters) => {
   if (!filters) return "";
   try {
     var queryString = Object.keys(filters)
@@ -244,7 +245,7 @@ exports.convertJSONToQueryString = (filters) => {
   }
 };
 
-exports.productFilters = {
+export const productFilters = {
   max: "",
   name: "",
   rate_review: "",
@@ -256,7 +257,7 @@ exports.productFilters = {
   refetch_data: true,
 };
 
-exports.convertTimestampToDate = (timestamp, dateTimeFormat) => {
+export const convertTimestampToDate = (timestamp, dateTimeFormat) => {
   return dayjs.unix(timestamp).format(dateTimeFormat);
 };
 
@@ -268,7 +269,7 @@ const discountCalculator = (type, discount, total) => {
   return isNaN(totalDiscount) ? 0 : totalDiscount;
 };
 
-exports.calculateDiscount = (type = 1, discount, total = 0) => {
+export const calculateDiscount = (type = 1, discount, total = 0) => {
   /* 
     1 -> Percentage,
     0 -> Flat
@@ -278,7 +279,7 @@ exports.calculateDiscount = (type = 1, discount, total = 0) => {
   return totalDiscount;
 };
 
-exports.calculateProductTotalPrice = (
+export const calculateProductTotalPrice = (
   productDetails,
   shippingCost = 0,
   discountType = 0,
@@ -353,14 +354,14 @@ exports.calculateProductTotalPrice = (
   };
 };
 
-exports.currencyFormatter = (totalAmount, currency = "UAD") => {
+export const currencyFormatter = (totalAmount, currency = "UAD") => {
   let formatter = new Intl.NumberFormat("en-US", {
     currency: currency,
   });
   return formatter.format(totalAmount);
 };
 
-exports.updateCartItemsBatch = (totalCartItems, id = "cartCount") => {
+export const updateCartItemsBatch = (totalCartItems, id = "cartCount") => {
   let cartCountElement = document.getElementById(id);
   if (cartCountElement) {
     if ((totalCartItems && !isNaN(totalCartItems)) || totalCartItems === 0) {
@@ -369,7 +370,7 @@ exports.updateCartItemsBatch = (totalCartItems, id = "cartCount") => {
   }
 };
 
-exports.updateWishlistItemsBatch = (
+export const updateWishlistItemsBatch = (
   totalWishlistItems,
   id = "wishlistCount"
 ) => {
@@ -384,7 +385,7 @@ exports.updateWishlistItemsBatch = (
   }
 };
 
-exports.getLanguage = () => {
+export const getLanguage = () => {
   let language = localStorage.getItem("lang");
   if ((language && language === "en") || language === "ar") {
     return language;
@@ -392,11 +393,11 @@ exports.getLanguage = () => {
   return "en";
 };
 
-exports.setLanguage = (language) => {
+export const setLanguage = (language) => {
   localStorage.setItem("lang", language?.toLowerCase());
 };
 
-exports.getWordBasedOnLanguage = (englishWord, arabicWord) => {
+export const getWordBasedOnLanguage = (englishWord, arabicWord) => {
   let language = localStorage.getItem("lang");
   if (!language || (language !== "ar" && language !== "en")) {
     language = "en";
@@ -413,7 +414,7 @@ exports.getWordBasedOnLanguage = (englishWord, arabicWord) => {
   return englishWord;
 };
 
-exports.getPageDirection = () => {
+export const getPageDirection = () => {
   let language = localStorage.getItem("lang");
   if (!language || (language !== "ar" && language !== "en")) {
     language = "en";
@@ -428,7 +429,7 @@ exports.getPageDirection = () => {
   }
 };
 
-exports.checkProductIsAlreadyWishlisted = (wishList, productId) => {
+export const checkProductIsAlreadyWishlisted = (wishList, productId) => {
   if (wishList && Array.isArray(wishList) && wishList.includes(productId)) {
     return true;
   }
@@ -437,12 +438,12 @@ exports.checkProductIsAlreadyWishlisted = (wishList, productId) => {
 
 /**
  * Prefer local/public assets when remote CDN/API certs fail (local demo).
- * Rewrites known production API hosts to REACT_APP_ASSETS_URL or localhost.
+ * Rewrites known production API hosts to VITE_ASSETS_URL / env.ASSETS_URL or localhost.
  */
-exports.resolveAssetUrl = (url, fallbackPath = "/images/no_image_available.png") => {
+export const resolveAssetUrl = (url, fallbackPath = "/images/no_image_available.png") => {
   if (!url || typeof url !== "string") return fallbackPath;
 
-  const assetsBase = (process.env.REACT_APP_ASSETS_URL || "").replace(/\/$/, "");
+  const assetsBase = (env.ASSETS_URL || "").replace(/\/$/, "");
   const knownBrokenHosts = [
     "https://api.thunyanhoneyuae.com",
     "http://api.thunyanhoneyuae.com",
@@ -463,7 +464,7 @@ exports.resolveAssetUrl = (url, fallbackPath = "/images/no_image_available.png")
   return resolved || fallbackPath;
 };
 
-exports.handleAssetImageError = (event, fallbackPath = "/images/no_image_available.png") => {
+export const handleAssetImageError = (event, fallbackPath = "/images/no_image_available.png") => {
   if (!event?.currentTarget) return;
   event.currentTarget.onerror = null;
   event.currentTarget.src = fallbackPath;

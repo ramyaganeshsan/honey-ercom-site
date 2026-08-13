@@ -1,5 +1,6 @@
 import { t } from "i18next";
 import { Link } from "react-router-dom";
+import { env } from "../../env";
 
 const AccountBlocked = ({ handleLogout }) => {
   return (
@@ -10,7 +11,7 @@ const AccountBlocked = ({ handleLogout }) => {
             <div className="error-page-blk">
               <img
                 style={{ width: "400px" }}
-                src={`${process.env.REACT_APP_ASSETS_URL}/images/account-blocked.jpeg`}
+                src={`${env.ASSETS_URL}/images/account-blocked.jpeg`}
                 alt="blocked image"
               />
               <div className="error-cont-blk">

@@ -23,6 +23,7 @@ import {
 import { toast } from "react-toastify";
 import { siteSettingsContext } from "../contexts";
 import { useGoogleLogin } from "@react-oauth/google";
+import { env } from "../env";
 
 const SignInWithGuestOption = ({
   loginImage,
@@ -137,8 +138,8 @@ const SignInWithGuestOption = ({
   };
   const handleFacebookLogin = () => {
     try {
-      const clientId = process.env.REACT_APP_FACEBOOK_APP_ID;
-      const redirectUri = process.env.REACT_APP_FACEBOOK_REDIRECTURL;
+      const clientId = env.FACEBOOK_APP_ID;
+      const redirectUri = env.FACEBOOK_REDIRECTURL;
       const scope = "email,user_phone_number";
       const facebookOAuthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
 

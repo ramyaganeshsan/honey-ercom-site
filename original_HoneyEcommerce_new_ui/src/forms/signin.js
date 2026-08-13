@@ -26,8 +26,9 @@ import { toast } from "react-toastify";
 import { siteSettingsContext } from "../contexts";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useLocation } from "react-router-dom";
-const googleClinetId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-const googleRedirectURl = process.env.REACT_APP_GOOGLE_REDIRECTURL;
+import { env } from "../env";
+const googleClinetId = env.GOOGLE_CLIENT_ID;
+const googleRedirectURl = env.GOOGLE_REDIRECTURL;
 
 const SignIn = ({ loginImage }) => {
   const [errors, setErrors] = React.useState({ email: "", password: "" });
@@ -138,8 +139,8 @@ const SignIn = ({ loginImage }) => {
 
   const handleFacebookLogin = () => {
     try {
-      const clientId = process.env.REACT_APP_FACEBOOK_APP_ID;
-      const redirectUri = process.env.REACT_APP_FACEBOOK_REDIRECTURL;
+      const clientId = env.FACEBOOK_APP_ID;
+      const redirectUri = env.FACEBOOK_REDIRECTURL;
       const scope = "email";
       const facebookOAuthUrl = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
 

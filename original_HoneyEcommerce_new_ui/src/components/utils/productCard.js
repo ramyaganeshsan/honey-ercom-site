@@ -28,6 +28,7 @@ import {
   WhatsappIcon,
   XIcon,
 } from "react-share";
+import { env } from "../../env";
 
 const getStars = (totalStars) => {
   let stars = [];
@@ -201,7 +202,7 @@ const ProductCard = ({ product }) => {
     setShowShareOptions(!showShareOptions);
   };
 
-  const shareUrl = `${process.env.REACT_APP_FRONT_END_BASE_URL}/product_detail?q=${product?.deal_key}`;
+  const shareUrl = `${env.FRONT_END_BASE_URL}/product_detail?q=${product?.deal_key}`;
   const title = getWordBasedOnLanguage(
     siteInfo?.siteSettings?.site_name,
     siteInfo?.siteSettings?.site_name_french

@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>%REACT_APP_SITE_NAME%</title>
+    <!-- Vite replaces %VITE_*% in HTML (same role as CRA %REACT_APP_*% ) -->
+    <title>%VITE_SITE_NAME%</title>
 
     <link
       href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap"
@@ -22,38 +23,38 @@
       rel="stylesheet"
     />
 
-    <!-- <link href="%REACT_APP_ASSETS_URL%/css/bootstrap.min.css" rel="stylesheet"> -->
-    <!-- <link href="%REACT_APP_ASSETS_URL%/css/bootstrap.rtl.min.css" rel="stylesheet"> -->
+    <!-- <link href="%VITE_ASSETS_URL%/css/bootstrap.min.css" rel="stylesheet"> -->
+    <!-- <link href="%VITE_ASSETS_URL%/css/bootstrap.rtl.min.css" rel="stylesheet"> -->
     <link
       rel="stylesheet"
       type="text/css"
-      href="%REACT_APP_ASSETS_URL%/css/owl.carousel.css"
+      href="%VITE_ASSETS_URL%/css/owl.carousel.css"
     />
     <link
       rel="stylesheet"
       type="text/css"
-      href="%REACT_APP_ASSETS_URL%/css/font-awesome.min.css"
+      href="%VITE_ASSETS_URL%/css/font-awesome.min.css"
     />
 
     <script
       type="text/javascript"
-      src="%REACT_APP_ASSETS_URL%/js/jquery-3.2.1.min.js"
+      src="%VITE_ASSETS_URL%/js/jquery-3.2.1.min.js"
     ></script>
     <script
       type="text/javascript"
-      src="%REACT_APP_ASSETS_URL%/js/owl.carousel.min.js"
+      src="%VITE_ASSETS_URL%/js/owl.carousel.min.js"
     ></script>
 
-    <link href="%REACT_APP_ASSETS_URL%/css/easyzoom.css" rel="stylesheet" />
-    <!-- <link href="%REACT_APP_ASSETS_URL%/css/style.css" rel="stylesheet"> -->
-    <!-- <link href="%REACT_APP_ASSETS_URL%/css/media_style.css" rel="stylesheet"> -->
+    <link href="%VITE_ASSETS_URL%/css/easyzoom.css" rel="stylesheet" />
+    <!-- <link href="%VITE_ASSETS_URL%/css/style.css" rel="stylesheet"> -->
+    <!-- <link href="%VITE_ASSETS_URL%/css/media_style.css" rel="stylesheet"> -->
 
     <script
       type="text/javascript"
-      src="%REACT_APP_ASSETS_URL%/js/jquery.mCustomScrollbar.concat.min.js"
+      src="%VITE_ASSETS_URL%/js/jquery.mCustomScrollbar.concat.min.js"
     ></script>
     <link
-      href="%REACT_APP_ASSETS_URL%/css/jquery.mCustomScrollbar.min.css"
+      href="%VITE_ASSETS_URL%/css/jquery.mCustomScrollbar.min.css"
       rel="stylesheet"
     />
 
@@ -70,7 +71,7 @@
 
     <script
       type="text/javascript"
-      src="%REACT_APP_ASSETS_URL%/js/easyzoom.js"
+      src="%VITE_ASSETS_URL%/js/easyzoom.js"
     ></script>
   </head>
   <body>
@@ -92,5 +93,6 @@
 
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <script type="module" src="/src/index.js"></script>
   </body>
 </html>

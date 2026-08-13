@@ -1,6 +1,7 @@
 import React, { useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import { t } from "i18next";
+import { env } from "../../env";
 
 const Error404 = () => {
   useLayoutEffect(() => {
@@ -20,7 +21,7 @@ const Error404 = () => {
           <div className="col-12">
             <div className="error-page-blk">
               <img
-                src={`${process.env.REACT_APP_ASSETS_URL}/images/img-404.svg`}
+                src={`${env.ASSETS_URL}/images/img-404.svg`}
                 alt="Error 404"
               />
               <div className="error-cont-blk">

@@ -1,4 +1,5 @@
 import { t } from "i18next";
+import { env } from "../../env";
 
 const NoDataFound = ({ resetAllFilters }) => {
   return (
@@ -8,7 +9,7 @@ const NoDataFound = ({ resetAllFilters }) => {
           <div className="col-12">
             <div className="error-page-blk">
               <img
-                src={`${process.env.REACT_APP_ASSETS_URL}/images/no_data.png`}
+                src={`${env.ASSETS_URL}/images/no_data.png`}
                 alt="Error 500"
               />
               <div className="error-cont-blk">

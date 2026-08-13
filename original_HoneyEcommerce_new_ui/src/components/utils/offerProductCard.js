@@ -20,6 +20,7 @@ import {
 import { toast } from "react-toastify";
 import Spinner from "../../components/utils/spinner";
 import Price from "./price";
+import { env } from "../../env";
 
 const getStars = (totalStars) => {
   let stars = [];
@@ -258,7 +259,7 @@ const OfferProductCard = ({ product }) => {
                 <span
                   onClick={() =>
                     handleShare(
-                      `${process.env.REACT_APP_FRONT_END_BASE_URL}/product_detail?q=${product?.deal_key}`
+                      `${env.FRONT_END_BASE_URL}/product_detail?q=${product?.deal_key}`
                     )
                   }
                   title={t("share")}

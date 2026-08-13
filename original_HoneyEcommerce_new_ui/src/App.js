@@ -17,8 +17,9 @@ import {
 } from "react-router-dom";
 import TwitterCallback from "./components/TwitterCallback";
 import { toast } from "react-toastify";
+import { env } from "./env";
 
-const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+const clientId = env.GOOGLE_CLIENT_ID;
 
 if (getPageDirection() === "ltr") {
   import("./assets/css/ltr.css");
@@ -36,7 +37,7 @@ function App() {
   React.useEffect(() => {
     if (!isLoading && data && +data?.status === 1) {
       document.title =
-        data?.data?.siteSettings?.title ?? process.env.REACT_APP_SITE_NAME;
+        data?.data?.siteSettings?.title ?? env.SITE_NAME;
       setUserCartDetails((prev) => ({
         ...data?.data?.userCartDetails,
         wishList: [...prev?.wishList, ...data?.data?.userCartDetails?.wishList],

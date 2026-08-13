@@ -1,0 +1,24 @@
+# Copy to .env or .env.local and fill values for local demo (Vite)
+
+# API base (trailing slash recommended)
+VITE_BASE_URL=http://localhost:5000/
+
+# Static assets served by the API (owl/css/js + uploaded images)
+# Used in index.html as %VITE_ASSETS_URL% and in src via env.ASSETS_URL
+VITE_ASSETS_URL=http://localhost:5000/public
+
+VITE_SITE_NAME=Honey Ecommerce
+
+# AES key used by src/utils encrypt/decrypt helpers
+VITE_SECRECT_KEY=
+
+# Google OAuth
+VITE_GOOGLE_CLIENT_ID=
+VITE_GOOGLE_REDIRECTURL=http://localhost:3000
+
+# Facebook OAuth
+VITE_FACEBOOK_APP_ID=
+VITE_FACEBOOK_REDIRECTURL=http://localhost:3000
+
+# Frontend origin (share links, etc.)
+VITE_FRONT_END_BASE_URL=http://localhost:3000

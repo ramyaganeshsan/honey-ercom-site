@@ -33,10 +33,10 @@ import tamaraIcon from "../../assets/paymentMethodIcons/tamaraLogo.png";
 import Popup from "../payment/tabbyPopUp";
 import PopupTamara from "../payment/tamaraPopup";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timeZone from "dayjs/plugin/timezone";
 import axios from "axios";
 
-let utc = require("dayjs/plugin/utc");
-let timeZone = require("dayjs/plugin/timezone");
 dayjs.extend(utc);
 dayjs.extend(timeZone);
 const TIME_ZONE = "Asia/Dubai";

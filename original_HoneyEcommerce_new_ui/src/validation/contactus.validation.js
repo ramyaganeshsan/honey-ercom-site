@@ -1,4 +1,4 @@
-const JOI = require("joi");
+import JOI from "joi";
 
 export const contactUsSchema = {
   name: JOI.string().required().max(30).label("Name"),
