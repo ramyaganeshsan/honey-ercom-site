@@ -1,26 +1,26 @@
 @media (max-width: 1600px) {
   .soc-icons li a.fb-ico {
-    background: rgba(66, 103, 178, 0.12) url(../images/icon-fb.svg) no-repeat
+    background: rgba(66, 103, 178, 0.12) url(/images/icon-fb.svg) no-repeat
       center;
     background-size: 17px;
   }
   .soc-icons li a.tw-ico {
-    background: rgba(29, 161, 242, 0.12) url(../images/icon-twitter.svg)
+    background: rgba(29, 161, 242, 0.12) url(/images/icon-twitter.svg)
       no-repeat center;
     background-size: 18px;
   }
   .soc-icons li a.yt-ico {
-    background: rgba(255, 0, 0, 0.1) url(../images/icon-youtube.svg) no-repeat
+    background: rgba(255, 0, 0, 0.1) url(/images/icon-youtube.svg) no-repeat
       center;
     background-size: 18px;
   }
   .soc-icons li a.pn-ico {
-    background: rgba(189, 8, 28, 0.12) url(../images/icon-pinterest.svg)
+    background: rgba(189, 8, 28, 0.12) url(/images/icon-pinterest.svg)
       no-repeat center;
     background-size: 17px;
   }
   .soc-icons li a.insta-ico {
-    background: rgba(193, 53, 132, 0.12) url(../images/icon-insta.svg) no-repeat
+    background: rgba(193, 53, 132, 0.12) url(/images/icon-insta.svg) no-repeat
       center;
     background-size: 17px;
   }
@@ -134,14 +134,14 @@
   }
   .product_carousel1 .owl-next {
     right: 15px;
-    background: url(../images/arrow-right.svg) no-repeat;
+    background: url(/images/arrow-right.svg) no-repeat;
     width: 13px;
     height: 25px;
     background-size: 12px;
   }
   .product_carousel1 .owl-prev {
     left: 15px;
-    background: url(../images/arrow-left.svg) no-repeat;
+    background: url(/images/arrow-left.svg) no-repeat;
     width: 13px;
     height: 25px;
     background-size: 12px;
@@ -279,7 +279,7 @@
   }
   .show-filter {
     display: flex;
-    background: url(../images/filter-icon.svg) no-repeat left;
+    background: url(/images/filter-icon.svg) no-repeat left;
     padding-left: 28px;
     color: #000;
     font-size: 14px;
@@ -531,7 +531,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(../images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -565,7 +565,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(../images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -599,7 +599,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(../images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -633,7 +633,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(../images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -667,7 +667,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(../images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -701,7 +701,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(../images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -735,7 +735,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(../images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -932,7 +932,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(../images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;

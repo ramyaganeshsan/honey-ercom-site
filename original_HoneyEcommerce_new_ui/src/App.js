@@ -25,11 +25,34 @@ const clientId =
     ? env.GOOGLE_CLIENT_ID
     : "google-oauth-not-configured.apps.googleusercontent.com";
 
-if (getPageDirection() === "ltr") {
-  import("./assets/css/ltr.css");
-} else {
-  import("./assets/css/rtl.css");
+function ensureStylesheet(id, href) {
+  let link = document.getElementById(id);
+  if (!link) {
+    link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+  }
+  if (link.getAttribute("href") !== href) {
+    link.setAttribute("href", href);
+  }
 }
+
+function applyThemeDirection() {
+  const dir = getPageDirection() === "rtl" ? "rtl" : "ltr";
+  ensureStylesheet("theme-style", "/css/style.css");
+  ensureStylesheet("theme-media-style", "/css/media_style.css");
+  ensureStylesheet(
+    "theme-bootstrap",
+    dir === "rtl" ? "/css/bootstrap.rtl.min.css" : "/css/bootstrap.min.css"
+  );
+  const html = document.getElementsByTagName("html")[0];
+  if (html) html.dir = dir;
+}
+
+// Load theme CSS as plain public links (not Vite CSS imports) so
+// /images and /fonts URLs are not rewritten to /public/...
+applyThemeDirection();
 
 function App() {
   const navigate = useNavigate();
@@ -37,6 +60,10 @@ function App() {
   const [userCartDetails, setUserCartDetails] = React.useState({
     wishList: [],
   });
+
+  React.useEffect(() => {
+    applyThemeDirection();
+  }, []);
 
   React.useEffect(() => {
     if (!isLoading && data && +data?.status === 1) {
@@ -49,10 +76,7 @@ function App() {
     } else {
       handleResponse(data, toast, navigate);
     }
-    let html = document.getElementsByTagName("html");
-    if (html && html.length > 0 && getPageDirection() === "rtl") {
-      html[0]["dir"] = "rtl";
-    }
+    applyThemeDirection();
   }, [data, isLoading]);
 
   const removeProductFromUserWishlist = React.useCallback(

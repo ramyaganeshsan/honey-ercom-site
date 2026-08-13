@@ -141,96 +141,96 @@ button:active,
 /* font face*/
 @font-face {
   font-family: "roboto_light";
-  src: url("../fonts/roboto_light/roboto-light-webfont.eot");
-  src: url("../fonts/roboto_light/roboto-light-webfont.eot?#iefix")
+  src: url("/fonts/roboto_light/roboto-light-webfont.eot");
+  src: url("/fonts/roboto_light/roboto-light-webfont.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/roboto_light/roboto-light-webfont.woff2") format("woff2"),
-    url("../fonts/roboto_light/roboto-light-webfont.woff") format("woff"),
-    url("../fonts/roboto_light/roboto-light-webfont.ttf") format("truetype");
+    url("/fonts/roboto_light/roboto-light-webfont.woff2") format("woff2"),
+    url("/fonts/roboto_light/roboto-light-webfont.woff") format("woff"),
+    url("/fonts/roboto_light/roboto-light-webfont.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "Roboto";
-  src: url("../fonts/roboto_regular/roboto-regular-webfont.eot");
-  src: url("../fonts/roboto_regular/roboto-regular-webfont.eot?#iefix")
+  src: url("/fonts/roboto_regular/roboto-regular-webfont.eot");
+  src: url("/fonts/roboto_regular/roboto-regular-webfont.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/roboto_regular/roboto-regular-webfont.woff2") format("woff2"),
-    url("../fonts/roboto_regular/roboto-regular-webfont.woff") format("woff"),
-    url("../fonts/roboto_regular/roboto-regular-webfont.ttf") format("truetype");
+    url("/fonts/roboto_regular/roboto-regular-webfont.woff2") format("woff2"),
+    url("/fonts/roboto_regular/roboto-regular-webfont.woff") format("woff"),
+    url("/fonts/roboto_regular/roboto-regular-webfont.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "roboto_bold";
-  src: url("../fonts/roboto_bold/roboto-bold-webfont.eot");
-  src: url("../fonts/roboto_bold/roboto-bold-webfont.eot?#iefix")
+  src: url("/fonts/roboto_bold/roboto-bold-webfont.eot");
+  src: url("/fonts/roboto_bold/roboto-bold-webfont.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/roboto_bold/roboto-bold-webfont.woff2") format("woff2"),
-    url("../fonts/roboto_bold/roboto-bold-webfont.woff") format("woff"),
-    url("../fonts/roboto_bold/roboto-bold-webfont.ttf") format("truetype");
+    url("/fonts/roboto_bold/roboto-bold-webfont.woff2") format("woff2"),
+    url("/fonts/roboto_bold/roboto-bold-webfont.woff") format("woff"),
+    url("/fonts/roboto_bold/roboto-bold-webfont.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "roboto_medium";
-  src: url("../fonts/roboto_medium/Roboto-Medium.eot?#iefix")
+  src: url("/fonts/roboto_medium/Roboto-Medium.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/roboto_medium/Roboto-Medium.woff") format("woff"),
-    url("../fonts/roboto_medium/Roboto-Medium.ttf") format("truetype"),
-    url("../fonts/roboto_medium/Roboto-Medium.svg#Roboto-Medium") format("svg");
+    url("/fonts/roboto_medium/Roboto-Medium.woff") format("woff"),
+    url("/fonts/roboto_medium/Roboto-Medium.ttf") format("truetype"),
+    url("/fonts/roboto_medium/Roboto-Medium.svg#Roboto-Medium") format("svg");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "roboto_black";
-  src: url("../fonts/roboto_black/Roboto-Black.eot?#iefix")
+  src: url("/fonts/roboto_black/Roboto-Black.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/roboto_black/Roboto-Black.woff") format("woff"),
-    url("../fonts/roboto_black/Roboto-Black.ttf") format("truetype"),
-    url("../fonts/roboto_black/Roboto-Black.svg#Roboto-Black") format("svg");
+    url("/fonts/roboto_black/Roboto-Black.woff") format("woff"),
+    url("/fonts/roboto_black/Roboto-Black.ttf") format("truetype"),
+    url("/fonts/roboto_black/Roboto-Black.svg#Roboto-Black") format("svg");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "tahoma_regular";
-  src: url("../fonts/tahoma-regular/Tahoma.eot?#iefix")
+  src: url("/fonts/tahoma-regular/Tahoma.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/tahoma-regular/Tahoma.woff") format("woff"),
-    url("../fonts/tahoma-regular/Tahoma.ttf") format("truetype"),
-    url("../fonts/tahoma-regular/Tahoma.svg#Tahoma") format("svg");
+    url("/fonts/tahoma-regular/Tahoma.woff") format("woff"),
+    url("/fonts/tahoma-regular/Tahoma.ttf") format("truetype"),
+    url("/fonts/tahoma-regular/Tahoma.svg#Tahoma") format("svg");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "tahoma_bold";
-  src: url("../fonts/tahoma-bold/Tahoma-Bold.eot?#iefix")
+  src: url("/fonts/tahoma-bold/Tahoma-Bold.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/tahoma-bold/Tahoma-Bold.woff") format("woff"),
-    url("../fonts/tahoma-bold/Tahoma-Bold.ttf") format("truetype"),
-    url("../fonts/tahoma-bold/Tahoma-Bold.svg#Tahoma-Bold") format("svg");
+    url("/fonts/tahoma-bold/Tahoma-Bold.woff") format("woff"),
+    url("/fonts/tahoma-bold/Tahoma-Bold.ttf") format("truetype"),
+    url("/fonts/tahoma-bold/Tahoma-Bold.svg#Tahoma-Bold") format("svg");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "folio bk bt";
-  src: url("../fonts/folio/folion-webfont.eot");
-  src: url("../fonts/folio/folion-webfont.eot?#iefix")
+  src: url("/fonts/folio/folion-webfont.eot");
+  src: url("/fonts/folio/folion-webfont.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/folio/folion-webfont.woff2") format("woff2"),
-    url("../fonts/folio/folion-webfont.woff") format("woff"),
-    url("../fonts/folio/folion-webfont.ttf") format("truetype");
+    url("/fonts/folio/folion-webfont.woff2") format("woff2"),
+    url("/fonts/folio/folion-webfont.woff") format("woff"),
+    url("/fonts/folio/folion-webfont.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "font-awesome";
-  src: url("../fonts/fontawesome/fontawesome-webfont.eot");
-  src: url("../fonts/fontawesome/fontawesome-webfont.eot?#iefix")
+  src: url("/fonts/fontawesome/fontawesome-webfont.eot");
+  src: url("/fonts/fontawesome/fontawesome-webfont.eot?#iefix")
       format("embedded-opentype"),
-    url("../fonts/fontawesome/fontawesome-webfont.woff2") format("woff2"),
-    url("../fonts/fontawesome/fontawesome-webfont.woff") format("woff"),
-    url("../fonts/fontawesome/fontawesome-webfont.ttf") format("truetype");
+    url("/fonts/fontawesome/fontawesome-webfont.woff2") format("woff2"),
+    url("/fonts/fontawesome/fontawesome-webfont.woff") format("woff"),
+    url("/fonts/fontawesome/fontawesome-webfont.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
@@ -720,7 +720,7 @@ header {
 .menu-bar-blk .cyr-all-cate {
   display: flex;
   width: auto;
-  background: url(../images/menu-icon.svg) no-repeat left center;
+  background: url(/images/menu-icon.svg) no-repeat left center;
   margin-right: 50px;
   color: #fff;
   font-family: "Quicksand", sans-serif;
@@ -744,7 +744,7 @@ header {
   width: 80px;
   height: 80px;
   flex-shrink: 0;
-  background: url(../images/logo.svg) no-repeat;
+  background: url(/images/logo.svg) no-repeat;
   color: transparent;
   font-size: 0;
 }
@@ -812,7 +812,7 @@ header {
   line-height: normal;
   border: none;
   border-radius: 0px 0px 6px 6px;
-  background: #fff url(../images/search-icon.svg) no-repeat 10px center;
+  background: #fff url(/images/search-icon.svg) no-repeat 10px center;
   box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.16);
 }
 .navbar-right {
@@ -854,17 +854,17 @@ header {
 .navbar-right li a.icon-profile {
   width: 26px;
   height: 26px;
-  background: url(../images/icon-profile.svg) no-repeat center;
+  background: url(/images/icon-profile.svg) no-repeat center;
 }
 .navbar-right li a.icon-wishlist {
   width: 26px;
   height: 26px;
-  background: url(../images/icon-wishlist.svg) no-repeat center;
+  background: url(/images/icon-wishlist.svg) no-repeat center;
 }
 .navbar-right li a.icon-cart {
   width: 26px;
   height: 26px;
-  background: url(../images/icon-cart.svg) no-repeat center;
+  background: url(/images/icon-cart.svg) no-repeat center;
 }
 
 /* Mega Menu */
@@ -921,7 +921,7 @@ header {
   padding: 5px 15px 5px 10px;
   border: 1px solid transparent;
   border-radius: 8px;
-  background: url(../images/menu-arrow-right.svg) no-repeat right center;
+  background: url(/images/menu-arrow-right.svg) no-repeat right center;
 }
 .mega-menu-lft ul li a:hover {
   border: 1px solid #f14d22;
@@ -1109,10 +1109,10 @@ main {
   height: 65px;
 }
 .cyr-widget-conatiner-inner ul li i.cyr-secure-payment {
-  background: url(../images/icon-secure-payment.svg) no-repeat;
+  background: url(/images/icon-secure-payment.svg) no-repeat;
 }
 .cyr-widget-conatiner-inner ul li i.cyr-naturally-derived {
-  background: url(../images/icon-naturally-derived.svg) no-repeat;
+  background: url(/images/icon-naturally-derived.svg) no-repeat;
 }
 .cyr-widget-conatiner-inner ul li .cyr-widget-cont {
   display: flex;
@@ -1242,16 +1242,16 @@ main {
   font-size: 0;
 } */
 .product-overlay ul li a.prod-wishlist {
-  background: #f4bc21 url(../images/icon-wishlist-black.svg) no-repeat center;
+  background: #f4bc21 url(/images/icon-wishlist-black.svg) no-repeat center;
 }
 .product-overlay ul li a.prod-share {
-  background: #f4bc21 url(../images/icon-share.svg) no-repeat center;
+  background: #f4bc21 url(/images/icon-share.svg) no-repeat center;
 }
 .product-overlay ul li a.prod-zoom {
-  background: #f4bc21 url(../images/icon-zoom.svg) no-repeat center;
+  background: #f4bc21 url(/images/icon-zoom.svg) no-repeat center;
 }
 .product-overlay ul li a.prod-addtocart {
-  background: #f4bc21 url(../images/icon-cart-black.svg) no-repeat center;
+  background: #f4bc21 url(/images/icon-cart-black.svg) no-repeat center;
 }
 .product_content {
   width: 100%;
@@ -1300,13 +1300,13 @@ main {
   width: 12px;
   height: 11px;
   display: inline-block;
-  background: url(../images/star.png) no-repeat;
+  background: url(/images/star.png) no-repeat;
 }
 .product_block .star i.star_icon.active {
   width: 12px;
   height: 11px;
   display: block;
-  background: url(../images/star_active.png) no-repeat;
+  background: url(/images/star_active.png) no-repeat;
 }
 .product_block .prod_price_blk span {
   color: #626262;
@@ -1343,7 +1343,7 @@ main {
   position: absolute;
   left: 0;
   top: 45%;
-  background: url(../images/arrow-left.svg) no-repeat;
+  background: url(/images/arrow-left.svg) no-repeat;
   width: 21px;
   height: 35px;
   font-size: 0;
@@ -1354,7 +1354,7 @@ main {
   position: absolute;
   right: 0;
   top: 45%;
-  background: url(../images/arrow-right.svg) no-repeat;
+  background: url(/images/arrow-right.svg) no-repeat;
   width: 21px;
   height: 35px;
   font-size: 0;
@@ -1449,7 +1449,7 @@ footer {
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: url(../images/footer-bg.png) no-repeat center bottom;
+  background: url(/images/footer-bg.png) no-repeat center bottom;
   border: 1px solid #eaeaea;
   background-size: cover;
 }
@@ -1485,7 +1485,7 @@ footer {
   font-weight: 700;
   line-height: normal;
   padding-left: 20px;
-  background: url(../images/icon-map.svg) no-repeat left center;
+  background: url(/images/icon-map.svg) no-repeat left center;
   margin-top: 10px;
 }
 
@@ -1510,27 +1510,27 @@ footer {
   float: left;
 }
 .soc-icons li a.fb-ico {
-  background: rgba(66, 103, 178, 0.12) url(../images/icon-fb.svg) no-repeat
+  background: rgba(66, 103, 178, 0.12) url(/images/icon-fb.svg) no-repeat
     center;
   background-size: 20px;
 }
 .soc-icons li a.tw-ico {
-  background: rgba(29, 161, 242, 0.12) url(../images/icon-twitter.svg) no-repeat
+  background: rgba(29, 161, 242, 0.12) url(/images/icon-twitter.svg) no-repeat
     center;
   background-size: 20px;
 }
 .soc-icons li a.yt-ico {
-  background: rgba(255, 0, 0, 0.1) url(../images/icon-youtube.svg) no-repeat
+  background: rgba(255, 0, 0, 0.1) url(/images/icon-youtube.svg) no-repeat
     center;
   background-size: 20px;
 }
 .soc-icons li a.pn-ico {
-  background: rgba(189, 8, 28, 0.12) url(../images/icon-pinterest.svg) no-repeat
+  background: rgba(189, 8, 28, 0.12) url(/images/icon-pinterest.svg) no-repeat
     center;
   background-size: 20px;
 }
 .soc-icons li a.insta-ico {
-  background: rgba(193, 53, 132, 0.12) url(../images/icon-insta.svg) no-repeat
+  background: rgba(193, 53, 132, 0.12) url(/images/icon-insta.svg) no-repeat
     center;
   background-size: 20px;
 }
@@ -1584,7 +1584,7 @@ footer {
   content: "";
   width: 24px;
   height: 16px;
-  background: url(../images/icon-phone.svg) no-repeat;
+  background: url(/images/icon-phone.svg) no-repeat;
   background-size: contain;
   transform: translateY(-50%);
 }
@@ -1599,7 +1599,7 @@ footer {
   content: "";
   width: 24px;
   height: 16px;
-  background: url(../images/icon-email.svg) no-repeat;
+  background: url(/images/icon-email.svg) no-repeat;
 }
 .ftr-blocks .ftr-links li p {
   line-height: 26px;
@@ -1643,7 +1643,7 @@ footer {
   display: flex;
   width: 280px;
   height: 30px;
-  background: url(../images/icon-payment.svg) no-repeat;
+  background: url(/images/icon-payment.svg) no-repeat;
 }
 
 /*footer ends*/
@@ -1717,13 +1717,13 @@ footer {
   margin-right: 25px;
 }
 .login-opt-blk li a.login-fb {
-  background: url(../images/login-fb-ico.svg) no-repeat center center;
+  background: url(/images/login-fb-ico.svg) no-repeat center center;
 }
 .login-opt-blk li a.login-gmail {
-  background: url(../images/login-gmail-ico.svg) no-repeat center center;
+  background: url(/images/login-gmail-ico.svg) no-repeat center center;
 }
 .login-opt-blk li a.login-twitter {
-  background: url(../images/login-twitter-ico.svg) no-repeat center center;
+  background: url(/images/login-twitter-ico.svg) no-repeat center center;
   margin-right: 0;
 }
 .login-opt-divider {
@@ -1812,7 +1812,7 @@ p.exist-acc a {
   height: 11px;
   top: 4px;
   right: -14px;
-  background: url(../images/breadcrumb-arrow.svg) no-repeat center;
+  background: url(/images/breadcrumb-arrow.svg) no-repeat center;
 }
 .breadcrumb-blk .breadcrumb-list .breadcrumb-list-item.active::after {
   display: none;
@@ -1861,7 +1861,7 @@ p.exist-acc a {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background: url(../images/select-arrow.svg) no-repeat;
+  background: url(/images/select-arrow.svg) no-repeat;
   background-position: 98% center;
   background-size: 12px;
   padding-right: 20px;
@@ -1903,10 +1903,10 @@ p.exist-acc a {
   border: none;
 }
 .prod-view-blk .prod-view.list-view {
-  background: url(../images/icon-list-view.svg) no-repeat center;
+  background: url(/images/icon-list-view.svg) no-repeat center;
 }
 .prod-view-blk .prod-view.grid-view {
-  background: url(../images/icon-grid-view.svg) no-repeat center;
+  background: url(/images/icon-grid-view.svg) no-repeat center;
   margin-left: 0;
 }
 
@@ -2171,7 +2171,7 @@ input[type="range"]:disabled::-moz-range-thumb {
   width: 24px;
   height: 24px;
   display: inline-block;
-  background: url(../images/star.svg) no-repeat;
+  background: url(/images/star.svg) no-repeat;
 }
 
 /* Custom scroll color */
@@ -2270,16 +2270,16 @@ input[type="range"]:disabled::-moz-range-thumb {
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.05);
 }
 .product-listing-block .product-overlay ul li a.prod-wishlist {
-  background: #fff url(../images/icon-wishlist-black.svg) no-repeat center;
+  background: #fff url(/images/icon-wishlist-black.svg) no-repeat center;
 }
 .product-listing-block .product-overlay ul li a.prod-share {
-  background: #fff url(../images/icon-share.svg) no-repeat center;
+  background: #fff url(/images/icon-share.svg) no-repeat center;
 }
 .product-listing-block .product-overlay ul li a.prod-zoom {
-  background: #fff url(../images/icon-zoom.svg) no-repeat center;
+  background: #fff url(/images/icon-zoom.svg) no-repeat center;
 }
 .product-listing-block .product-overlay ul li a.prod-addtocart {
-  background: #fff url(../images/icon-cart-black.svg) no-repeat center;
+  background: #fff url(/images/icon-cart-black.svg) no-repeat center;
 }
 .product-listing-block .product_content {
   width: 100%;
@@ -2330,13 +2330,13 @@ input[type="range"]:disabled::-moz-range-thumb {
   width: 12px;
   height: 11px;
   display: inline-block;
-  background: url(../images/star.png) no-repeat;
+  background: url(/images/star.png) no-repeat;
 }
 .product-listing-block .star i.star_icon.active {
   width: 12px;
   height: 11px;
   display: block;
-  background: url(../images/star_active.png) no-repeat;
+  background: url(/images/star_active.png) no-repeat;
 }
 .product-listing-block .prod_price_blk span {
   color: #626262;
@@ -2543,13 +2543,13 @@ form .form-grp {
   left: 0;
 }
 .contact-info-ctnr p.map-ico::before {
-  background: url(../images/contact-loc-ico.svg) no-repeat center;
+  background: url(/images/contact-loc-ico.svg) no-repeat center;
 }
 .contact-info-ctnr p.phone_ico::before {
-  background: url(../images/contact-phone-ico.svg) no-repeat center;
+  background: url(/images/contact-phone-ico.svg) no-repeat center;
 }
 .contact-info-ctnr p.mail_ico::before {
-  background: url(../images/contact-email-ico.svg) no-repeat center;
+  background: url(/images/contact-email-ico.svg) no-repeat center;
 }
 
 /* Product Details css starts*/
@@ -2754,7 +2754,7 @@ ul.thumbnails li img {
 .product_details_right .star i.star_icon {
   width: 12px;
   height: 11px;
-  background: url(../images/star.png) no-repeat;
+  background: url(/images/star.png) no-repeat;
   float: left;
   margin-right: 3px;
 }
@@ -2762,7 +2762,7 @@ ul.thumbnails li img {
   width: 12px;
   height: 11px;
   display: block;
-  background: url(../images/star_active.png) no-repeat;
+  background: url(/images/star_active.png) no-repeat;
 }
 .product_details_right .price_block {
   position: relative;
@@ -2819,12 +2819,12 @@ span.review_count {
 .stock-detail.in-stock {
   color: #05a14d;
   padding-left: 45px;
-  background: #f4faf6 url(../images/in-stock.svg) no-repeat 15px center;
+  background: #f4faf6 url(/images/in-stock.svg) no-repeat 15px center;
 }
 .stock-detail.out-of-stock {
   color: #d77076;
   padding-left: 45px;
-  background: #fff7f8 url(../images/out-of-stock.svg) no-repeat 15px center;
+  background: #fff7f8 url(/images/out-of-stock.svg) no-repeat 15px center;
 }
 .prod-wght-blk {
   display: flex;
@@ -2903,7 +2903,7 @@ span.review_count {
   content: "";
   width: 20px;
   height: 20px;
-  background: url(../images/bag-check.svg) no-repeat center;
+  background: url(/images/bag-check.svg) no-repeat center;
   left: 15px;
   top: calc(50% - 10px);
 }
@@ -2928,23 +2928,23 @@ span.review_count {
   float: left;
 }
 .prod-soc-icons li a.fb-ico {
-  background: url(../images/soc-icons.svg) no-repeat center;
+  background: url(/images/soc-icons.svg) no-repeat center;
   background-position: 0 0;
 }
 .prod-soc-icons li a.tw-ico {
-  background: url(../images/soc-icons.svg) no-repeat center;
+  background: url(/images/soc-icons.svg) no-repeat center;
   background-position: -50px 0;
 }
 .prod-soc-icons li a.yt-ico {
-  background: url(../images/soc-icons.svg) no-repeat center;
+  background: url(/images/soc-icons.svg) no-repeat center;
   background-position: -102px 0;
 }
 .prod-soc-icons li a.pn-ico {
-  background: url(../images/soc-icons.svg) no-repeat center;
+  background: url(/images/soc-icons.svg) no-repeat center;
   background-position: -152px 0;
 }
 .prod-soc-icons li a.wtsapp-ico {
-  background: url(../images/soc-icons.svg) no-repeat center;
+  background: url(/images/soc-icons.svg) no-repeat center;
   background-position: -202px 0;
 }
 .prod-det-list {
@@ -3001,16 +3001,16 @@ span.review_count {
 }
 .btn-compare {
   padding: 0 0 0 30px;
-  background: url(../images/prod-compare.svg) no-repeat 0 center;
+  background: url(/images/prod-compare.svg) no-repeat 0 center;
 }
 .btn-wishlist {
   padding: 0 0 0 30px;
-  background: url(../images/prod-wishlist.svg) no-repeat 0 center;
+  background: url(/images/prod-wishlist.svg) no-repeat 0 center;
   margin: 0 20px;
 }
 
 .btn-wishlisted {
-  background: url(../images/wishlisted.svg) no-repeat 0 center;
+  background: url(/images/wishlisted.svg) no-repeat 0 center;
 }
 
 .qty_value {
@@ -3071,7 +3071,7 @@ span.review_count {
   height: 22px;
   left: 0px;
   top: -3px;
-  background: url(../images/delivery-icon.svg) no-repeat 0 center;
+  background: url(/images/delivery-icon.svg) no-repeat 0 center;
 }
 .delivery-info {
   position: relative;
@@ -3180,7 +3180,7 @@ span.review_count {
   width: 24px;
   height: 24px;
   display: inline-block;
-  background: url(../images/star.svg) no-repeat;
+  background: url(/images/star.svg) no-repeat;
   filter: grayscale(100%);
 }
 .review-cont .review-rating .review-star.active {
@@ -3188,7 +3188,7 @@ span.review_count {
   width: 24px;
   height: 24px;
   display: inline-block;
-  background: url(../images/star.svg) no-repeat;
+  background: url(/images/star.svg) no-repeat;
 }
 .review-cont .review-name {
   color: #000;
@@ -3310,7 +3310,7 @@ span.review_count {
   width: 14px;
   height: 14px;
   display: flex;
-  background: url(../images/star-bordered.svg) no-repeat center;
+  background: url(/images/star-bordered.svg) no-repeat center;
   margin-right: 5px;
 }
 .star-bordered:last-child {
@@ -3399,7 +3399,7 @@ span.review_count {
 .remove-cart-item {
   width: 10px;
   height: 10px;
-  background: url(../images/close-icon.svg) no-repeat center;
+  background: url(/images/close-icon.svg) no-repeat center;
   border: none;
 }
 .cart-table .cart-tb-tr .cart-tb-td:last-child {
@@ -3847,14 +3847,14 @@ span.review_count {
   width: 18px;
   height: 13px;
   display: flex;
-  background: url(../images/flag-eng.svg) no-repeat;
+  background: url(/images/flag-eng.svg) no-repeat;
   margin-right: 5px;
 }
 .lang-icon.en {
   width: 18px;
   height: 13px;
   display: flex;
-  background: url(../images/flag-eng.svg) no-repeat;
+  background: url(/images/flag-eng.svg) no-repeat;
   margin-right: 5px;
 }
 .cyr-top-hd-rgt li .dropdown-menu a {
@@ -3922,7 +3922,7 @@ span.review_count {
   padding: 5px 15px 5px 10px;
   border: 1px solid transparent;
   border-radius: 8px;
-  background: url(../images/menu-arrow-left.svg) no-repeat left center;
+  background: url(/images/menu-arrow-left.svg) no-repeat left center;
 }
 [dir="rtl"] .ftr-blocks.ftr-blk1::after {
   right: inherit;
@@ -3933,7 +3933,7 @@ span.review_count {
 }
 [dir="rtl"] .ftr-blocks .map-ico {
   padding-right: 20px;
-  background: url(../images/icon-map.svg) no-repeat right center;
+  background: url(/images/icon-map.svg) no-repeat right center;
 }
 [dir="rtl"] .soc-icons {
   float: right;
@@ -4005,12 +4005,12 @@ span.review_count {
 [dir="rtl"] .product_carousel1 .owl-next {
   right: inherit;
   left: 0;
-  background: url(../images/arrow-left.svg) no-repeat;
+  background: url(/images/arrow-left.svg) no-repeat;
 }
 [dir="rtl"] .product_carousel1 .owl-prev {
   left: inherit;
   right: 0;
-  background: url(../images/arrow-right.svg) no-repeat;
+  background: url(/images/arrow-right.svg) no-repeat;
 }
 [dir="rtl"] .product-overlay ul li {
   margin-right: inherit;
@@ -4090,11 +4090,11 @@ span.review_count {
 }
 [dir="rtl"] .btn-wishlist {
   padding: 0 30px 0 0;
-  background: url(../images/prod-wishlist.svg) no-repeat 100% center;
+  background: url(/images/prod-wishlist.svg) no-repeat 100% center;
 }
 [dir="rtl"] .btn-compare {
   padding: 0 30px 0 0;
-  background: url(../images/prod-compare.svg) no-repeat 100% center;
+  background: url(/images/prod-compare.svg) no-repeat 100% center;
 }
 [dir="rtl"] .product-listing-block .sale-blk {
   left: inherit;
@@ -4288,19 +4288,19 @@ span.review_count {
   cursor: pointer;
 }
 .product-overlay ul li span.prod-wishlist {
-  background: #f4bc21 url(../images/icon-wishlist-black.svg) no-repeat center;
+  background: #f4bc21 url(/images/icon-wishlist-black.svg) no-repeat center;
 }
 .product-overlay ul li span.prod-wishlisted {
-  background: #f4bc21 url(../images/wishlisted.svg) no-repeat center;
+  background: #f4bc21 url(/images/wishlisted.svg) no-repeat center;
 }
 .product-overlay ul li span.prod-share {
-  background: #f4bc21 url(../images/icon-share.svg) no-repeat center;
+  background: #f4bc21 url(/images/icon-share.svg) no-repeat center;
 }
 .product-overlay ul li span.prod-zoom {
-  background: #f4bc21 url(../images/icon-zoom.svg) no-repeat center;
+  background: #f4bc21 url(/images/icon-zoom.svg) no-repeat center;
 }
 .product-overlay ul li span.prod-addtocart {
-  background: #f4bc21 url(../images/icon-cart-black.svg) no-repeat center;
+  background: #f4bc21 url(/images/icon-cart-black.svg) no-repeat center;
 }
 .product_block .star i.star_icon.active {
   display: inline-block;
@@ -4431,7 +4431,7 @@ ul.thumbnails li span {
   width: 14px;
   height: 14px;
   display: flex;
-  background: url(../images/star.svg) no-repeat center;
+  background: url(/images/star.svg) no-repeat center;
   margin-right: 5px;
 }
 /* // .navbar-brand {
@@ -4517,7 +4517,7 @@ ul.thumbnails li span {
 }
 [dir="rtl"] .ftr-blocks .map-ico {
   padding-right: 20px;
-  background: url(../images/icon-map.svg) no-repeat right center;
+  background: url(/images/icon-map.svg) no-repeat right center;
 }
 
 .my_profile_links_container {
@@ -4555,13 +4555,13 @@ ul.thumbnails li span {
   width: 12px;
   height: 11px;
   display: inline-block;
-  background: url(../images/star.png) no-repeat;
+  background: url(/images/star.png) no-repeat;
 }
 .wishlist-product-ratings .star i.star_icon.active {
   width: 12px;
   height: 11px;
   display: block;
-  background: url(../images/star_active.png) no-repeat;
+  background: url(/images/star_active.png) no-repeat;
 }
 .without_background {
   border: 1px solid rgb(244, 188, 33);
