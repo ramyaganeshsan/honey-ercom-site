@@ -93,9 +93,11 @@ exports.getStatusCode = (type) => {
 const DEFAULT_REDIS_EXPIRY_TIME = 5; // in Seconds
 exports.getValueFromRedis = async (key) => {
   if (process.env.NODE_ENV === "development") return null;
+  const client = global.REDIS_CLIENT;
+  if (!client) return null;
 
   try {
-    let response = await REDIS_CLIENT.get(key);
+    let response = await client.get(key);
     return response;
   } catch (err) {
     logger.error(err?.message);
@@ -108,8 +110,10 @@ exports.setValueRedis = async (
   value,
   expiry = DEFAULT_REDIS_EXPIRY_TIME
 ) => {
+  const client = global.REDIS_CLIENT;
+  if (!client) return 0;
   try {
-    await REDIS_CLIENT.set(key, value, { EX: expiry });
+    await client.set(key, value, { EX: expiry });
     return 1;
   } catch (err) {
     logger.error(err?.message);

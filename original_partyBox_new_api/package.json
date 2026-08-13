@@ -1,14 +1,17 @@
 {
   "name": "honey-e-commerce",
-  "version": "1.0.0",
-  "description": "",
+  "version": "2.0.0",
+  "description": "Honey ecommerce API — MongoDB + Node 22",
   "main": "app.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "nodemon app.js",
-    "start": "pm2 start pm2.config.json",
-    "console": "node --experimental-repl-await --trace-warnings --unhandled-rejections=strict src/v1/utils/console",
-    "db:reset": "sequelize db:drop && sequelize db:create && sequelize db:migrate && sequelize db:seed:all",
-    "seq": "sequelize"
+    "start": "node app.js",
+    "start:pm2": "pm2 start pm2.config.json",
+    "seed:demo": "node src/v1/mongo/seedDemo.js",
+    "console": "node --experimental-repl-await --trace-warnings --unhandled-rejections=strict src/v1/utils/console"
   },
   "author": "Indipro Technologies",
   "license": "ISC",
@@ -30,8 +33,6 @@
     "jspdf": "^2.5.1",
     "md5": "^2.3.0",
     "mongoose": "^8.9.0",
-    "mysql2": "^3.4.0",
-    "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.7",
     "oauth": "^0.10.0",
     "oauth-1.0a": "^2.2.6",
@@ -40,8 +41,6 @@
     "pdfkit": "^0.15.0",
     "puppeteer": "^22.12.1",
     "redis": "^4.6.7",
-    "sequelize": "^6.32.1",
-    "sequelize-auto": "^0.8.8",
     "serialize-javascript": "^6.0.1",
     "twitter-lite": "^1.1.0",
     "uuid": "^9.0.1",
@@ -53,6 +52,7 @@
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-n": "^16.0.0",
-    "eslint-plugin-promise": "^6.1.1"
+    "eslint-plugin-promise": "^6.1.1",
+    "nodemon": "^3.1.0"
   }
 }

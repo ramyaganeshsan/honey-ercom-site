@@ -33,45 +33,32 @@ exports.validateJwtToken = (req, res, next) => {
       "/api/checkout",
       "/api/faqs",
       "/api/promocode",
+      "/api/common",
+      "/api/checkoutTest",
     ];
 
     let userSessionID = req.get("sessionID") ?? null;
     req.userSessionID = userSessionID;
 
+    const isUnprotectedPrefix = (prefix) =>
+      path === prefix || path.startsWith(prefix + "/");
+
     if (
-      path === "/api/auth/signup" ||
-      path === "/api/auth/login" ||
-      path === "/api/auth/google_signin" ||
-      path === "/api/auth/facebook_signin" ||
-      path === "/api/auth/twitter_signin" ||
-      path === "/api/auth/twitter_callback" ||
-      path === "/api/auth/send_otp" ||
-      path === "/api/auth/verify_otp" ||
-      path === "/api/checkout/" ||
-      path === "/api/checkout/initiateTabbyPayment" ||
-      path === "/api/checkout/webhooks/tabby" ||
-      path === "/api/checkout/verifyTabbyPayment" ||
-      path === "/api/checkout/webhooksRegister" ||
-      path === "/api/checkout/tamara-webhook" ||
-      path === "/api/checkout/createTamaraSesson" ||
-      path === "/api/checkout/authorisePayment" ||
-      path === "/api/checkout/fetchDimensions" ||
-      path === "/api/checkout/" ||
-      path === "/api/checkout/initiateTabbyPayment" ||
-      path === "/api/checkout/webhooks/tabby" ||
-      path === "/api/checkout/verifyTabbyPayment" ||
-      path === "/api/checkout/webhooksRegister" ||
-      path === "/api/checkout/tamara-webhook" ||
-      path === "/api/checkout/createTamaraSesson" ||
-      path === "/api/checkout/authorisePayment" ||
-      path === "/api/checkout/fetchDimensions" ||
-      path === "/api/checkout/DHLGetratingApi" ||
-      path === "/api/checkout/DHLWebhook"
+      isUnprotectedPrefix("/api/auth/signup") ||
+      isUnprotectedPrefix("/api/auth/login") ||
+      isUnprotectedPrefix("/api/auth/google_signin") ||
+      isUnprotectedPrefix("/api/auth/facebook_signin") ||
+      isUnprotectedPrefix("/api/auth/twitter_signin") ||
+      isUnprotectedPrefix("/api/auth/twitter_callback") ||
+      isUnprotectedPrefix("/api/auth/send_otp") ||
+      isUnprotectedPrefix("/api/auth/verify_otp") ||
+      isUnprotectedPrefix("/api/checkout")
     ) {
       return next();
     }
 
-    if (unProtectedPaths.includes(path)) {
+    // `/api/*` middleware sets baseUrl to the full path, so match prefixes
+    if (unProtectedPaths.some((p) => isUnprotectedPrefix(p))) {
       try {
         let token = req.get("token") ?? "";
         if (token) {

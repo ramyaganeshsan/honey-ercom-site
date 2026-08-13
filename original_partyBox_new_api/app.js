@@ -87,6 +87,8 @@ app.use(`${baseAPIurl}/cron`, cronRoutes);
 
 /* Sharing asset's */
 app.use("/public", express.static("assets"));
+/* Product/banner uploads (DASHBOARD_URL + cloud/uploads/...) */
+app.use("/cloud", express.static("cloud"));
 
 // app.all("*", (req, res) => {
 //   logger.error(`INVALID REQUESTED URL : ${req.path}`);
@@ -106,25 +108,33 @@ app.use((err, req, res, next) => {
   }
 });
 
-const { connectDatabase } = require("./src/v1/database/sequelize");
+const { connectMongo } = require("./src/v1/mongo/connection");
 const { connectRedis, getRedisClient } = require("./src/v1/redis");
-const e = require("express");
 
-connectDatabase()
-  .then(() => {
-    connectRedis()
-      .then(() => {
-        global.REDIS_CLIENT = getRedisClient();
-        app.listen(PORT, () => {
-          logger.info("Server is listening");
-          // registerWebhook();
-          // registerTamaraWebhook();
-        });
-      })
-      .catch((err) => {
-        logger.error(err ?? "Failed to start REDIS SERVER");
-      });
-  })
-  .catch((err) => {
-    logger.error(err ?? "Something went wrong");
+async function startServer() {
+  try {
+    await connectMongo();
+    logger.info("MongoDB connection established");
+  } catch (err) {
+    logger.error(err ?? "Failed to connect to MongoDB");
+    process.exit(1);
+  }
+
+  try {
+    await connectRedis();
+    global.REDIS_CLIENT = getRedisClient();
+    logger.info("Redis connection established");
+  } catch (err) {
+    // Redis is optional for local/demo — cache helpers already tolerate failures
+    global.REDIS_CLIENT = null;
+    logger.error(err ?? "Failed to start REDIS SERVER (continuing without Redis)");
+  }
+
+  app.listen(PORT, () => {
+    logger.info(`Server is listening on port ${PORT}`);
+    // registerWebhook();
+    // registerTamaraWebhook();
   });
+}
+
+startServer();
