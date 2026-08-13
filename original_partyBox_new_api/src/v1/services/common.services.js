@@ -151,10 +151,12 @@ exports.getSiteInfo = async () => {
   response["login_page_image"] = `${PUBLIC_IMAGE_FOLDER}login-image.png`;
   response["signin_page_image"] = `${PUBLIC_IMAGE_FOLDER}login-image.png`;
   response["offer_text"] = "UP TO 70 % OFF";
+  // MyFatoorah / Tabby / Tamara disabled — COD only so Place order works locally
   response["payment_types"] = [
-    { name: "online_payment", value: 1 },
+    // { name: "online_payment", value: 1 }, // MyFatoorah
     { name: "cash_on_delivery", value: 0 },
     // { name: "tabby", value: 2 },
+    // { name: "tamara", value: 3 },
     // { name: "pickup_from_store", value: 2 },
   ];
 

@@ -84,7 +84,7 @@ exports.getUserCheckoutDetails = async (userId) => {
       item_id: item.item_id,
       item_quantity: item.item_quantity,
       sub_product_id: item.sub_product_id,
-      currentPrice: sub.discount,
+      currentPrice: Number(sub.discount) || Number(sub.price) || 0,
       deal_title: product.deal_title,
       deal_title_french: product.deal_title_french,
       inStock: Number(sub.quantity) > 0,

@@ -9,7 +9,7 @@ export const checkoutFormSchema = {
   phone_number: Joi.string()
     .required()
     .min(6)
-    .max(10)
+    .max(15)
     .pattern(/^[0-9]+$/)
     .label("Phone number"),
   country: Joi.number().required().label("Country"),

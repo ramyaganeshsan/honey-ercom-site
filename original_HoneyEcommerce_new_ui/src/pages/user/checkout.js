@@ -95,7 +95,8 @@ const Checkout = () => {
     countryId: "",
     cityId: "",
     response: {},
-    selectedPaymentType: null,
+    // MyFatoorah / Tabby / Tamara disabled — default to Cash on Delivery
+    selectedPaymentType: 0,
     userInfo: {},
   });
 
@@ -488,23 +489,20 @@ const Checkout = () => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target).entries());
 
-    // if (Number(state?.selectedPaymentType) === 2) {
-    //   data["paymentMethod"] = -2;
-    // } else if (Number(state?.selectedPaymentType) === 0) {
+    // MyFatoorah (online), Tabby, Tamara commented out — always place as COD (-1)
+    data["paymentMethod"] = -1;
+    // if (Number(state?.selectedPaymentType) === 0) {
     //   data["paymentMethod"] = -1;
     // }
-    if (Number(state?.selectedPaymentType) === 0) {
-      data["paymentMethod"] = -1;
-    }
-    if (Number(state?.selectedPaymentType) === 1) {
-      data["paymentMethod"] = 6;
-    }
-    if (Number(state?.selectedPaymentType) === 2) {
-      data["paymentMethod"] = 7;
-    }
-    if (Number(state?.selectedPaymentType) === 3) {
-      data["paymentMethod"] = 8;
-    }
+    // if (Number(state?.selectedPaymentType) === 1) {
+    //   data["paymentMethod"] = 6; // MyFatoorah
+    // }
+    // if (Number(state?.selectedPaymentType) === 2) {
+    //   data["paymentMethod"] = 7; // Tabby
+    // }
+    // if (Number(state?.selectedPaymentType) === 3) {
+    //   data["paymentMethod"] = 8; // Tamara
+    // }
     data["isPickupFromStore"] = !isNaN(Number(state?.isPickupFromStore))
       ? Number(state?.isPickupFromStore)
       : 0;
@@ -562,247 +560,17 @@ const Checkout = () => {
         shippingCost: Number(state.shippingCost),
         productDetails: myCheckoutProducts,
       };
+      /* Tabby payment flow disabled
       if (Number(state?.selectedPaymentType) === 2) {
-        let itemsDetails = [];
-
-        state?.products.forEach((product) => {
-          itemsDetails.push({
-            title: product?.deal_title,
-            quantity: Number(product?.item_quantity),
-            unit_price: String(product?.currentPrice),
-            category: String(product?.sub_product_id),
-          });
-        });
-
-        let requestData = {
-          ...data,
-          cart_id: state?.userInfo?.user_id ? state.cartId : 0,
-          paymentMethod: Number(data?.paymentMethod),
-          city: Number(data?.city),
-          state: Number(data?.state),
-          country: Number(data?.country),
-          address: data?.address,
-          notes: data?.notes,
-          discount: state.isValidPromocode ? state?.discount : 0,
-          discountType: Number(
-            state.isValidPromocode ? state?.discountType : ""
-          ),
-          promocode: state.isValidPromocode ? state?.promocode : "",
-          grandTotal: Number(state?.totalWithShipping),
-          totalDiscount: state.isValidPromocode
-            ? Number(state?.totalDiscount)
-            : 0,
-          totalTax: Number(state?.totalTax) ?? 0,
-          tax: Number(state?.response?.tax),
-          subTotal: Number(state?.subTotal),
-          totalShippingCost: Number(state.shippingCost),
-          productIds: myCheckoutProducts,
-        };
-
-        let paymentData = {
-          payment: {
-            amount: String(state?.totalWithShipping),
-            currency: "AED",
-            buyer: {
-              phone: data.phone_number,
-              email: data.email,
-              name: data.name,
-            },
-            shipping_address: {
-              city: data.city,
-              address: data.address,
-              zip: "00000",
-            },
-            order: {
-              tax_amount: "5.00",
-              shipping_amount: "1.00",
-              discount_amount: "2.00",
-              reference_id: state?.cartId.toString(),
-              items: itemsDetails,
-            },
-            buyer_history: {
-              registered_since: "2019-08-24T14:15:22Z",
-              loyalty_level: 0,
-            },
-            order_history: [
-              {
-                purchased_at: new Date().toISOString(),
-                amount: String(state?.totalWithShipping),
-                status: "new",
-                buyer: {
-                  phone: data.phone_number,
-                  email: data.email,
-                  name: data.name,
-                },
-                shipping_address: {
-                  city: data.city,
-                  address: data.address,
-                  zip: data.state,
-                },
-              },
-            ],
-            meta: { requestData },
-          },
-          lang: "en",
-          merchant_code: "MANAHEL ALTHUNAYYAN CO.LLC SPare",
-          // merchant_urls: {
-          //   success: "http://localhost:3000/tabby-success",
-          //   cancel: "http://localhost:3000/tabby-failed",
-          //   failure: "http://localhost:3000/tabby-cancel",
-          // },
-          // merchant_urls: {
-          //   success: "https://ecom.indiprotechnologies.com/tabby-success",
-          //   cancel: "https://ecom.indiprotechnologies.com/tabby-failed",
-          //   failure: "https://ecom.indiprotechnologies.com/tabby-cancel",
-          // },
-          merchant_urls: {
-            success: "https://www.thunyanhoneyuae.com/tabby-success",
-            cancel: "https://www.thunyanhoneyuae.com/tabby-failed",
-            failure: "https://www.thunyanhoneyuae.com/tabby-cancel",
-          },
-          token: null,
-        };
-        console.log("paymentData of TABBY : ", paymentData);
-        const tabbyResponse = await initiateTabbyPayment(paymentData);
-        console.log("tabbyResponse of TABBY : ", tabbyResponse);
-        let webUrl = tabbyResponse.data.webURL;
-        if (tabbyResponse.data.success == true && webUrl) {
-          window.location.href = webUrl;
-          return;
-        } else if (webUrl == "") {
-          toast.error(t("tabby_rejected_message"));
-          navigate("/checkout");
-          return;
-        }
+        // ... Tabby initiateTabbyPayment ...
       }
+      */
 
+      /* Tamara payment flow disabled
       if (Number(state?.selectedPaymentType) === 3) {
-        let itemsDetails = [];
-        state?.products.forEach((product) => {
-          itemsDetails.push({
-            name: product?.deal_title,
-            quantity: Number(product?.item_quantity),
-            reference_id: state?.cartId.toString(),
-            type: "Digital",
-            sku: String(product?.sub_product_id),
-            total_amount: {
-              amount: state?.subTotal,
-              currency: "SAR",
-            },
-          });
-        });
-
-        let requestData = {
-          ...data,
-          cart_id: state?.userInfo?.user_id ? state.cartId : 0,
-          paymentMethod: Number(data?.paymentMethod),
-          city: Number(data?.city),
-          state: Number(data?.state),
-          country: Number(data?.country),
-          address: data?.address,
-          notes: data?.notes,
-          discount: state.isValidPromocode ? state?.discount : 0,
-          discountType: Number(
-            state.isValidPromocode ? state?.discountType : ""
-          ),
-          promocode: state.isValidPromocode ? state?.promocode : "",
-          grandTotal: Number(state?.totalWithShipping),
-          totalDiscount: state.isValidPromocode
-            ? Number(state?.totalDiscount)
-            : 0,
-          totalTax: Number(state?.totalTax) ?? 0,
-          tax: Number(state?.response?.tax),
-          subTotal: Number(state?.subTotal),
-          totalShippingCost: Number(state.shippingCost),
-          productIds: myCheckoutProducts,
-        };
-
-        const fullName = data.name.trim();
-        const nameParts = fullName.split(" ");
-        const firstName = nameParts.shift();
-        const lastName = nameParts.pop();
-
-        let requestDataTamara = {
-          total_amount: {
-            amount: state?.totalWithShipping,
-            currency: "AED",
-          },
-          shipping_amount: {
-            amount: Number(state.shippingCost),
-            currency: "AED",
-          },
-          tax_amount: {
-            amount: Number(state?.totalTax),
-            currency: "AED",
-          },
-          order_reference_id: state?.cartId.toString(),
-          items: itemsDetails,
-          total_amount: {
-            amount: state?.totalWithShipping,
-            currency: "AED",
-          },
-          consumer: {
-            email: data.email,
-            first_name: firstName,
-            last_name: lastName,
-            phone_number: data.phone_number,
-          },
-          country_code: "AE",
-          description: "The order description ",
-          // STAGING
-          // merchant_url: {
-          //   cancel: "https://ecom.indiprotechnologies.com/tamara-cancel",
-          //   failure: "https://ecom.indiprotechnologies.com/tamara-fail",
-          //   success: "https://ecom.indiprotechnologies.com/tamara-success",
-          //   notification:
-          //     "https://ecomapi.indiprotechnologies.com/api/checkoutTest/tamara-webhook",
-          // },
-
-          //   LIVE
-          //   merchant_url: {
-          //     cancel: "https://www.thunyanhoneyuae.com/tamara-cancel",
-          //     failure: "https://www.thunyanhoneyuae.com/tamara-fail",
-          //     success: "https://www.thunyanhoneyuae.com/tamara-success",
-          //     notification:
-          //       "https://api.thunyanhoneyuae.com/api/checkoutTest/tamara-webhook",
-          //   },
-
-          //   LOCAL
-          // merchant_url: {
-          //   cancel: "http://localhost:3000/tamara-cancel",
-          //   failure: "http://localhost:3000/tamara-fail",
-          //   success: "http://localhost:3000/tamara-success",
-          //   notification:
-          //     "https://2d86-2401-4900-8827-4b4b-796c-89d4-3614-cdd0.ngrok-free.app/api/checkoutTest/tamara-webhook",
-          // },
-          payment_type: installmentOption,
-          instalments: 3,
-          shipping_address: {
-            city: String(data?.city),
-            country_code: "AE",
-            first_name: firstName,
-            last_name: lastName,
-            line1: data?.address,
-            line2: data?.state,
-          },
-          additional_data: requestData,
-        };
-
-        console.log("requestDataTamara TAMARA : ", requestDataTamara);
-
-        const tamaraResponse = await createTamaraSession(requestDataTamara);
-        console.log("tamaraResponse TAMARA : ", tamaraResponse);
-
-        let webUrl = tamaraResponse.data.webURL;
-        if (tamaraResponse.data.success == true && webUrl) {
-          window.location.href = webUrl;
-          return;
-        } else if (!webUrl) {
-          toast.error(t("tamara_rejected_message"));
-          navigate("/checkout");
-          return;
-        }
+        // ... Tamara createTamaraSession ...
       }
+      */
 
       const response = await validateCheckoutDetails(requestData);
       setErrors(initialErrors);
@@ -1417,11 +1185,12 @@ const Checkout = () => {
                           {t("cash_on_delivery")}
                         </label>
                       </div>
+                      {/* MyFatoorah / online payment disabled
                       <div className="form-check form-check-inline">
                         <input
                           className="form-check-input"
                           type="radio"
-                          value={1} // Numeric value for online_payment
+                          value={1}
                           checked={state?.selectedPaymentType === 1}
                           onChange={handlePaymentMethodChange}
                         />
@@ -1433,130 +1202,17 @@ const Checkout = () => {
                           {t("online_payment")}
                         </label>
                       </div>
-                      <div className="form-check form-check-inline">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          value={2}
-                          checked={state?.selectedPaymentType === 2}
-                          onChange={handlePaymentMethodChange}
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="female"
-                          style={{ marginLeft: "5px" }}
-                        >
-                          {t("tabby")}
-                        </label>
-                      </div>
-                      <div className="form-check-description">
-                        <div className="description-container">
-                          <p className="tabby-text">
-                            {t("tabby_description")}
-                            <span
-                              className="tabby_description"
-                              onClick={handleTabbyIconClick}
-                            >
-                              {t("Learn_more")}
-                            </span>
-                          </p>
-                          <div
-                            className="tabbyLogo"
-                            onClick={handleTabbyIconClick}
-                          >
-                            <img src={tabblyIcon} alt="Tabby" />
-                          </div>
-                        </div>
-                        <Popup
-                          isVisible={isTabbyPopupVisible}
-                          onClose={handleClosePopup}
-                        />
-                      </div>
-                      <div className="form-check form-check-inline">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          value={3}
-                          checked={state?.selectedPaymentType === 3}
-                          onChange={handlePaymentMethodChange}
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="female"
-                          style={{ marginLeft: "5px" }}
-                        >
-                          {t("tamara")}
-                        </label>
-                      </div>
-                      {state?.selectedPaymentType === 3 && (
-                        <div>
-                          <select
-                            style={{ marginBottom: "15px", fontSize: "13px" }}
-                            value={installmentOption}
-                            onChange={handleInstallmentOptionChange}
-                            className="form-select"
-                          >
-                            <option value="">
-                              {t("select_payment_option")}
-                            </option>
-                            <option value="PAY_NOW">
-                              {t("pay_full_payment")}
-                            </option>
-                            <option value="PAY_BY_INSTALMENTS">
-                              {t("pay_by_installments")}
-                            </option>
-                          </select>
-
-                          {/* {installmentOption === "PAY_BY_INSTALMENTS" && (
-                            <div>
-                              <h6 style={{ marginTop: "22px" }}>
-                                {t("select_number_of_installments")}
-                              </h6>
-                              <select
-                                style={{
-                                  marginTop: "-10px",
-                                  marginBottom: "15px",
-                                  fontSize: "12px",
-                                }}
-                                value={installmentSplit}
-                                onChange={handleInstallmentSplitChange}
-                                className="form-select"
-                              >
-                                <option value="2">2 {t("installments")}</option>
-                                <option value="3">3 {t("installments")}</option>
-                                <option value="4">4 {t("installments")}</option>
-                              </select>
-                            </div>
-                          )} */}
-                        </div>
-                      )}
+                      */}
+                      {/* Tabby disabled
+                      <div className="form-check form-check-inline">...</div>
+                      */}
+                      {/* Tamara disabled
+                      <div className="form-check form-check-inline">...</div>
+                      */}
                     </div>
-                    <div
-                      className="form-check-description"
-                      style={{ marginTop: "-20px" }}
-                    >
-                      <div className="description-container">
-                        <p className="tabby-text">
-                          {t("tamara_description")}
-                          <span
-                            className="tabby_description"
-                            onClick={handleTamaraIconClick}
-                          >
-                            {t("Learn_more")}
-                          </span>
-                        </p>
-                        <div
-                          className="tabbyLogo"
-                          onClick={handleTamaraIconClick}
-                        >
-                          <img src={tamaraIcon} alt="Tamara" />
-                        </div>
-                      </div>
-                      <PopupTamara
-                        isVisible={isTamaraPopupVisible}
-                        onClose={handleTamaraClosePopup}
-                      />
-                    </div>
+                    {/* Tamara description / popup disabled
+                    <div className="form-check-description">...</div>
+                    */}
 
                     {/* <div className="payment-opt-blk">
                       <h6>{t("payment_method")}</h6>

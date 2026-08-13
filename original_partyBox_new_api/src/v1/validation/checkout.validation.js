@@ -9,7 +9,7 @@ exports.cartCheckoutSchema = {
     state: JOI.number().required().label("State"),
     city: JOI.number().required().label("City"),
     // address: JOI.string().required().min(30).max(250).label("Address"),
-    address: JOI.string().required().min(10).max(30).label("Address"),
+    address: JOI.string().required().min(10).max(250).label("Address"),
     notes: JOI.string().min(10).max(250).allow(null, "").label("Notes"),
     isPickupFromStore: JOI.any().required().label("Delivery type"),
     productDetails: JOI.array()

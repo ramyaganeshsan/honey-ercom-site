@@ -524,9 +524,11 @@ exports.validateCheckoutDetails = async (req, res, next) => {
         productIds.push(productId);
       });
 
+      // MyFatoorah / Tabby / Tamara disabled — always place order as COD (-1)
+      const effectivePaymentMethod = -1;
       // if (Number(paymentMethod) === -1 || Number(paymentMethod) === -2) {
 
-      if (Number(paymentMethod) === -1) {
+      if (Number(effectivePaymentMethod) === -1) {
         let paymentId = `${userDetails?.user_id}00${getCurrentTimestamp()}`;
         let {
           status,
@@ -543,7 +545,7 @@ exports.validateCheckoutDetails = async (req, res, next) => {
           grandTotal: finalPrice,
           subTotal: totalPrice,
           paymentId: paymentId,
-          paymentMethod: paymentMethod,
+          paymentMethod: effectivePaymentMethod,
           id: paymentId,
           requestData: req.body,
           sessionID: sessionID,
@@ -564,47 +566,16 @@ exports.validateCheckoutDetails = async (req, res, next) => {
           response["message"] = getMessage("try_again", req.lang);
         }
       } else {
+        /* MyFatoorah ExecutePayment disabled
         let paymentDetails = {
           PaymentMethodId: Number(paymentMethod),
           InvoiceValue: finalPrice,
-          CustomerMobile: userDetails.phone_number,
-          CustomerEmail: userDetails.email,
-          Language: "EN",
-          CallBackUrl: PAYMENT_SUCCESS_URL,
-          ErrorUrl: PAYMENT_FAILED_URL,
-          CustomerReference: userDetails.user_id,
-          CustomerAdress: { Address: req.body?.address },
-          userDefinedField: JSON.stringify({
-            promocode: req.body?.promocode,
-            discount: req.body?.discount,
-            discount_type: req.body?.discountType,
-            productIds: productIds,
-            cart_id: req.body?.cartId,
-            totalShippingCost: totalShippingCost,
-            totalDiscount: promocodeDiscount,
-            grandTotal: finalPrice,
-            subTotal: totalPrice,
-            tax: tax,
-            totalTax: totalTax,
-            paymentMethod: Number(paymentMethod),
-            sessionID: sessionID ? sessionID : "",
-            isPickupFromStore: req?.body?.isPickupFromStore
-              ? req?.body?.isPickupFromStore
-              : 0,
-            shippingDetails: `${req.body.country}-${req.body.state}-${req.body.city}`,
-          }),
+          ...
         };
-
         let paymentResponse = await executePaymentDetails(paymentDetails);
-        if (paymentResponse?.IsSuccess) {
-          await updateCartCheckoutDetails(req.body);
-
-          response["status"] = getStatusCode("success");
-          response["message"] = "";
-          response["data"] = { paymentURL: paymentResponse.Data.PaymentURL };
-        } else {
-          response["message"] = getMessage("try_again", req.lang);
-        }
+        ...
+        */
+        response["message"] = getMessage("try_again", req.lang);
       }
     } else {
       response["message"] = getMessage("total_error", req.lang);

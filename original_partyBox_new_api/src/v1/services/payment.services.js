@@ -36,6 +36,11 @@ const FALLBACK_PAYMENT_METHODS = [
 exports.getFallbackPaymentMethods = () => FALLBACK_PAYMENT_METHODS;
 
 exports.PaymentMethodsDetails = async () => {
+  // MyFatoorah InitiatePayment disabled — return local fallback so checkout opens.
+  // Re-enable the block below when TOKEN is configured.
+  return FALLBACK_PAYMENT_METHODS;
+
+  /*
   console.log(
     "caling ---------------------------------------------------------------------------------------"
   );
@@ -77,17 +82,11 @@ exports.PaymentMethodsDetails = async () => {
     logger.warn("MyFatoorah returned no payment methods; using fallback");
     return FALLBACK_PAYMENT_METHODS;
   } catch (err) {
-    console.error(
-      ")))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))0"
-    );
-    console.error("error : ", err);
-    console.error(
-      "))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))"
-    );
     console.log(err.message);
     logger.error(err);
     return FALLBACK_PAYMENT_METHODS;
   }
+  */
 };
 
 exports.executePaymentDetails = async (paymentDetails) => {

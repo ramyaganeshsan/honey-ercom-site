@@ -27,6 +27,7 @@ checkoutRoutes
   .get(getUserCheckoutDetails)
   .post(validateParams(cartCheckoutSchema), validateCheckoutDetails)
   .put(validateParams(validatePaymentStatusSchema), getPaymentStatus);
+/* Tabby / Tamara routes disabled — Place order uses COD only
 checkoutRoutes.route("/initiateTabbyPayment").post(initiateTabbyPayment);
 checkoutRoutes.route("/verifyTabbyPayment").get(verifyPayment);
 checkoutRoutes.route("/webhooks/tabby").post(handleTabbyWebhook);
@@ -35,6 +36,7 @@ checkoutRoutes.route("/createTamaraSesson").post(createTamaraSesson);
 checkoutRoutes.route("/authorisePayment").post(sendOrderStaus);
 checkoutRoutes.route("/registerWebhooks").post(registerTamaraWebhook);
 checkoutRoutes.route("/tamara-webhook").post(handleTamaraWekhook);
+*/
 checkoutRoutes.route("/fetchDimensions").post(fetchSubProductDimensions);
 checkoutRoutes.route("/DHLGetratingApi").get(DHLRating);
 checkoutRoutes.route("/DHLWebhook").post(handleDHLWebhook);
