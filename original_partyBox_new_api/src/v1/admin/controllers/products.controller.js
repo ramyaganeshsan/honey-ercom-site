@@ -191,6 +191,9 @@ exports.createProduct = async (req, res) => {
       return res.send(fail("deal_title is required"));
     }
     const payload = productDefaults(body);
+    if (!payload.url_title) {
+      payload.url_title = slugify(payload.deal_title);
+    }
     const product = await create("product", payload);
     await syncSubProduct(product.deal_id, product, body);
     const subProducts = await findAll("sub_products", {
@@ -199,7 +202,13 @@ exports.createProduct = async (req, res) => {
     return res.send(ok({ ...product, sub_products: subProducts }, "Product created"));
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to create product"));
+    const details =
+      err?.name === "ValidationError"
+        ? Object.values(err.errors || {})
+            .map((e) => e.message)
+            .join("; ")
+        : err?.message;
+    return res.send(fail(details || "Failed to create product"));
   }
 };
 
