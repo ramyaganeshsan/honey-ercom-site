@@ -65,7 +65,7 @@ async function queryProductsWithRatings({
   nameFields = ["deal_title", "deal_title_french"],
   rate_review = "",
   sort_by = "",
-  pageNumber = 0,
+  pageNumber = 1,
   pageSize = 20,
   offsetOverride = null,
 }) {
@@ -82,15 +82,15 @@ async function queryProductsWithRatings({
 
   const ratingValues = parseRatingFilter(rate_review);
   const sort = buildSort(sort_by);
+  const safePage = Number(pageNumber);
+  const safeSize = Number(pageSize);
   const skip =
     offsetOverride != null
-      ? offsetOverride
-      : isNaN(pageNumber * pageSize)
+      ? Math.max(0, Number(offsetOverride) || 0)
+      : !safePage || isNaN(safePage) || safePage <= 1 || isNaN(safeSize)
       ? 0
-      : Number(pageNumber) === 1
-      ? 0
-      : Number((pageNumber - 1) * pageSize);
-  const limit = isNaN(pageSize) ? 0 : Number(pageSize);
+      : Math.max(0, (safePage - 1) * safeSize);
+  const limit = isNaN(safeSize) || safeSize < 1 ? 20 : safeSize;
 
   const pipeline = [
     { $match: filter },
