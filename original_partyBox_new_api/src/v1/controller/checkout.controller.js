@@ -40,9 +40,21 @@ const {
 const logger = require("../utils/logger");
 const {
   PaymentMethodsDetails,
+  getFallbackPaymentMethods,
   executePaymentDetails,
   validatePaymentStatus,
 } = require("../services/payment.services");
+
+async function resolvePaymentMethods() {
+  try {
+    const methods = await PaymentMethodsDetails();
+    if (Array.isArray(methods) && methods.length > 0) return methods;
+  } catch (error) {
+    console.error("Error fetching payment methods:", error);
+    logger.error("PaymentMethodsDetails error:", error);
+  }
+  return getFallbackPaymentMethods();
+}
 const { validatePromocode } = require("../services/promocode.services");
 const {
   PAYMENT_FAILED_URL,
@@ -101,29 +113,7 @@ exports.getUserCheckoutDetails = async (req, res, next) => {
             getCartDetailsUsingSessionDetails(cartDetails),
           ]);
 
-          let paymentMethods = [];
-          try {
-            paymentMethods = await PaymentMethodsDetails();
-          } catch (error) {
-            console.error("Error fetching payment methods:", error);
-            logger.error("PaymentMethodsDetails error:", error);
-          }
-          // paymentMethods = [
-          //   {
-          //     PaymentMethodId: 6,
-          //     PaymentMethodAr: "البطاقات المدينة/الدائنة",
-          //     PaymentMethodEn: "Debit/Credit Cards",
-          //     PaymentMethodCode: "uaecc",
-          //     IsDirectPayment: false,
-          //     ServiceCharge: 0,
-          //     TotalAmount: 0,
-          //     CurrencyIso: "AED",
-          //     ImageUrl:
-          //       "https://portal.myfatoorah.com/imgs/payment-methods/uaecc.png",
-          //     IsEmbeddedSupported: true,
-          //     PaymentCurrencyIso: "AED",
-          //   },
-          // ];
+          let paymentMethods = await resolvePaymentMethods();
 
           let response = {
             status: getStatusCode("failed"),
@@ -195,41 +185,24 @@ exports.getUserCheckoutDetails = async (req, res, next) => {
       userDetails.user_id
     );
     let userAddressDetails = await getUserAddDetails(userDetails.user_id);
-    let paymentMethods = await PaymentMethodsDetails();
-
-    // let paymentMethods = [
-    //   {
-    //     PaymentMethodId: 6,
-    //     PaymentMethodAr: "البطاقات المدينة/الدائنة",
-    //     PaymentMethodEn: "Debit/Credit Cards",
-    //     PaymentMethodCode: "uaecc",
-    //     IsDirectPayment: false,
-    //     ServiceCharge: 0,
-    //     TotalAmount: 0,
-    //     CurrencyIso: "AED",
-    //     ImageUrl:
-    //       "https://portal.myfatoorah.com/imgs/payment-methods/uaecc.png",
-    //     IsEmbeddedSupported: true,
-    //     PaymentCurrencyIso: "AED",
-    //   },
-    // ];
+    let paymentMethods = await resolvePaymentMethods();
 
     let siteSettings = await getSiteInfo();
 
     if (
       stateAndCityDetails.length > 0 &&
       userCheckoutProducts.length > 0 &&
-      userAddressDetails.length > 0 &&
       paymentMethods.length > 0
     ) {
       let shippingCost = 0;
       let cartId = userCheckoutProducts[0]["cart_id"];
+      let addressDetails = userAddressDetails[0] ?? {};
 
-      if (userAddressDetails[0]["address1"]) {
+      if (addressDetails["address1"] && stateAndCityDetails[0]?.cities) {
         for (let i = 0; i < stateAndCityDetails[0].cities.length; i++) {
           let city = stateAndCityDetails[0].cities[i];
 
-          if (city.city_id === userAddressDetails[0]["city_id"]) {
+          if (city.city_id === addressDetails["city_id"]) {
             shippingCost = city["delivery_charge"];
           }
         }
@@ -241,7 +214,7 @@ exports.getUserCheckoutDetails = async (req, res, next) => {
         data: {
           stateAndCities: stateAndCityDetails,
           products: userCheckoutProducts,
-          userDetails: userAddressDetails[0] ?? {},
+          userDetails: addressDetails,
           shippingCost,
           cartId,
           paymentMethods: paymentMethods,
@@ -259,6 +232,8 @@ exports.getUserCheckoutDetails = async (req, res, next) => {
 
       if (userCheckoutProducts.length <= 0) {
         response["message"] = getMessage("empty_cart", req.lang);
+      } else if (!stateAndCityDetails.length) {
+        response["message"] = getMessage("something_went_wrong_error", req.lang);
       }
 
       return res.send(response);

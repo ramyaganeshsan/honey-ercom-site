@@ -16,6 +16,25 @@ let headers = {
   "Content-Type": "application/json",
 };
 
+/** Local/dev fallback when MyFatoorah TOKEN is missing or InitiatePayment fails. */
+const FALLBACK_PAYMENT_METHODS = [
+  {
+    PaymentMethodId: 6,
+    PaymentMethodAr: "البطاقات المدينة/الدائنة",
+    PaymentMethodEn: "Debit/Credit Cards",
+    PaymentMethodCode: "uaecc",
+    IsDirectPayment: false,
+    ServiceCharge: 0,
+    TotalAmount: 0,
+    CurrencyIso: "AED",
+    ImageUrl: "https://portal.myfatoorah.com/imgs/payment-methods/uaecc.png",
+    IsEmbeddedSupported: true,
+    PaymentCurrencyIso: "AED",
+  },
+];
+
+exports.getFallbackPaymentMethods = () => FALLBACK_PAYMENT_METHODS;
+
 exports.PaymentMethodsDetails = async () => {
   console.log(
     "caling ---------------------------------------------------------------------------------------"
@@ -23,7 +42,15 @@ exports.PaymentMethodsDetails = async () => {
   let paymentMethods = await getValueFromRedis("paymentMethods");
   if (paymentMethods) {
     let parsedResponse = parseData(paymentMethods);
-    if (parsedResponse?.status) return parsedResponse?.data;
+    if (parsedResponse?.status) {
+      const cached = parsedResponse?.data;
+      if (Array.isArray(cached) && cached.length > 0) return cached;
+    }
+  }
+
+  if (!token || !String(token).trim()) {
+    logger.warn("MyFatoorah TOKEN is empty; using fallback payment methods");
+    return FALLBACK_PAYMENT_METHODS;
   }
 
   try {
@@ -37,16 +64,18 @@ exports.PaymentMethodsDetails = async () => {
     });
 
     if (response && response.data && response.data["IsSuccess"]) {
-      let stringifyResponse = stringifyData(
-        response.data["Data"]["PaymentMethods"]
-      );
-      if (stringifyResponse?.status) {
-        await setValueRedis("paymentMethods", stringifyResponse.data, 86400);
+      const methods = response.data["Data"]["PaymentMethods"] || [];
+      if (methods.length > 0) {
+        let stringifyResponse = stringifyData(methods);
+        if (stringifyResponse?.status) {
+          await setValueRedis("paymentMethods", stringifyResponse.data, 86400);
+        }
+        return methods;
       }
-      return response.data["Data"]["PaymentMethods"];
     }
 
-    return [];
+    logger.warn("MyFatoorah returned no payment methods; using fallback");
+    return FALLBACK_PAYMENT_METHODS;
   } catch (err) {
     console.error(
       ")))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))0"
@@ -57,7 +86,7 @@ exports.PaymentMethodsDetails = async () => {
     );
     console.log(err.message);
     logger.error(err);
-    return [];
+    return FALLBACK_PAYMENT_METHODS;
   }
 };
 

@@ -43,6 +43,10 @@ exports.validateJwtToken = (req, res, next) => {
     const isUnprotectedPrefix = (prefix) =>
       path === prefix || path.startsWith(prefix + "/");
 
+    // Auth/signup paths skip JWT entirely. `/api/checkout` must NOT be here —
+    // it is unprotected (guest + logged-in) and needs optional JWT decode below
+    // so logged-in carts resolve by user_id. Skipping decode made checkout
+    // return "Your cart is empty" even when /api/cart had items.
     if (
       isUnprotectedPrefix("/api/auth/signup") ||
       isUnprotectedPrefix("/api/auth/login") ||
@@ -52,7 +56,6 @@ exports.validateJwtToken = (req, res, next) => {
       isUnprotectedPrefix("/api/auth/twitter_callback") ||
       isUnprotectedPrefix("/api/auth/send_otp") ||
       isUnprotectedPrefix("/api/auth/verify_otp") ||
-      isUnprotectedPrefix("/api/checkout") ||
       isUnprotectedPrefix("/api/admin/auth")
     ) {
       return next();
