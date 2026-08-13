@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { categoriesApi, productsApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
@@ -222,6 +223,18 @@ export default function ProductsPage() {
       toast.error('Title is required')
       return
     }
+    if (!Number(form.category_id)) {
+      toast.error('Select Category first (step 1)')
+      return
+    }
+    if (subCategories.length > 0 && !Number(form.sub_category_id)) {
+      toast.error('Select Sub category (step 2) under the chosen Category')
+      return
+    }
+    if (parentCategories.length === 0) {
+      toast.error('Create a Category first in Categories menu')
+      return
+    }
     setSaving(true)
     const payload = buildPayload()
     const id = editing?.deal_id ?? editing?.id
@@ -370,9 +383,73 @@ export default function ProductsPage() {
           </>
         }
       >
+        <div className="flow-steps compact">
+          <span className={form.category_id ? 'done' : 'active'}>1. Category</span>
+          <span
+            className={
+              form.sub_category_id ? 'done' : form.category_id ? 'active' : ''
+            }
+          >
+            2. Sub category
+          </span>
+          <span className={form.category_id && form.sub_category_id ? 'active' : ''}>
+            3. Product
+          </span>
+        </div>
+
         <div className="form-grid">
+          <div className="form-field">
+            <label>1. Category</label>
+            <select name="category_id" value={form.category_id} onChange={onChange}>
+              <option value="">Select category</option>
+              {parentCategories.map((c) => (
+                <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
+                  {c.category_name}
+                </option>
+              ))}
+            </select>
+            {parentCategories.length === 0 ? (
+              <p className="field-hint">
+                No categories yet.{' '}
+                <Link to="/categories">Create Category first</Link>
+              </p>
+            ) : null}
+          </div>
+          <div className="form-field">
+            <label>2. Sub category</label>
+            <select
+              name="sub_category_id"
+              value={form.sub_category_id}
+              onChange={onChange}
+              disabled={!form.category_id}
+            >
+              <option value="">
+                {!form.category_id
+                  ? 'Select category first'
+                  : subCategories.length
+                    ? 'Select sub category'
+                    : 'No sub categories — add under Categories'}
+              </option>
+              {subCategories.map((c) => (
+                <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
+                  {c.category_name}
+                </option>
+              ))}
+            </select>
+            {form.category_id && subCategories.length === 0 ? (
+              <p className="field-hint">
+                <Link to="/categories">Add a Sub category</Link> under this Category, then
+                return here.
+              </p>
+            ) : (
+              <p className="field-hint">
+                Sub category list shows only children of the selected Category.
+              </p>
+            )}
+          </div>
+
           <div className="form-field full">
-            <label>Product image</label>
+            <label>3. Product image</label>
             <div className="image-upload">
               {imagePreview ? (
                 <img className="image-preview" src={imagePreview} alt="Product preview" />
@@ -382,7 +459,8 @@ export default function ProductsPage() {
               <div>
                 <input type="file" accept="image/*" onChange={onImageChange} />
                 <p className="field-hint">
-                  Uploads as {'{deal_key}_1.png'} into product image sizes (1000×800, 160×180, 80×80).
+                  Uploads as {'{deal_key}_1.png'} into product image sizes (1000×800, 160×180,
+                  80×80).
                 </p>
               </div>
             </div>
@@ -486,43 +564,6 @@ export default function ProductsPage() {
           </div>
 
           <div className="form-field">
-            <label>Category</label>
-            <select name="category_id" value={form.category_id} onChange={onChange}>
-              <option value="">Select category</option>
-              {parentCategories.map((c) => (
-                <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
-                  {c.category_name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-field">
-            <label>Sub category</label>
-            <select
-              name="sub_category_id"
-              value={form.sub_category_id}
-              onChange={onChange}
-              disabled={!form.category_id}
-            >
-              <option value="">
-                {form.category_id
-                  ? subCategories.length
-                    ? 'Select sub category'
-                    : 'No sub categories for this category'
-                  : 'Select category first'}
-              </option>
-              {subCategories.map((c) => (
-                <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
-                  {c.category_name}
-                </option>
-              ))}
-            </select>
-            <p className="field-hint">
-              Sub categories are linked via category.main_category_id → parent category_id
-            </p>
-          </div>
-
-          <div className="form-field">
             <label>Brand name</label>
             <input name="brand_names" value={form.brand_names} onChange={onChange} />
           </div>
@@ -615,11 +656,26 @@ export default function ProductsPage() {
       <div className="page-header">
         <div>
           <h2>Products</h2>
-          <p>Create and manage honey catalog items</p>
+          <p>Step 3 — after Category and Sub category are ready</p>
         </div>
         <button type="button" className="btn btn-primary" onClick={openCreate}>
           Add product
         </button>
+      </div>
+
+      <div className="flow-steps">
+        <Link to="/categories" className="flow-step">
+          <strong>1</strong>
+          <span>Category</span>
+        </Link>
+        <Link to="/categories" className="flow-step">
+          <strong>2</strong>
+          <span>Sub category</span>
+        </Link>
+        <span className="flow-step active">
+          <strong>3</strong>
+          <span>Product</span>
+        </span>
       </div>
 
       <div className="toolbar">
