@@ -1,6 +1,5 @@
-const { rate_review } = require("../models");
 const { getCurrentTimestamp } = require("../utils");
-const tableConfig = require("../database/table.config.json");
+const { create, findAll } = require("../mongo/repo");
 
 exports.addReview = async (body, currentUser) => {
   let data = {
@@ -14,7 +13,7 @@ exports.addReview = async (body, currentUser) => {
     module_id: 2,
     user_id: currentUser.user_id,
   };
-  let response = await rate_review.create(data);
+  let response = await create("rate_review", data);
   return response;
 };
 
@@ -22,26 +21,68 @@ exports.getReviews = async (dealId, userId) => {
   let userReviews = [];
   let otherReviews = [];
   let limit = 10;
+
   if (userId && !isNaN(userId)) {
-    let userReviewsQuery = `SELECT id, rating, review_description, created_date FROM ${tableConfig.rate_review} WHERE user_id = ${userId} AND type_id = ${dealId} ORDER BY created_date DESC LIMIT 10;`;
-    userReviews = await global?.SEQUELIZE?.query(userReviewsQuery, {
-      type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-    });
+    userReviews = await findAll(
+      "rate_review",
+      { user_id: Number(userId), type_id: Number(dealId) },
+      {
+        attributes: ["id", "rating", "review_description", "created_date"],
+        order: [["created_date", "DESC"]],
+        limit: 10,
+      }
+    );
 
     if (userReviews.length < 10) {
       limit = limit - userReviews.length;
     }
   }
-  if (limit && limit > 0) {
-    let userReviewsQuery = `SELECT id, rating, review_description, created_date, ${tableConfig.users}.firstname, ${tableConfig.users}.lastname FROM ${tableConfig.rate_review} JOIN ${tableConfig.users} ON ${tableConfig.users}.user_id = ${tableConfig.rate_review}.user_id WHERE ${tableConfig.rate_review}.type_id = ${dealId} ORDER BY created_date DESC LIMIT ${limit};`;
 
+  if (limit && limit > 0) {
+    const otherFilter = {
+      type_id: Number(dealId),
+    };
     if (userId && !isNaN(userId)) {
-      userReviewsQuery = `SELECT id, rating, review_description, created_date, ${tableConfig.users}.firstname, ${tableConfig.users}.lastname FROM ${tableConfig.rate_review} JOIN ${tableConfig.users} ON ${tableConfig.users}.user_id = ${tableConfig.rate_review}.user_id WHERE ${tableConfig.rate_review}.user_id != ${userId} AND ${tableConfig.rate_review}.type_id = ${dealId} ORDER BY created_date DESC LIMIT ${limit};`;
+      otherFilter.user_id = { $ne: Number(userId) };
     }
 
-    otherReviews = await global?.SEQUELIZE?.query(userReviewsQuery, {
-      type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+    const reviews = await findAll("rate_review", otherFilter, {
+      attributes: [
+        "id",
+        "rating",
+        "review_description",
+        "created_date",
+        "user_id",
+      ],
+      order: [["created_date", "DESC"]],
+      limit,
     });
+
+    const userIds = [...new Set(reviews.map((r) => r.user_id))];
+    const users =
+      userIds.length > 0
+        ? await findAll(
+            "users",
+            { user_id: { $in: userIds } },
+            { attributes: ["user_id", "firstname", "lastname"] }
+          )
+        : [];
+    const userMap = Object.fromEntries(
+      users.map((u) => [u.user_id, u])
+    );
+
+    // Original SQL used JOIN — only return reviews that have a matching user
+    otherReviews = reviews
+      .filter((review) => userMap[review.user_id])
+      .map((review) => ({
+        id: review.id,
+        rating: review.rating,
+        review_description: review.review_description,
+        created_date: review.created_date,
+        firstname: userMap[review.user_id].firstname,
+        lastname: userMap[review.user_id].lastname,
+      }));
   }
+
   return { myReviews: userReviews, othersReview: otherReviews };
 };

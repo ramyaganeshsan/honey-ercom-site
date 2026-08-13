@@ -4,6 +4,7 @@ const {
   stringifyData,
   setValueRedis,
 } = require("../utils");
+const { findOne } = require("../mongo/repo");
 
 exports.getCMSDetails = async (id) => {
   let newProducts = await getValueFromRedis("cms_about_us");
@@ -12,11 +13,20 @@ exports.getCMSDetails = async (id) => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let query = `SELECT cms_desc, cms_desc_french, cms_title, cms_title_french FROM cms WHERE cms_id = ${id}`;
+  const doc = await findOne(
+    "cms",
+    { cms_id: Number(id) },
+    {
+      attributes: [
+        "cms_desc",
+        "cms_desc_french",
+        "cms_title",
+        "cms_title_french",
+      ],
+    }
+  );
 
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  const response = doc ? [doc] : [];
   console.log("response : ", response);
   let stringifyResponse = stringifyData(response);
   if (stringifyResponse?.status) {

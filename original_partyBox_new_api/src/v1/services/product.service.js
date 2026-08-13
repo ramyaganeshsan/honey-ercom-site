@@ -1,4 +1,3 @@
-const tableConfig = require("../database/table.config.json");
 const {
   getValueFromRedis,
   stringifyData,
@@ -6,6 +5,161 @@ const {
   parseData,
 } = require("../utils");
 const { PRODUCT_DISPLAY_IMAGE } = require("../utils/constants");
+const { findOne, findAll, count, aggregate } = require("../mongo/repo");
+
+const APPROVED_STATUS = { $in: [1, true] };
+
+function parsePageParams({ min, max, pageNumber, pageSize }) {
+  let parsedMin = min;
+  let parsedMax = max;
+  let parsedPageNumber = pageNumber;
+  let parsedPageSize = pageSize;
+
+  if (parsedMin == "" || isNaN(parsedMin)) {
+    parsedMin = 0;
+  }
+  if (parsedMax == "" || isNaN(parsedMax)) {
+    parsedMax = 20000;
+  }
+  if (parsedPageNumber == "" || isNaN(parsedPageNumber)) {
+    parsedPageNumber = 0;
+  }
+  if (parsedPageSize == "" || isNaN(parsedPageSize)) {
+    parsedPageSize = 20;
+  }
+
+  return {
+    min: Number(parsedMin),
+    max: Number(parsedMax),
+    pageNumber: Number(parsedPageNumber),
+    pageSize: Number(parsedPageSize),
+  };
+}
+
+function buildSort(sort_by) {
+  switch (sort_by) {
+    case "newest":
+      return { deal_id: -1 };
+    case "oldest":
+      return { deal_id: 1 };
+    case "mintomax":
+      return { deal_value: 1 };
+    case "maxtomin":
+      return { deal_value: -1 };
+    default:
+      return null;
+  }
+}
+
+function parseRatingFilter(rate_review) {
+  if (!rate_review || !rate_review.length) return null;
+  return rate_review
+    .split(",")
+    .map((review) => Number(review))
+    .filter((review) => !isNaN(review));
+}
+
+async function queryProductsWithRatings({
+  match,
+  name = "",
+  nameFields = ["deal_title", "deal_title_french"],
+  rate_review = "",
+  sort_by = "",
+  pageNumber = 0,
+  pageSize = 20,
+  offsetOverride = null,
+}) {
+  const filter = { ...match };
+
+  if (name !== "") {
+    const regex = { $regex: name, $options: "i" };
+    if (nameFields.length === 1) {
+      filter[nameFields[0]] = regex;
+    } else {
+      filter.$or = nameFields.map((field) => ({ [field]: regex }));
+    }
+  }
+
+  const ratingValues = parseRatingFilter(rate_review);
+  const sort = buildSort(sort_by);
+  const skip =
+    offsetOverride != null
+      ? offsetOverride
+      : isNaN(pageNumber * pageSize)
+      ? 0
+      : Number(pageNumber) === 1
+      ? 0
+      : Number((pageNumber - 1) * pageSize);
+  const limit = isNaN(pageSize) ? 0 : Number(pageSize);
+
+  const pipeline = [
+    { $match: filter },
+    {
+      $lookup: {
+        from: "rate_review",
+        let: { dealId: "$deal_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$type_id", "$$dealId"] },
+                  { $in: ["$approve_status", [1, true]] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "reviews",
+      },
+    },
+    {
+      $addFields: {
+        ratings: { $avg: "$reviews.rating" },
+        inStock: { $gt: ["$user_limit_quantity", 0] },
+        image: {
+          $concat: [PRODUCT_DISPLAY_IMAGE, "$deal_key", "_1.png"],
+        },
+      },
+    },
+  ];
+
+  if (ratingValues && ratingValues.length > 0) {
+    pipeline.push({ $match: { ratings: { $in: ratingValues } } });
+  } else {
+    pipeline.push({
+      $match: {
+        $or: [{ ratings: null }, { ratings: { $gte: 0 } }],
+      },
+    });
+  }
+
+  if (sort) {
+    pipeline.push({ $sort: sort });
+  }
+
+  pipeline.push(
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+        deal_id: 1,
+        having_size_color: 1,
+        deal_title: 1,
+        deal_title_french: 1,
+        deal_key: 1,
+        deal_price: 1,
+        deal_value: 1,
+        image: 1,
+        inStock: 1,
+        ratings: 1,
+      },
+    }
+  );
+
+  return aggregate("product", pipeline);
+}
 
 exports.getProducts = async ({
   rate_review = "",
@@ -19,98 +173,37 @@ exports.getProducts = async ({
   sl_c: thirdLevelCategory = 0,
   sort_by = "",
 }) => {
-  if (min == "" || isNaN(min)) {
-    min = 0;
-  }
-
-  if (max == "" || isNaN(max)) {
-    max = 20000;
-  }
-
-  if (pageNumber == "" || isNaN(pageNumber)) {
-    pageNumber = 0;
-  }
-
-  if (pageSize == "" || isNaN(pageSize)) {
-    pageSize = 20;
-  }
-
-  let baseQuery = `SELECT deal_id, having_size_color,deal_title, deal_title_french ,deal_key, deal_price, deal_value, CONCAT("${PRODUCT_DISPLAY_IMAGE}",deal_key,"_1.png") as image, CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, AVG(${tableConfig.rate_review}.rating) AS ratings FROM ${tableConfig.product} LEFT JOIN ${tableConfig.rate_review} ON ${tableConfig.product}.deal_id=${tableConfig.rate_review}.type_id AND ${tableConfig.rate_review}.approve_status=1 WHERE deal_value BETWEEN ${min} AND ${max} AND deal_status = 1`;
+  const parsed = parsePageParams({ min, max, pageNumber, pageSize });
+  min = parsed.min;
+  max = parsed.max;
+  pageNumber = parsed.pageNumber;
+  pageSize = parsed.pageSize;
 
   console.log(name, " 000000000000000000");
-  if (name !== "") {
-    baseQuery = `${baseQuery} AND (deal_title REGEXP "${name}" OR deal_title_french REGEXP "${name}" )`;
-  }
+
+  const match = {
+    deal_status: 1,
+    deal_value: { $gte: min, $lte: max },
+  };
+
   if (firstLevelCategory && !isNaN(firstLevelCategory)) {
-    baseQuery = `${baseQuery} AND category_id = ${Number(firstLevelCategory)}`;
+    match.category_id = Number(firstLevelCategory);
   }
   if (secondLevelCategory && !isNaN(secondLevelCategory)) {
-    baseQuery = `${baseQuery} AND sub_category_id = ${Number(
-      secondLevelCategory
-    )}`;
+    match.sub_category_id = Number(secondLevelCategory);
   }
   if (thirdLevelCategory && !isNaN(thirdLevelCategory)) {
-    baseQuery = `${baseQuery} AND sec_category_id = ${Number(
-      thirdLevelCategory
-    )}`;
+    match.sec_category_id = Number(thirdLevelCategory);
   }
 
-  baseQuery = `${baseQuery} GROUP BY deal_id`;
-
-  if (rate_review && rate_review.length > 0) {
-    let reviews = rate_review.split(",");
-    reviews.forEach((review, index) => {
-      if (!isNaN(review) && index == 0) {
-        if (reviews.length <= 1) {
-          baseQuery = `${baseQuery} HAVING ratings = ${Number(review)}`;
-        } else {
-          baseQuery = `${baseQuery} HAVING ratings = ${Number(review)} OR`;
-        }
-      } else if (!isNaN(review) && index == reviews.length - 1) {
-        baseQuery = `${baseQuery} ratings = ${Number(review)}`;
-      } else if (!isNaN(review)) {
-        baseQuery = `${baseQuery} ratings = ${Number(review)} OR`;
-      }
-    });
-  } else {
-    baseQuery = `${baseQuery} HAVING ratings IS NULL OR ratings >= 0`;
-  }
-
-  if (sort_by !== "") {
-    switch (sort_by) {
-      case "newest": {
-        baseQuery = `${baseQuery} ORDER BY deal_id DESC`;
-        break;
-      }
-      case "oldest": {
-        baseQuery = `${baseQuery} ORDER BY deal_id ASC`;
-        break;
-      }
-      case "mintomax": {
-        baseQuery = `${baseQuery} ORDER BY deal_value ASC`;
-        break;
-      }
-      case "maxtomin": {
-        baseQuery = `${baseQuery} ORDER BY deal_value DESC`;
-        break;
-      }
-    }
-  }
-
-  baseQuery = `${baseQuery} LIMIT ${
-    isNaN(pageSize) ? 0 : Number(pageSize)
-  } OFFSET ${
-    isNaN(pageNumber * pageSize)
-      ? 0
-      : Number(pageNumber) === 1
-      ? 0
-      : Number((pageNumber - 1) * pageSize)
-  }`;
-
-  console.log(baseQuery);
-
-  let products = await global?.SEQUELIZE?.query(baseQuery, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  const products = await queryProductsWithRatings({
+    match,
+    name,
+    nameFields: ["deal_title", "deal_title_french"],
+    rate_review,
+    sort_by,
+    pageNumber,
+    pageSize,
   });
 
   return products;
@@ -123,10 +216,28 @@ exports.getMinMaxPrice = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let query = `SELECT MAX(deal_value) as maximunPrice, MIN(deal_value) as minimumPrice FROM ${tableConfig.product} WHERE deal_status = 1;`;
-  productMinMaxPrice = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  const rows = await aggregate("product", [
+    { $match: { deal_status: 1 } },
+    {
+      $group: {
+        _id: null,
+        maximunPrice: { $max: "$deal_value" },
+        minimumPrice: { $min: "$deal_value" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        maximunPrice: 1,
+        minimumPrice: 1,
+      },
+    },
+  ]);
+
+  productMinMaxPrice =
+    rows.length > 0
+      ? rows
+      : [{ maximunPrice: null, minimumPrice: null }];
 
   let stringifyResponse = stringifyData(productMinMaxPrice);
   if (stringifyResponse?.status) {
@@ -146,20 +257,33 @@ exports.getCategoryWiseProductCount = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let query = `SELECT 
-  COALESCE(COUNT(product.deal_id), 0) as total_products, 
-  category.category_id,
-  category.category_name, 
-  category.category_name_french
-FROM ${tableConfig.category} AS category
-LEFT JOIN ${tableConfig.product} AS product 
-ON product.category_id = category.category_id 
-AND product.deal_status = 1 
-GROUP BY category.category_id, category.category_name, category.category_name_french `;
+  const categories = await findAll(
+    "category",
+    {},
+    {
+      attributes: ["category_id", "category_name", "category_name_french"],
+    }
+  );
 
-  categoryWiseProductCount = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  const counts = await aggregate("product", [
+    { $match: { deal_status: 1 } },
+    {
+      $group: {
+        _id: "$category_id",
+        total_products: { $sum: 1 },
+      },
+    },
+  ]);
+  const countMap = Object.fromEntries(
+    counts.map((row) => [row._id, row.total_products])
+  );
+
+  categoryWiseProductCount = categories.map((category) => ({
+    total_products: countMap[category.category_id] || 0,
+    category_id: category.category_id,
+    category_name: category.category_name,
+    category_name_french: category.category_name_french,
+  }));
 
   let totalProducts = categoryWiseProductCount.reduce((total, category) => {
     return total + category.total_products;
@@ -185,72 +309,146 @@ GROUP BY category.category_id, category.category_name, category.category_name_fr
 };
 
 exports.getProductDetail = async (deal_key) => {
-  let query = `SELECT 
-    ${tableConfig.product}.deal_title,
-    ${tableConfig.product}.deal_title_french,
-    ${tableConfig.product}.deal_id,
-    ${tableConfig.product}.deal_description,
-    ${tableConfig.product}.deal_description_french, 
-    ${tableConfig.product}.deal_value, 
-    ${tableConfig.product}.deal_price, 
-    ${tableConfig.product}.delivery_period,
-    ${tableConfig.product}.category_id,
-    ${tableConfig.product}.sub_category_id,
-    ${tableConfig.product}.sec_category_id,
-    ${tableConfig.product}.related_products,
-    ${tableConfig.product}.having_size_color,
-    CASE WHEN ${tableConfig.product}.user_limit_quantity > 0 THEN true ELSE false END AS inStock,
-    AVG(${tableConfig.rate_review}.rating) as ratings, 
-    COUNT(${tableConfig.rate_review}.id) as total_reviews,
-    main_category.category_name as main_category_name,
-    sub_category.category_name as sub_category_name,
-    second_level_category.category_name as second_level_category_name,
-    main_category.category_name_french as main_category_name_french,
-    sub_category.category_name_french as sub_category_name_french,
-    second_level_category.category_name_french as second_level_category_name_french
-  FROM ${tableConfig.product} 
-  LEFT JOIN ${tableConfig.rate_review} ON ${tableConfig.rate_review}.type_id = ${tableConfig.product}.deal_id AND ${tableConfig.rate_review}.approve_status = 1
-  LEFT JOIN ${tableConfig.category} AS main_category ON main_category.category_id = ${tableConfig.product}.category_id
-  LEFT JOIN ${tableConfig.category} AS sub_category ON sub_category.category_id = ${tableConfig.product}.sub_category_id
-  LEFT JOIN ${tableConfig.category} AS second_level_category ON second_level_category.category_id = ${tableConfig.product}.sec_category_id
-  WHERE ${tableConfig.product}.deal_status = 1 AND ${tableConfig.product}.deal_key = "${deal_key}";`;
-
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  const product = await findOne("product", {
+    deal_status: 1,
+    deal_key: String(deal_key),
   });
-  return response[0] ? response[0] : {};
+
+  if (!product) {
+    return {};
+  }
+
+  const [ratingRows, main_category, sub_category, second_level_category] =
+    await Promise.all([
+      aggregate("rate_review", [
+        {
+          $match: {
+            type_id: product.deal_id,
+            approve_status: APPROVED_STATUS,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            ratings: { $avg: "$rating" },
+            total_reviews: { $sum: 1 },
+          },
+        },
+      ]),
+      findOne(
+        "category",
+        { category_id: product.category_id },
+        { attributes: ["category_name", "category_name_french"] }
+      ),
+      findOne(
+        "category",
+        { category_id: product.sub_category_id },
+        { attributes: ["category_name", "category_name_french"] }
+      ),
+      findOne(
+        "category",
+        { category_id: product.sec_category_id },
+        { attributes: ["category_name", "category_name_french"] }
+      ),
+    ]);
+
+  const ratingStats = ratingRows[0] || {};
+
+  return {
+    deal_title: product.deal_title,
+    deal_title_french: product.deal_title_french,
+    deal_id: product.deal_id,
+    deal_description: product.deal_description,
+    deal_description_french: product.deal_description_french,
+    deal_value: product.deal_value,
+    deal_price: product.deal_price,
+    delivery_period: product.delivery_period,
+    category_id: product.category_id,
+    sub_category_id: product.sub_category_id,
+    sec_category_id: product.sec_category_id,
+    related_products: product.related_products,
+    having_size_color: product.having_size_color,
+    inStock: Number(product.user_limit_quantity) > 0,
+    ratings: ratingStats.ratings ?? null,
+    total_reviews: ratingStats.total_reviews ?? 0,
+    main_category_name: main_category?.category_name ?? null,
+    sub_category_name: sub_category?.category_name ?? null,
+    second_level_category_name: second_level_category?.category_name ?? null,
+    main_category_name_french: main_category?.category_name_french ?? null,
+    sub_category_name_french: sub_category?.category_name_french ?? null,
+    second_level_category_name_french:
+      second_level_category?.category_name_french ?? null,
+  };
 };
 
 exports.getRelatedProductsDetails = async (relatedProductIds, deal_id) => {
-  relatedProductIds = relatedProductIds.join(",");
-  let query = `SELECT deal_id, deal_title, deal_title_french,deal_key, deal_price, deal_value, CONCAT("${PRODUCT_DISPLAY_IMAGE}",deal_key,"_1.png") as image, CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, AVG(${tableConfig.rate_review}.rating) AS ratings FROM ${tableConfig.product} LEFT JOIN ${tableConfig.rate_review} ON ${tableConfig.product}.deal_id=${tableConfig.rate_review}.type_id AND ${tableConfig.rate_review}.approve_status=1 WHERE deal_status = 1 AND deal_id IN (${relatedProductIds}) AND deal_id != ${deal_id} GROUP BY deal_id;`;
+  if (!Array.isArray(relatedProductIds) || relatedProductIds.length === 0) {
+    return [];
+  }
 
-  let relatedProducts = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  const ids = relatedProductIds
+    .map((id) => Number(id))
+    .filter((id) => !isNaN(id) && id !== Number(deal_id));
+
+  if (!ids.length) {
+    return [];
+  }
+
+  return queryProductsWithRatings({
+    match: {
+      deal_status: 1,
+      deal_id: { $in: ids },
+    },
+    pageNumber: 1,
+    pageSize: ids.length,
+    offsetOverride: 0,
   });
-  return relatedProducts;
 };
 
 exports.getProductSizeDetails = async (productSizeDetails, productId) => {
-  productSizeDetails = productSizeDetails.join(",");
+  if (!Array.isArray(productSizeDetails) || productSizeDetails.length === 0) {
+    return [];
+  }
 
-  // let query = `SELECT size_name, size_id FROM ${tableConfig.size} WHERE size_id IN (${productSizeDetails});`;
-  let query = `SELECT 
-    size_name, 
-    ${tableConfig.size}.size_id,
-    sub_product.quantity,
-    sub_product.price,
-    sub_product.discount
-  FROM ${tableConfig.size} 
-  LEFT JOIN ( SELECT size_id, product_id, quantity, price, discount from ${tableConfig.sub_products} WHERE ${tableConfig.sub_products}.product_id = ${productId} ) as sub_product
-  ON sub_product.size_id = size.size_id
-  WHERE size.size_id IN (${productSizeDetails})
-  GROUP BY sub_product.size_id;`;
+  const sizeIds = productSizeDetails
+    .map((id) => Number(id))
+    .filter((id) => !isNaN(id));
 
-  let relatedProducts = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  if (!sizeIds.length) {
+    return [];
+  }
+
+  const [sizes, subProducts] = await Promise.all([
+    findAll(
+      "size",
+      { size_id: { $in: sizeIds } },
+      { attributes: ["size_name", "size_id"] }
+    ),
+    findAll(
+      "sub_products",
+      { product_id: Number(productId), size_id: { $in: sizeIds } },
+      { attributes: ["size_id", "quantity", "price", "discount"] }
+    ),
+  ]);
+
+  const subBySize = {};
+  for (const sub of subProducts) {
+    // GROUP BY size_id — keep first occurrence
+    if (subBySize[sub.size_id] == null) {
+      subBySize[sub.size_id] = sub;
+    }
+  }
+
+  return sizes.map((size) => {
+    const sub = subBySize[size.size_id];
+    return {
+      size_name: size.size_name,
+      size_id: size.size_id,
+      quantity: sub?.quantity ?? null,
+      price: sub?.price ?? null,
+      discount: sub?.discount ?? null,
+    };
   });
-  return relatedProducts;
 };
 
 exports.getRandomProducts = async (
@@ -259,58 +457,134 @@ exports.getRandomProducts = async (
   secondSubCategory,
   deal_id
 ) => {
-  let condition = "";
-  if (categoryId !== "") {
-    condition = `category_id = ${categoryId}`;
+  const orConditions = [];
+  if (categoryId !== "" && categoryId != null) {
+    orConditions.push({ category_id: Number(categoryId) });
+  }
+  if (subcategoryId !== "" && subcategoryId != null) {
+    orConditions.push({ sub_category_id: Number(subcategoryId) });
+  }
+  if (secondSubCategory !== "" && secondSubCategory != null) {
+    orConditions.push({ sec_category_id: Number(secondSubCategory) });
   }
 
-  if (subcategoryId !== "") {
-    if (condition !== "") {
-      condition += " OR ";
-    }
-    condition = `sub_category_id = ${subcategoryId}`;
+  if (!orConditions.length) {
+    return [];
   }
 
-  if (secondSubCategory !== "") {
-    if (condition !== "") {
-      condition += " OR ";
-    }
-    condition = `sec_category_id = ${secondSubCategory}`;
-  }
+  const match = {
+    deal_status: 1,
+    deal_id: { $ne: Number(deal_id) },
+    $or: orConditions,
+  };
 
-  let query = `SELECT deal_id, deal_title, deal_title_french, deal_key, deal_price, deal_value, CONCAT("${PRODUCT_DISPLAY_IMAGE}",deal_key,"_1.png") as image, CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, AVG(${tableConfig.rate_review}.rating) AS ratings FROM ${tableConfig.product} LEFT JOIN ${tableConfig.rate_review} ON ${tableConfig.product}.deal_id=${tableConfig.rate_review}.type_id AND ${tableConfig.rate_review}.approve_status=1 WHERE deal_status = 1 AND ${condition} AND deal_id != ${deal_id} GROUP BY deal_id; ORDER BY RAND() LIMIT 5`;
+  const pipeline = [
+    { $match: match },
+    { $sample: { size: 5 } },
+    {
+      $lookup: {
+        from: "rate_review",
+        let: { dealId: "$deal_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$type_id", "$$dealId"] },
+                  { $in: ["$approve_status", [1, true]] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "reviews",
+      },
+    },
+    {
+      $addFields: {
+        ratings: { $avg: "$reviews.rating" },
+        inStock: { $gt: ["$user_limit_quantity", 0] },
+        image: {
+          $concat: [PRODUCT_DISPLAY_IMAGE, "$deal_key", "_1.png"],
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        deal_id: 1,
+        deal_title: 1,
+        deal_title_french: 1,
+        deal_key: 1,
+        deal_price: 1,
+        deal_value: 1,
+        image: 1,
+        inStock: 1,
+        ratings: 1,
+      },
+    },
+  ];
 
-  let randomRelatedProducts = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
-
-  return randomRelatedProducts;
+  return aggregate("product", pipeline);
 };
 
 exports.getProductInCartDetails = async (productId) => {
-  let query = `SELECT count(item_id) as in_cart FROM ${tableConfig.cart_items} JOIN ${tableConfig.cart} ON ${tableConfig.cart_items}.cart_id = ${tableConfig.cart}.cart_id WHERE ${tableConfig.cart}.cart_transaction_status != 1 AND ${tableConfig.cart_items}.deal_id = ${productId};`;
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  const activeCarts = await findAll(
+    "cart",
+    { cart_transaction_status: { $ne: 1 } },
+    { attributes: ["cart_id"] }
+  );
+  const cartIds = activeCarts.map((cart) => cart.cart_id);
+  if (!cartIds.length) {
+    return 0;
+  }
+
+  const inCart = await count("cart_items", {
+    cart_id: { $in: cartIds },
+    deal_id: Number(productId),
   });
-  return response && response[0] && response[0]?.in_cart
-    ? response[0]?.in_cart
-    : 0;
+
+  return inCart || 0;
 };
 
 exports.getSubProductSizeAndQuantity = async (productId) => {
-  let query = `SELECT 
-    size_name,
-    ${tableConfig.sub_products}.size_id, 
-    ${tableConfig.sub_products}.quantity,
-    ${tableConfig.sub_products}.price,
-    ${tableConfig.sub_products}.discount,
-    CASE WHEN quantity > 0 THEN true ELSE false END AS inStock
-  FROM ${tableConfig.sub_products} 
-  JOIN ${tableConfig.size} ON ${tableConfig.sub_products}.size_id = ${tableConfig.size}.size_id
-  WHERE product_id = ${productId} ORDER BY size_name ASC;`;
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  const subProducts = await findAll(
+    "sub_products",
+    { product_id: Number(productId) },
+    {
+      attributes: ["size_id", "quantity", "price", "discount"],
+    }
+  );
+
+  if (!subProducts.length) {
+    return [];
+  }
+
+  const sizeIds = [...new Set(subProducts.map((s) => s.size_id))];
+  const sizes = await findAll(
+    "size",
+    { size_id: { $in: sizeIds } },
+    { attributes: ["size_id", "size_name"] }
+  );
+  const sizeMap = Object.fromEntries(
+    sizes.map((size) => [size.size_id, size.size_name])
+  );
+
+  const response = subProducts
+    .filter((sub) => sizeMap[sub.size_id] != null)
+    .map((sub) => ({
+      size_name: sizeMap[sub.size_id],
+      size_id: sub.size_id,
+      quantity: sub.quantity,
+      price: sub.price,
+      discount: sub.discount,
+      inStock: Number(sub.quantity) > 0,
+    }));
+
+  response.sort((a, b) =>
+    String(a.size_name).localeCompare(String(b.size_name))
+  );
+
   return response;
 };
 
@@ -342,73 +616,38 @@ exports.getOffersProducts = async ({
     pageSize = 20;
   }
 
-  let baseQuery = `SELECT deal_id, having_size_color, deal_title, deal_title_french, deal_key, deal_price, deal_value, CONCAT("${PRODUCT_DISPLAY_IMAGE}", deal_key, "_1.png") as image, CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, AVG(${tableConfig.rate_review}.rating) AS ratings FROM ${tableConfig.product} LEFT JOIN ${tableConfig.rate_review} ON ${tableConfig.product}.deal_id=${tableConfig.rate_review}.type_id AND ${tableConfig.rate_review}.approve_status=1 WHERE deal_value BETWEEN ${min} AND ${max} AND deal_status = 1 AND category_id = 720`;
-
-  if (name !== "") {
-    baseQuery = `${baseQuery} AND deal_title REGEXP "${name}"`;
+  // SQL always constrains category_id = 720, then may AND another category_id
+  if (
+    firstLevelCategory &&
+    !isNaN(firstLevelCategory) &&
+    Number(firstLevelCategory) !== 720
+  ) {
+    return [];
   }
 
-  if (firstLevelCategory && !isNaN(firstLevelCategory)) {
-    baseQuery = `${baseQuery} AND category_id = ${Number(firstLevelCategory)}`;
-  }
+  const match = {
+    deal_status: 1,
+    category_id: 720,
+    deal_value: { $gte: Number(min), $lte: Number(max) },
+  };
+
   if (secondLevelCategory && !isNaN(secondLevelCategory)) {
-    baseQuery = `${baseQuery} AND sub_category_id = ${Number(
-      secondLevelCategory
-    )}`;
+    match.sub_category_id = Number(secondLevelCategory);
   }
   if (thirdLevelCategory && !isNaN(thirdLevelCategory)) {
-    baseQuery = `${baseQuery} AND sec_category_id = ${Number(
-      thirdLevelCategory
-    )}`;
+    match.sec_category_id = Number(thirdLevelCategory);
   }
 
-  baseQuery = `${baseQuery} GROUP BY deal_id`;
+  const offset = (Number(pageNumber) - 1) * Number(pageSize);
 
-  if (rate_review && rate_review.length > 0) {
-    let reviews = rate_review.split(",");
-    reviews.forEach((review, index) => {
-      if (!isNaN(review) && index == 0) {
-        if (reviews.length <= 1) {
-          baseQuery = `${baseQuery} HAVING ratings = ${Number(review)}`;
-        } else {
-          baseQuery = `${baseQuery} HAVING ratings = ${Number(review)} OR`;
-        }
-      } else if (!isNaN(review) && index == reviews.length - 1) {
-        baseQuery = `${baseQuery} ratings = ${Number(review)}`;
-      } else if (!isNaN(review)) {
-        baseQuery = `${baseQuery} ratings = ${Number(review)} OR`;
-      }
-    });
-  } else {
-    baseQuery = `${baseQuery} HAVING ratings IS NULL OR ratings >= 0`;
-  }
-
-  if (sort_by !== "") {
-    switch (sort_by) {
-      case "newest": {
-        baseQuery = `${baseQuery} ORDER BY deal_id DESC`;
-        break;
-      }
-      case "oldest": {
-        baseQuery = `${baseQuery} ORDER BY deal_id ASC`;
-        break;
-      }
-      case "mintomax": {
-        baseQuery = `${baseQuery} ORDER BY deal_value ASC`;
-        break;
-      }
-      case "maxtomin": {
-        baseQuery = `${baseQuery} ORDER BY deal_value DESC`;
-        break;
-      }
-    }
-  }
-
-  const offset = (pageNumber - 1) * pageSize;
-  baseQuery = `${baseQuery} LIMIT ${Number(pageSize)} OFFSET ${offset}`;
-
-  let products = await global?.SEQUELIZE?.query(baseQuery, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  return queryProductsWithRatings({
+    match,
+    name,
+    nameFields: ["deal_title"],
+    rate_review,
+    sort_by,
+    pageNumber: Number(pageNumber),
+    pageSize: Number(pageSize),
+    offsetOverride: offset,
   });
-  return products;
 };

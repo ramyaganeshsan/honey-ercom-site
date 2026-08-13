@@ -2,18 +2,51 @@ const {
   BANNER_IMAGE_URL,
   PRODUCT_DISPLAY_IMAGE,
 } = require("../utils/constants");
-const sequelize = require("sequelize");
-const { Op } = sequelize;
-const tableConfig = require("../database/table.config.json");
-
-const { cart, users } = require("../models");
 const {
   getValueFromRedis,
   setValueRedis,
   stringifyData,
   parseData,
 } = require("../utils");
-const { query } = require("winston");
+const { findOne, findAll, aggregate } = require("../mongo/repo");
+
+const APPROVED_STATUS = { $in: [1, true] };
+
+async function attachProductListFields(products) {
+  if (!products.length) return [];
+
+  const dealIds = products.map((p) => p.deal_id);
+  const ratingRows = await aggregate("rate_review", [
+    {
+      $match: {
+        type_id: { $in: dealIds },
+        approve_status: APPROVED_STATUS,
+      },
+    },
+    {
+      $group: {
+        _id: "$type_id",
+        ratings: { $avg: "$rating" },
+      },
+    },
+  ]);
+  const ratingMap = Object.fromEntries(
+    ratingRows.map((row) => [row._id, row.ratings])
+  );
+
+  return products.map((p) => ({
+    deal_id: p.deal_id,
+    deal_title: p.deal_title,
+    deal_title_french: p.deal_title_french,
+    deal_key: p.deal_key,
+    deal_price: p.deal_price,
+    deal_value: p.deal_value,
+    having_size_color: p.having_size_color,
+    image: `${PRODUCT_DISPLAY_IMAGE}${p.deal_key}_1.png`,
+    inStock: Number(p.user_limit_quantity) > 0,
+    ratings: ratingMap[p.deal_id] ?? null,
+  }));
+}
 
 exports.getBannerImage = async () => {
   let bannerImages = await getValueFromRedis("bannerImages");
@@ -22,10 +55,22 @@ exports.getBannerImage = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let query = `SELECT banner_id, image_title, redirect_url, CONCAT("${BANNER_IMAGE_URL}", banner_id, ".png") as url FROM ${tableConfig.banner_image} WHERE status = 1 AND home = 1 ORDER BY banner_id DESC LIMIT 5;`;
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  const rows = await findAll(
+    "banner_image",
+    { status: 1, home: 1 },
+    {
+      attributes: ["banner_id", "image_title", "redirect_url"],
+      order: [["banner_id", "DESC"]],
+      limit: 5,
+    }
+  );
+
+  const response = rows.map((row) => ({
+    banner_id: row.banner_id,
+    image_title: row.image_title,
+    redirect_url: row.redirect_url,
+    url: `${BANNER_IMAGE_URL}${row.banner_id}.png`,
+  }));
 
   let stringifyResponse = stringifyData(response);
   if (stringifyResponse?.status) {
@@ -42,11 +87,20 @@ exports.getCategories = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let query = `SELECT category_id, category_name, category_name_french,main_category_id, sub_category_id FROM ${tableConfig.category} WHERE category_status = 1 ORDER BY main_category_id ASC;`;
-
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  let response = await findAll(
+    "category",
+    { category_status: 1 },
+    {
+      attributes: [
+        "category_id",
+        "category_name",
+        "category_name_french",
+        "main_category_id",
+        "sub_category_id",
+      ],
+      order: [["main_category_id", "ASC"]],
+    }
+  );
 
   let categories = {};
   let subSubCategories = [];
@@ -156,18 +210,26 @@ exports.getProducts = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let query = `SELECT deal_id, deal_title, deal_title_french ,deal_key, deal_price, 
-deal_value, having_size_color, CONCAT("${PRODUCT_DISPLAY_IMAGE}",deal_key,"_1.png") as image ,
-CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, 
-AVG(${tableConfig.rate_review}.rating) AS ratings FROM ${tableConfig.product} 
-LEFT JOIN ${tableConfig.rate_review} ON ${tableConfig.product}.deal_id=${tableConfig.rate_review}.type_id 
-AND ${tableConfig.rate_review}.approve_status=1 WHERE deal_status = 1 
-AND category_id != 720
-GROUP BY deal_id ORDER BY deal_id DESC LIMIT 8`;
+  const products = await findAll(
+    "product",
+    { deal_status: 1, category_id: { $ne: 720 } },
+    {
+      attributes: [
+        "deal_id",
+        "deal_title",
+        "deal_title_french",
+        "deal_key",
+        "deal_price",
+        "deal_value",
+        "having_size_color",
+        "user_limit_quantity",
+      ],
+      order: [["deal_id", "DESC"]],
+      limit: 8,
+    }
+  );
 
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  let response = await attachProductListFields(products);
 
   let stringifyResponse = stringifyData(response);
   if (stringifyResponse?.status) {
@@ -183,11 +245,27 @@ exports.getBestSellingProducts = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let query = `SELECT deal_id, deal_title, deal_title_french, deal_key, deal_price, deal_value, having_size_color, CONCAT("${PRODUCT_DISPLAY_IMAGE}",deal_key,"_1.png") as image ,CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, AVG(${tableConfig.rate_review}.rating) AS ratings FROM ${tableConfig.product} LEFT JOIN ${tableConfig.rate_review} ON ${tableConfig.product}.deal_id=${tableConfig.rate_review}.type_id AND ${tableConfig.rate_review}.approve_status=1 WHERE deal_status = 1 GROUP BY deal_id ORDER BY purchase_count DESC LIMIT 8`;
+  const products = await findAll(
+    "product",
+    { deal_status: 1 },
+    {
+      attributes: [
+        "deal_id",
+        "deal_title",
+        "deal_title_french",
+        "deal_key",
+        "deal_price",
+        "deal_value",
+        "having_size_color",
+        "user_limit_quantity",
+        "purchase_count",
+      ],
+      order: [["purchase_count", "DESC"]],
+      limit: 8,
+    }
+  );
 
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  let response = await attachProductListFields(products);
 
   let stringifyResponse = stringifyData(response);
   if (stringifyResponse?.status) {
@@ -203,14 +281,27 @@ exports.getOfferProducts = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let query = `SELECT deal_id, deal_title, deal_title_french, deal_key, deal_price, deal_value, having_size_color, CONCAT("${PRODUCT_DISPLAY_IMAGE}",deal_key,"_1.png") as image ,CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock, AVG(${tableConfig.rate_review}.rating) AS ratings FROM ${tableConfig.product} LEFT JOIN ${tableConfig.rate_review} ON ${tableConfig.product}.deal_id=${tableConfig.rate_review}.type_id AND ${tableConfig.rate_review}.approve_status=1 
-  WHERE deal_status = 1 
-  AND category_id = 720
-  GROUP BY deal_id ORDER BY purchase_count DESC LIMIT 8`;
+  const products = await findAll(
+    "product",
+    { deal_status: 1, category_id: 720 },
+    {
+      attributes: [
+        "deal_id",
+        "deal_title",
+        "deal_title_french",
+        "deal_key",
+        "deal_price",
+        "deal_value",
+        "having_size_color",
+        "user_limit_quantity",
+        "purchase_count",
+      ],
+      order: [["purchase_count", "DESC"]],
+      limit: 8,
+    }
+  );
 
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
+  let response = await attachProductListFields(products);
 
   let stringifyResponse = stringifyData(response);
   if (stringifyResponse?.status) {
@@ -220,44 +311,31 @@ exports.getOfferProducts = async () => {
 };
 
 exports.getUserCartProductCount = async (userId) => {
-  let condition = {
-    user_id: Number(userId),
-    cart_transaction_status: { [Op.not]: 1 },
-  };
-  let filter = {
-    where: condition,
-    attributes: ["total_cart_items"],
-    // include: [
-    //   {
-    //     model: cart_items,
-    //     attributes: ["deal_id"],
-    //   },
-    // ],
-  };
-
-  // let response = await cart.count(filter);
-  // return response;
-  let response = await cart.findOne(filter);
+  const response = await findOne(
+    "cart",
+    {
+      user_id: Number(userId),
+      cart_transaction_status: { $ne: 1 },
+    },
+    { attributes: ["total_cart_items"] }
+  );
   return response?.total_cart_items ?? 0;
 };
 
 exports.getUserWishListCount = async (userId) => {
-  let condition = {
-    user_id: Number(userId),
-  };
-  let filter = {
-    where: condition,
-    attributes: ["wishlist"],
-    raw: true,
-  };
-  let response = await users.findOne(filter);
+  const response = await findOne(
+    "users",
+    { user_id: Number(userId) },
+    { attributes: ["wishlist"] }
+  );
   return response;
 };
 
 exports.getUserCartAndWishlistCountSession = async (sessionID) => {
-  let query = `SELECT wishlist, cart FROM ${tableConfig.sessions} WHERE session_id = "${sessionID}" AND isMovedToUsers = 0`;
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
-  return response;
+  const doc = await findOne(
+    "sessions",
+    { session_id: sessionID, isMovedToUsers: 0 },
+    { attributes: ["wishlist", "cart"] }
+  );
+  return doc ? [doc] : [];
 };

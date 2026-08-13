@@ -1,36 +1,40 @@
-const { users } = require("../models");
-const tableConfig = require("../database/table.config.json");
 const {
   deserializeData,
   serializeData,
   checkProductIsActive,
 } = require("../utils");
 const { PRODUCT_LIST_DISPLAY_IMAGE } = require("../utils/constants");
+const { findOne, findAll, updateOne, aggregate } = require("../mongo/repo");
+
+const APPROVED_STATUS = { $in: [1, true] };
 
 const getUserWishList = async (userId) => {
-  let query = `SELECT wishlist FROM ${
-    tableConfig.users
-  } WHERE user_id = ${Number(userId)}`;
-  let user = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
-  return (user[0] && user[0]?.wishlist) ?? null;
+  const user = await findOne(
+    "users",
+    { user_id: Number(userId) },
+    { attributes: ["wishlist"] }
+  );
+  return user?.wishlist ?? null;
 };
 
 const getUserWishListFromSession = async (sessionID) => {
-  let query = `SELECT wishlist, isMovedToUsers FROM ${tableConfig.sessions} WHERE session_id = "${sessionID}"`;
-  let user = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
-  if (user[0] && user[0]?.isMovedToUsers) {
+  const session = await findOne(
+    "sessions",
+    { session_id: sessionID },
+    { attributes: ["wishlist", "isMovedToUsers"] }
+  );
+  if (session?.isMovedToUsers) {
     return -2;
   }
-  return (user[0] && user[0]?.wishlist) ?? null;
+  return session?.wishlist ?? null;
 };
 
 const updateSessionWishlist = async (serializedWishList, sessionID) => {
-  let query = `UPDATE ${tableConfig.sessions} SET wishlist = "${serializedWishList}" WHERE session_id = "${sessionID}"`;
-  await global?.SEQUELIZE?.query(query);
+  await updateOne(
+    "sessions",
+    { session_id: sessionID },
+    { wishlist: serializedWishList }
+  );
 };
 
 exports.getWishList = async (userId, fromSession = false, sessionID = "") => {
@@ -51,33 +55,66 @@ exports.getWishList = async (userId, fromSession = false, sessionID = "") => {
       Array.isArray(deserializedWishList) &&
       deserializedWishList?.length > 0
     ) {
-      let query = `
-      SELECT 
-          deal_id,
-          deal_title,
-          deal_title_french,
-          deal_key,
-          deal_value,
-          deal_price,
-          having_size_color,
-          CONCAT("${PRODUCT_LIST_DISPLAY_IMAGE}",deal_key,"_1.png") as image,
-          CASE WHEN user_limit_quantity > 0 THEN true ELSE false END AS inStock,
-          AVG(${tableConfig.rate_review}.rating) as ratings, 
-          COUNT(${tableConfig.rate_review}.id) as total_reviews
-      FROM ${tableConfig.product}
-      LEFT JOIN ${tableConfig.rate_review} ON ${
-        tableConfig.rate_review
-      }.type_id = product.deal_id AND ${
-        tableConfig.rate_review
-      }.approve_status = 1
-      WHERE deal_id IN (${deserializedWishList.join(",")})
-      GROUP BY deal_id;`;
+      const dealIds = deserializedWishList
+        .map((id) => Number(id))
+        .filter((id) => !isNaN(id));
 
-      let response = await global?.SEQUELIZE?.query(query, {
-        type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-      });
+      if (!dealIds.length) {
+        return [];
+      }
 
-      return response;
+      const products = await findAll(
+        "product",
+        { deal_id: { $in: dealIds } },
+        {
+          attributes: [
+            "deal_id",
+            "deal_title",
+            "deal_title_french",
+            "deal_key",
+            "deal_value",
+            "deal_price",
+            "having_size_color",
+            "user_limit_quantity",
+          ],
+        }
+      );
+
+      const ratingRows = await aggregate("rate_review", [
+        {
+          $match: {
+            type_id: { $in: dealIds },
+            approve_status: APPROVED_STATUS,
+          },
+        },
+        {
+          $group: {
+            _id: "$type_id",
+            ratings: { $avg: "$rating" },
+            total_reviews: { $sum: 1 },
+          },
+        },
+      ]);
+      const ratingMap = Object.fromEntries(
+        ratingRows.map((row) => [
+          row._id,
+          { ratings: row.ratings, total_reviews: row.total_reviews },
+        ])
+      );
+
+      return products.map((p) => ({
+        deal_id: p.deal_id,
+        deal_title: p.deal_title,
+        deal_title_french: p.deal_title_french,
+        deal_key: p.deal_key,
+        deal_value: p.deal_value,
+        deal_price: p.deal_price,
+        having_size_color: p.having_size_color,
+        image: `${PRODUCT_LIST_DISPLAY_IMAGE}${p.deal_key}_1.png`,
+        inStock: Number(p.user_limit_quantity) > 0,
+        ratings: ratingMap[p.deal_id]?.ratings ?? null,
+        total_reviews: ratingMap[p.deal_id]?.total_reviews ?? 0,
+      }));
     }
   }
   return [];
@@ -121,16 +158,14 @@ exports.addToWishList = async (
   let serializedWishList = serializeData(updatedWishList);
 
   if (!fromSession) {
-    let filter = {
-      user_id: userId,
-    };
-    let response = await users.update(
-      { wishlist: serializedWishList },
-      { where: filter }
+    const updated = await updateOne(
+      "users",
+      { user_id: Number(userId) },
+      { wishlist: serializedWishList }
     );
 
     return {
-      status: response[0] ?? 0,
+      status: updated ? 1 : 0,
       totalWishlistedProducts: updatedWishList.length,
     };
   }
@@ -174,16 +209,13 @@ exports.removeFromWishList = async (
   let serializedWishList = serializeData(updatedWishList);
 
   if (!fromSession) {
-    let filter = {
-      user_id: userId,
-    };
-
-    let response = await users.update(
-      { wishlist: serializedWishList },
-      { where: filter }
+    const updated = await updateOne(
+      "users",
+      { user_id: Number(userId) },
+      { wishlist: serializedWishList }
     );
     return {
-      status: response?.length ? 1 : 0,
+      status: updated ? 1 : 0,
       totalWishListItems: updatedWishList?.length ?? 0,
     };
   }

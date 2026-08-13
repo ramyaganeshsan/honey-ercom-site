@@ -1,10 +1,10 @@
-const { contact } = require("../models");
+const { create } = require("../mongo/repo");
 
 exports.addContact = async (contactDetails) => {
   let contactInfo = {
     ...contactDetails,
     status: 1,
   };
-  let response = await contact.create(contactInfo);
+  let response = await create("contact", contactInfo);
   return response;
 };

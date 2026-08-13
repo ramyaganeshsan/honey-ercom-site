@@ -1,17 +1,45 @@
-const tableConfig = require("../database/table.config.json");
+const { findAll } = require("../mongo/repo");
 
 exports.getOutOfStockProductDetails = async (minimumQuantity) => {
-  let query = `SELECT 
-        deal_title as productName,
-        ${tableConfig.sub_products}.quantity,
-        ${tableConfig.size}.size_name as sizeName
-    FROM ${tableConfig.sub_products}
-    LEFT JOIN product ON product.deal_id = ${tableConfig.sub_products}.product_id
-    LEFT JOIN ${tableConfig.size} ON ${tableConfig.size}.size_id = ${tableConfig.sub_products}.size_id
-    WHERE ${tableConfig.sub_products}.quantity < ${minimumQuantity};`;
+  const subProducts = await findAll(
+    "sub_products",
+    { quantity: { $lt: Number(minimumQuantity) } },
+    {
+      attributes: ["product_id", "quantity", "size_id"],
+    }
+  );
 
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
-  return response;
+  if (!subProducts.length) {
+    return [];
+  }
+
+  const productIds = [...new Set(subProducts.map((s) => s.product_id))];
+  const sizeIds = [...new Set(subProducts.map((s) => s.size_id))];
+
+  const [products, sizes] = await Promise.all([
+    findAll(
+      "product",
+      { deal_id: { $in: productIds } },
+      { attributes: ["deal_id", "deal_title"] }
+    ),
+    findAll(
+      "size",
+      { size_id: { $in: sizeIds } },
+      { attributes: ["size_id", "size_name"] }
+    ),
+  ]);
+
+  const productMap = Object.fromEntries(
+    products.map((p) => [p.deal_id, p.deal_title])
+  );
+  const sizeMap = Object.fromEntries(
+    sizes.map((s) => [s.size_id, s.size_name])
+  );
+
+  // LEFT JOIN product / size — include rows even when names are missing
+  return subProducts.map((sub) => ({
+    productName: productMap[sub.product_id] ?? null,
+    quantity: sub.quantity,
+    sizeName: sizeMap[sub.size_id] ?? null,
+  }));
 };
