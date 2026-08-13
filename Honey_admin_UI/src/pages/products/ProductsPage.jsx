@@ -15,8 +15,6 @@ const emptyForm = {
   deal_description_french: '',
   category_id: '',
   sub_category_id: '',
-  sec_category_id: '',
-  third_category_id: '',
   deal_value: '',
   deal_price: '',
   user_limit_quantity: '',
@@ -45,8 +43,6 @@ function mapRowToForm(row) {
     deal_description_french: row.deal_description_french || '',
     category_id: row.category_id ?? '',
     sub_category_id: row.sub_category_id ?? '',
-    sec_category_id: row.sec_category_id ?? '',
-    third_category_id: row.third_category_id ?? '',
     deal_value: row.deal_value ?? '',
     deal_price: row.deal_price ?? '',
     user_limit_quantity: row.user_limit_quantity ?? row.stock ?? '',
@@ -64,6 +60,10 @@ function mapRowToForm(row) {
     meta_keywords_french: row.meta_keywords_french || '',
     terms_conditions: row.terms_conditions || '',
   }
+}
+
+function isRootCategory(c) {
+  return !Number(c.main_category_id)
 }
 
 export default function ProductsPage() {
@@ -111,6 +111,17 @@ export default function ProductsPage() {
     return { amount, pct }
   }, [form.deal_value, form.deal_price])
 
+  const parentCategories = useMemo(
+    () => categories.filter((c) => isRootCategory(c)),
+    [categories]
+  )
+
+  const subCategories = useMemo(() => {
+    const parentId = Number(form.category_id) || 0
+    if (!parentId) return []
+    return categories.filter((c) => Number(c.main_category_id) === parentId)
+  }, [categories, form.category_id])
+
   const resetImage = () => {
     if (imagePreview && imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview)
@@ -136,7 +147,22 @@ export default function ProductsPage() {
 
   const onChange = (e) => {
     const { name, value } = e.target
-    setForm((f) => ({ ...f, [name]: value }))
+    setForm((f) => {
+      if (name === 'category_id') {
+        const parentId = Number(value) || 0
+        const stillValid = categories.some(
+          (c) =>
+            Number(c.category_id ?? c.id) === Number(f.sub_category_id) &&
+            Number(c.main_category_id) === parentId
+        )
+        return {
+          ...f,
+          category_id: value,
+          sub_category_id: stillValid ? f.sub_category_id : '',
+        }
+      }
+      return { ...f, [name]: value }
+    })
   }
 
   const onImageChange = (e) => {
@@ -155,6 +181,9 @@ export default function ProductsPage() {
       form.deal_price === '' || form.deal_price == null
         ? deal_value
         : Number(form.deal_price) || 0
+    const category_id = Number(form.category_id) || 0
+    const sub_category_id = Number(form.sub_category_id) || 0
+    const linkedIds = [category_id, sub_category_id].filter(Boolean)
 
     return {
       deal_title: form.deal_title.trim(),
@@ -163,11 +192,11 @@ export default function ProductsPage() {
       deal_key: form.deal_key.trim(),
       deal_description: form.deal_description,
       deal_description_french: form.deal_description_french,
-      category_id: Number(form.category_id) || 0,
-      category_ids: String(Number(form.category_id) || ''),
-      sub_category_id: Number(form.sub_category_id) || 0,
-      sec_category_id: Number(form.sec_category_id) || 0,
-      third_category_id: Number(form.third_category_id) || 0,
+      category_id,
+      category_ids: linkedIds.join(','),
+      sub_category_id,
+      sec_category_id: 0,
+      third_category_id: 0,
       deal_value,
       deal_price,
       user_limit_quantity: Number(form.user_limit_quantity) || 0,
@@ -242,6 +271,13 @@ export default function ProductsPage() {
     return c?.category_name || id || '—'
   }
 
+  const categoryLabel = (r) => {
+    const parent = catName(r.category_id)
+    const subId = Number(r.sub_category_id)
+    if (!subId) return parent
+    return `${parent} / ${catName(subId)}`
+  }
+
   const columns = [
     {
       key: 'image',
@@ -288,7 +324,7 @@ export default function ProductsPage() {
     {
       key: 'category_id',
       header: 'Category',
-      render: (r) => catName(r.category_id),
+      render: (r) => categoryLabel(r),
     },
     {
       key: 'deal_status',
@@ -487,7 +523,7 @@ export default function ProductsPage() {
             <label>Category</label>
             <select name="category_id" value={form.category_id} onChange={onChange}>
               <option value="">Select category</option>
-              {categories.map((c) => (
+              {parentCategories.map((c) => (
                 <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
                   {c.category_name}
                 </option>
@@ -495,31 +531,29 @@ export default function ProductsPage() {
             </select>
           </div>
           <div className="form-field">
-            <label>Sub category ID</label>
-            <input
+            <label>Sub category</label>
+            <select
               name="sub_category_id"
-              type="number"
               value={form.sub_category_id}
               onChange={onChange}
-            />
-          </div>
-          <div className="form-field">
-            <label>Second category ID</label>
-            <input
-              name="sec_category_id"
-              type="number"
-              value={form.sec_category_id}
-              onChange={onChange}
-            />
-          </div>
-          <div className="form-field">
-            <label>Third category ID</label>
-            <input
-              name="third_category_id"
-              type="number"
-              value={form.third_category_id}
-              onChange={onChange}
-            />
+              disabled={!form.category_id}
+            >
+              <option value="">
+                {form.category_id
+                  ? subCategories.length
+                    ? 'Select sub category'
+                    : 'No sub categories for this category'
+                  : 'Select category first'}
+              </option>
+              {subCategories.map((c) => (
+                <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
+                  {c.category_name}
+                </option>
+              ))}
+            </select>
+            <p className="field-hint">
+              Sub categories are linked via category.main_category_id → parent category_id
+            </p>
           </div>
 
           <div className="form-field">

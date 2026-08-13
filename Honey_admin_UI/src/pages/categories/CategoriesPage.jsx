@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import { categoriesApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
@@ -24,7 +24,7 @@ export default function CategoriesPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await categoriesApi.list({ page: 1, limit: 100 })
+    const res = await categoriesApi.list({ page: 1, limit: 200 })
     setRows(pickList(res.data))
     setLoading(false)
   }, [])
@@ -32,6 +32,17 @@ export default function CategoriesPage() {
   useEffect(() => {
     load()
   }, [load])
+
+  const rootCategories = useMemo(
+    () => rows.filter((c) => !Number(c.main_category_id)),
+    [rows]
+  )
+
+  const parentName = (parentId) => {
+    if (!Number(parentId)) return '— Root category —'
+    const p = rows.find((x) => (x.category_id ?? x.id) === Number(parentId))
+    return p?.category_name || `Parent #${parentId}`
+  }
 
   const openCreate = () => {
     setEditing(null)
@@ -72,9 +83,14 @@ export default function CategoriesPage() {
     }
     setSaving(true)
     const id = editing?.category_id ?? editing?.id
+    const payload = {
+      ...form,
+      // Keep category.sub_category_id aligned with parent link for tree consistency
+      sub_category_id: Number(form.main_category_id) || 0,
+    }
     const res = editing
-      ? await categoriesApi.update(id, form)
-      : await categoriesApi.create(form)
+      ? await categoriesApi.update(id, payload)
+      : await categoriesApi.create(payload)
     setSaving(false)
     if (res.ok) {
       toast.success(editing ? 'Category updated' : 'Category created')
@@ -102,9 +118,13 @@ export default function CategoriesPage() {
     { key: 'category_name', header: 'Name' },
     {
       key: 'main_category_id',
-      header: 'Parent',
+      header: 'Type / Parent',
       render: (r) =>
-        r.main_category_id ? `Parent #${r.main_category_id}` : 'Root',
+        Number(r.main_category_id) ? (
+          <span>Sub of {parentName(r.main_category_id)}</span>
+        ) : (
+          <span className="badge badge-ok">Category</span>
+        ),
     },
     { key: 'category_url', header: 'URL' },
     {
@@ -133,12 +153,17 @@ export default function CategoriesPage() {
     },
   ]
 
+  const editingId = editing?.category_id ?? editing?.id
+  const parentOptions = rootCategories.filter(
+    (c) => (c.category_id ?? c.id) !== editingId
+  )
+
   return (
     <div>
       <div className="page-header">
         <div>
           <h2>Categories</h2>
-          <p>Organize the product catalog tree</p>
+          <p>Root categories and linked sub categories for products</p>
         </div>
         <button type="button" className="btn btn-primary" onClick={openCreate}>
           Add category
@@ -187,13 +212,23 @@ export default function CategoriesPage() {
             <input name="category_url" value={form.category_url} onChange={onChange} />
           </div>
           <div className="form-field">
-            <label>Parent category ID</label>
-            <input
+            <label>Parent category</label>
+            <select
               name="main_category_id"
-              type="number"
               value={form.main_category_id}
               onChange={onChange}
-            />
+            >
+              <option value={0}>— None (this is a root category) —</option>
+              {parentOptions.map((c) => (
+                <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
+                  {c.category_name}
+                </option>
+              ))}
+            </select>
+            <p className="field-hint">
+              Choose a parent to make this a sub category. Products then filter sub categories by
+              this link.
+            </p>
           </div>
           <div className="form-field">
             <label>Sort order</label>
