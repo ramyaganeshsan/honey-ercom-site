@@ -281,6 +281,7 @@ exports.updateCartTransactionDetails = async ({
     }
 
     let transactionId = await getTransactionId();
+    const orderTs = getCurrentTimestamp();
     let cartUpdateDetails = {
       tracking_id: paymentId,
       cart_transaction_status: 1,
@@ -290,7 +291,8 @@ exports.updateCartTransactionDetails = async ({
       delivery_price: Number(totalShippingCost),
       discount_amount: Number(totalDiscount),
       transaction_id: Number(transactionId),
-      transaction_date: getCurrentTimestamp(),
+      transaction_date: orderTs,
+      order_date: orderTs,
       grand_total_price: Number(grandTotal),
       coupon_code: promocode,
       coupon_apply: totalDiscount > 0 ? 1 : 0,
@@ -421,6 +423,7 @@ exports.updateCartTransactionDetailsTabby = async ({
     }
 
     let transactionId = await getTransactionId();
+    const orderTs = getCurrentTimestamp();
     let cartUpdateDetails = {
       tracking_id: paymentId,
       cart_transaction_status: 1,
@@ -430,7 +433,8 @@ exports.updateCartTransactionDetailsTabby = async ({
       delivery_price: Number(totalShippingCost),
       discount_amount: Number(totalDiscount),
       transaction_id: Number(transactionId),
-      transaction_date: getCurrentTimestamp(),
+      transaction_date: orderTs,
+      order_date: orderTs,
       grand_total_price: Number(grandTotal),
       coupon_code: promocode,
       coupon_apply: totalDiscount > 0 ? 1 : 0,

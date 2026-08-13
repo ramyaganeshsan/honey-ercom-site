@@ -36,8 +36,11 @@ export default function Login() {
     setLoading(false)
 
     if (!res.ok) {
-      const msg = res.message || 'Login failed'
+      const msg =
+        res.message ||
+        'Login failed. Check API is running on :5000 and admin user is seeded.'
       setFormError(msg)
+      toast.error(msg)
       return
     }
 

@@ -102,19 +102,76 @@ exports.salesSummary = async (req, res) => {
       );
     }
 
+    // COD/local orders often have order_date=0; use transaction_date/created_on fallback
     const cartMatch = { cart_transaction_status: 1 };
     if (Object.keys(dateFilter).length) {
-      cartMatch.order_date = dateFilter;
+      cartMatch.$expr = {
+        $and: [
+          {
+            $gte: [
+              {
+                $cond: [
+                  { $gt: [{ $ifNull: ["$order_date", 0] }, 0] },
+                  "$order_date",
+                  {
+                    $cond: [
+                      { $gt: [{ $ifNull: ["$transaction_date", 0] }, 0] },
+                      "$transaction_date",
+                      { $ifNull: ["$created_on", 0] },
+                    ],
+                  },
+                ],
+              },
+              fromTs != null ? fromTs : 0,
+            ],
+          },
+          {
+            $lte: [
+              {
+                $cond: [
+                  { $gt: [{ $ifNull: ["$order_date", 0] }, 0] },
+                  "$order_date",
+                  {
+                    $cond: [
+                      { $gt: [{ $ifNull: ["$transaction_date", 0] }, 0] },
+                      "$transaction_date",
+                      { $ifNull: ["$created_on", 0] },
+                    ],
+                  },
+                ],
+              },
+              toTs != null ? toTs : Number.MAX_SAFE_INTEGER,
+            ],
+          },
+        ],
+      };
     }
 
     const rows = await aggregate("cart", [
       { $match: cartMatch },
       {
+        $addFields: {
+          report_date: {
+            $cond: [
+              { $gt: [{ $ifNull: ["$order_date", 0] }, 0] },
+              "$order_date",
+              {
+                $cond: [
+                  { $gt: [{ $ifNull: ["$transaction_date", 0] }, 0] },
+                  "$transaction_date",
+                  { $ifNull: ["$created_on", 0] },
+                ],
+              },
+            ],
+          },
+        },
+      },
+      {
         $group: {
           _id: {
             $dateToString: {
               format: "%Y-%m-%d",
-              date: { $toDate: { $multiply: ["$order_date", 1000] } },
+              date: { $toDate: { $multiply: ["$report_date", 1000] } },
             },
           },
           orders: { $sum: 1 },
