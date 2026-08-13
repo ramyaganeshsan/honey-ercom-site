@@ -6,9 +6,8 @@ const {
   getMessage,
   parseData,
 } = require("../utils");
-const { notification_template, email_settings } = require("../models");
+const { findOne } = require("../mongo/repo");
 const { sendEmail, sendEmailToAdmin } = require("../utils/notification");
-const { Console } = require("console");
 
 const SUCCESS_EMAIL_TEMPLATE_ID = 20;
 const CANCELLED_EMAIL_TEMPLATE_ID = 21;
@@ -18,17 +17,18 @@ const NOTIFY_ADMIN_FOR_CONTACTUS_REGISTER = 24;
 const ONE_DAT_IN_SECONDS = 86400;
 
 const getEmailTemplate = async (templateId) => {
-  const template = await notification_template.findOne({
-    where: {
-      id: templateId,
-    },
-    attributes: [
-      "subject",
-      "subject_ar",
-      "template_content",
-      "template_content_ar",
-    ],
-  });
+  const template = await findOne(
+    "notification_template",
+    { id: Number(templateId) },
+    {
+      attributes: [
+        "subject",
+        "subject_ar",
+        "template_content",
+        "template_content_ar",
+      ],
+    }
+  );
   return template;
 };
 
@@ -40,7 +40,7 @@ const getSMTPDetails = async () => {
     let parsedResponse = parseData(cachedSMTPDetails);
     if (parsedResponse?.status) smtpSettings = parsedResponse?.data;
   } else {
-    smtpSettings = await email_settings.findOne();
+    smtpSettings = await findOne("email_settings", {});
     let stringifyResponse = stringifyData(smtpSettings);
     await setValueRedis(
       "SMTPDetails",

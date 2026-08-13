@@ -15,10 +15,15 @@ const sub_productsSchema = new mongoose.Schema(
     sku: { type: String, required: true },
     created_date: { type: Number, required: true },
     updated_date: { type: Number },
+    weight: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+    plength: { type: Number, default: 0 },
+    width: { type: Number, default: 0 },
   },
   {
     collection: "sub_products",
     timestamps: false,
+    strict: false,
   }
 );
 

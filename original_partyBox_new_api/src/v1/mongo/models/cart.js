@@ -47,10 +47,25 @@ const cartSchema = new mongoose.Schema(
     discount_amount: { type: Number, required: true, default: 0 },
     isPaymentFromTabby: { type: Number, required: true, default: 0 },
     promocode_dump: { type: String },
+    // Checkout / payment / DHL fields (also allowed via strict:false)
+    isPickupFromStore: { type: Number, default: 0 },
+    isCashOnDelivery: { type: Number, default: 0 },
+    paymentStatusCOD: { type: Number, default: 0 },
+    isDHLShipment: { type: Number, default: 0 },
+    DHLshippingCost: { type: Number, default: 0 },
+    DHL_shipmet_trackingID: { type: String, default: "" },
+    DHLShipmentStatus: { type: String, default: "" },
+    DHLShipmentDescription: { type: String, default: "" },
+    DHLShipmentStatusDate: { type: String, default: "" },
+    DHLShipmentStatusTime: { type: String, default: "" },
+    sessionID: { type: String, default: "" },
+    isOrderFromSession: { type: Number, default: 0 },
+    discount_type: { type: Number, default: 0 },
   },
   {
     collection: "cart",
     timestamps: false,
+    strict: false,
   }
 );
 

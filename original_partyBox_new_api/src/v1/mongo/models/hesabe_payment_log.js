@@ -5,21 +5,22 @@ const hesabe_payment_logSchema = new mongoose.Schema(
   {
     id: { type: Number, required: false },
     status: { type: Number, required: true },
-    payment_token: { type: Number, required: true },
+    payment_token: { type: mongoose.Schema.Types.Mixed, required: true, default: "" },
     payment_id: { type: String, required: true },
     paid_on: { type: String, required: true },
     method: { type: Number, required: true },
     cart_id: { type: Number, required: true },
-    tabby_installment_count: { type: Number, required: true },
-    tabby_installment_period: { type: String, required: true },
-    tabby_payment_status: { type: String, required: true },
-    tamara_payment_mode: { type: String, required: true },
-    tamara_payment_status: { type: String, required: true },
-    tamara_instalments_count: { type: Number, required: true },
+    tabby_installment_count: { type: Number, default: 0 },
+    tabby_installment_period: { type: String, default: "" },
+    tabby_payment_status: { type: String, default: "" },
+    tamara_payment_mode: { type: String, default: "" },
+    tamara_payment_status: { type: String, default: "" },
+    tamara_instalments_count: { type: Number, default: 0 },
   },
   {
     collection: "hesabe_payment_log",
     timestamps: false,
+    strict: false,
   }
 );
 

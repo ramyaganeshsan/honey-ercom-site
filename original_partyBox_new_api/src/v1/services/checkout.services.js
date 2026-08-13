@@ -1,4 +1,3 @@
-const tableConfig = require("../database/table.config.json");
 const {
   currencyFormatter,
   getMessage,
@@ -10,151 +9,220 @@ const {
 } = require("../utils");
 const { PRODUCT_THUMP_DISPLAY_IMAGE } = require("../utils/constants");
 const { addToCart } = require("./cart.services");
+const {
+  findOne,
+  findAll,
+  create,
+  updateOne,
+  deleteMany,
+  count,
+  getModel,
+} = require("../mongo/repo");
+
+const byIdMap = (rows, key) => {
+  const map = {};
+  for (const row of rows || []) {
+    map[row[key]] = row;
+  }
+  return map;
+};
 
 exports.getUserCheckoutDetails = async (userId) => {
-  let query = `
-    SELECT 
-        ${tableConfig.cart_items}.deal_id,
-        ${tableConfig.cart_items}.deal_key,
-        ${tableConfig.cart_items}.cart_id,
-        ${tableConfig.cart_items}.item_id,
-        ${tableConfig.cart_items}.item_quantity,
-        ${tableConfig.cart_items}.sub_product_id,
-        ${tableConfig.sub_products}.discount as currentPrice,
-        products.deal_title,
-        products.deal_title_french,
-        CASE WHEN ${tableConfig.sub_products}.quantity > 0 THEN true ELSE false END AS inStock,
-        CONCAT("${PRODUCT_THUMP_DISPLAY_IMAGE}", ${tableConfig.cart_items}.deal_key, "_1.png") as image,
-        ${tableConfig.users}.joined_date  -- Include joined_date from users table
-    FROM ${tableConfig.cart}
-    LEFT JOIN ${tableConfig.cart_items} ON ${tableConfig.cart_items}.cart_id = ${tableConfig.cart}.cart_id
-    LEFT JOIN ${tableConfig.sub_products} ON ${tableConfig.sub_products}.id = ${tableConfig.cart_items}.sub_product_id 
-    LEFT JOIN ( SELECT deal_id, deal_title, deal_title_french FROM ${tableConfig.product} WHERE deal_status = 1 ) AS products ON products.deal_id = ${tableConfig.cart_items}.deal_id
-    LEFT JOIN ${tableConfig.users} ON ${tableConfig.users}.user_id = ${tableConfig.cart}.user_id  -- Join with users table
-
-    WHERE ${tableConfig.cart}.user_id = ${userId} AND ${tableConfig.cart}.cart_transaction_status != 1
-    GROUP BY ${tableConfig.cart_items}.item_id 
-    ORDER BY ${tableConfig.cart_items}.item_id DESC;`;
-
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  const carts = await findAll("cart", {
+    user_id: Number(userId),
+    cart_transaction_status: { $ne: 1 },
   });
+  if (!carts.length) return [];
 
+  const cartIds = carts.map((c) => c.cart_id);
+  const items = await findAll(
+    "cart_items",
+    { cart_id: { $in: cartIds } },
+    { order: [["item_id", "DESC"]] }
+  );
+  if (!items.length) return [];
+
+  const subProductIds = [
+    ...new Set(items.map((i) => Number(i.sub_product_id)).filter((id) => !isNaN(id))),
+  ];
+  const dealIds = [
+    ...new Set(items.map((i) => Number(i.deal_id)).filter((id) => !isNaN(id))),
+  ];
+
+  const [subProducts, products, user] = await Promise.all([
+    subProductIds.length
+      ? findAll("sub_products", { id: { $in: subProductIds } })
+      : Promise.resolve([]),
+    dealIds.length
+      ? findAll(
+          "product",
+          { deal_id: { $in: dealIds }, deal_status: 1 },
+          { attributes: ["deal_id", "deal_title", "deal_title_french"] }
+        )
+      : Promise.resolve([]),
+    findOne(
+      "users",
+      { user_id: Number(userId) },
+      { attributes: ["joined_date"] }
+    ),
+  ]);
+
+  const subMap = byIdMap(subProducts, "id");
+  const productMap = byIdMap(products, "deal_id");
+
+  const seen = new Set();
+  const response = [];
+  for (const item of items) {
+    if (seen.has(item.item_id)) continue;
+    seen.add(item.item_id);
+    const sub = subMap[item.sub_product_id] || {};
+    const product = productMap[item.deal_id] || {};
+    response.push({
+      deal_id: item.deal_id,
+      deal_key: item.deal_key,
+      cart_id: item.cart_id,
+      item_id: item.item_id,
+      item_quantity: item.item_quantity,
+      sub_product_id: item.sub_product_id,
+      currentPrice: sub.discount,
+      deal_title: product.deal_title,
+      deal_title_french: product.deal_title_french,
+      inStock: Number(sub.quantity) > 0,
+      image: `${PRODUCT_THUMP_DISPLAY_IMAGE}${item.deal_key}_1.png`,
+      joined_date: user?.joined_date,
+    });
+  }
   return response;
 };
 
 exports.getUserAddDetails = async (userId) => {
-  let query = `SELECT address1, city_id, state_id, country_id, phone_number, email, firstname, lastname FROM ${tableConfig.users} WHERE user_id = ${userId} AND user_status = 1`;
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
-  return response;
+  const user = await findOne(
+    "users",
+    { user_id: Number(userId), user_status: 1 },
+    {
+      attributes: [
+        "address1",
+        "city_id",
+        "state_id",
+        "country_id",
+        "phone_number",
+        "email",
+        "firstname",
+        "lastname",
+      ],
+    }
+  );
+  return user ? [user] : [];
 };
 
 exports.getAdminEmail = async () => {
-  let query = `SELECT adminEmailAddress FROM ${tableConfig.settings}`;
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
-  return response[0];
+  const settings = await findOne(
+    "settings",
+    {},
+    { attributes: ["adminEmailAddress"] }
+  );
+  return settings || {};
 };
 
 exports.getCartProducts = async (cartId, userId) => {
-  let query = `
-  SELECT 
-    ${tableConfig.cart_items}.cart_transaction_status, 
-    ${tableConfig.sub_products}.quantity,
-    ${tableConfig.sub_products}.price,
-    ${tableConfig.sub_products}.discount,
-    ${tableConfig.cart_items}.deal_id,
-    ${tableConfig.cart}.total_cart_items,
-    ${tableConfig.cart}.total_cart_price,
-    ${tableConfig.cart_items}.item_quantity,
-    ${tableConfig.product}.deal_status,
-    ${tableConfig.product}.deal_title,
-    ${tableConfig.product}.deal_title_french,
-    ${tableConfig.cart_items}.sub_product_id
-  FROM ${tableConfig.cart}
-  JOIN ${tableConfig.cart_items} ON ${tableConfig.cart_items}.cart_id = ${tableConfig.cart}.cart_id
-  JOIN ${tableConfig.sub_products} ON ${tableConfig.sub_products}.id = ${tableConfig.cart_items}.sub_product_id
-  JOIN ${tableConfig.product} ON ${tableConfig.product}.deal_id = ${tableConfig.cart_items}.deal_id
-  WHERE ${tableConfig.cart}.cart_id = ${cartId} AND ${tableConfig.cart}.user_id = ${userId} AND ${tableConfig.cart}.cart_transaction_status != 1;`;
-
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  const cart = await findOne("cart", {
+    cart_id: Number(cartId),
+    user_id: Number(userId),
+    cart_transaction_status: { $ne: 1 },
   });
-  return response;
+  if (!cart) return [];
+
+  const items = await findAll("cart_items", { cart_id: Number(cartId) });
+  if (!items.length) return [];
+
+  const subProductIds = [
+    ...new Set(items.map((i) => Number(i.sub_product_id)).filter((id) => !isNaN(id))),
+  ];
+  const dealIds = [
+    ...new Set(items.map((i) => Number(i.deal_id)).filter((id) => !isNaN(id))),
+  ];
+
+  const [subProducts, products] = await Promise.all([
+    findAll("sub_products", { id: { $in: subProductIds } }),
+    findAll("product", { deal_id: { $in: dealIds } }),
+  ]);
+  const subMap = byIdMap(subProducts, "id");
+  const productMap = byIdMap(products, "deal_id");
+
+  return items.map((item) => {
+    const sub = subMap[item.sub_product_id] || {};
+    const product = productMap[item.deal_id] || {};
+    return {
+      cart_transaction_status: item.cart_transaction_status,
+      quantity: sub.quantity,
+      price: sub.price,
+      discount: sub.discount,
+      deal_id: item.deal_id,
+      total_cart_items: cart.total_cart_items,
+      total_cart_price: cart.total_cart_price,
+      item_quantity: item.item_quantity,
+      deal_status: product.deal_status,
+      deal_title: product.deal_title,
+      deal_title_french: product.deal_title_french,
+      sub_product_id: item.sub_product_id,
+    };
+  });
 };
 
 exports.getCityShippingCost = async (cityId) => {
-  let query = `
-    SELECT 
-      delivery_charge
-    FROM ${tableConfig.city}
-    WHERE city_id = ${cityId};`;
-
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-  });
-  return response;
+  const city = await findOne(
+    "city",
+    { city_id: Number(cityId) },
+    { attributes: ["delivery_charge"] }
+  );
+  return city ? [city] : [];
 };
 
 exports.updateCartCheckoutDetails = async (requestData) => {
   await updateCartDetails(requestData);
 };
 
-const updateCartDetails = async (
-  {
-    notes,
-    shippingCost,
-    finalTotal,
-    name,
-    phone_number,
-    address,
-    state,
-    city,
-    country,
-    totalAmount,
-    totalDiscount,
-    cartId,
-    totalTax,
-    isPickupFromStore,
-  },
-  transaction = null
-) => {
-  let query = `
-    UPDATE ${tableConfig.cart}
-    SET
-      notes = '${notes ? notes?.replace(/[']+/g, " ") : ""}',
-      delivery_type = 1,
-      delivery_price = ${shippingCost},
-      grand_total_price = ${
-        currencyFormatter(finalTotal) + currencyFormatter(totalAmount)
-      },
-      shipping_name = '${name?.replace(/[']+/g, " ") ?? ""}',
-      shipping_address = '${address?.replace(/[']+/g, " ") ?? ""}',
-      shipping_phone = '${phone_number?.replace(/[']+/g, " ") ?? ""}',
-      shipping_city = ${Number(city)},
-      shipping_state = ${Number(state)},
-      shipping_country = ${Number(country)},
-      isPickupFromStore = ${
-        !isNaN(Number(isPickupFromStore)) ? Number(isPickupFromStore) : 0
-      },
-      total_cart_price=${currencyFormatter(totalAmount)},
-      discount_amount=${currencyFormatter(totalDiscount)},
-      tax_amount=${currencyFormatter(totalTax)}
-    WHERE 
-      cart_id = ${cartId};`;
-
-  let updateConfig = {
-    type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-  };
-
-  if (transaction) {
-    updateConfig["transaction"] = transaction;
-  }
-
-  await global?.SEQUELIZE?.query(query, updateConfig);
+const updateCartDetails = async ({
+  notes,
+  shippingCost,
+  finalTotal,
+  name,
+  phone_number,
+  address,
+  state,
+  city,
+  country,
+  totalAmount,
+  totalDiscount,
+  cartId,
+  totalTax,
+  isPickupFromStore,
+}) => {
+  await updateOne(
+    "cart",
+    { cart_id: Number(cartId) },
+    {
+      notes: notes ? String(notes).replace(/[']+/g, " ") : "",
+      delivery_type: 1,
+      delivery_price: shippingCost,
+      grand_total_price:
+        currencyFormatter(finalTotal) + currencyFormatter(totalAmount),
+      shipping_name: name ? String(name).replace(/[']+/g, " ") : "",
+      shipping_address: address ? String(address).replace(/[']+/g, " ") : "",
+      shipping_phone: phone_number
+        ? String(phone_number).replace(/[']+/g, " ")
+        : "",
+      shipping_city: String(Number(city)),
+      shipping_state: String(Number(state)),
+      shipping_country: String(Number(country)),
+      isPickupFromStore: !isNaN(Number(isPickupFromStore))
+        ? Number(isPickupFromStore)
+        : 0,
+      total_cart_price: currencyFormatter(totalAmount),
+      discount_amount: currencyFormatter(totalDiscount),
+      tax_amount: currencyFormatter(totalTax),
+    }
+  );
 };
 
 /* Update cart online payment */
@@ -177,33 +245,13 @@ exports.updateCartTransactionDetails = async ({
   sessionID,
   isDHLShipment,
 }) => {
-  let transaction = await global.SEQUELIZE?.transaction();
-
   try {
     if (!paymentId) {
       return { status: -1, message: getMessage("transaction_id_is_missing") };
     }
 
-    let selectConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-      transaction: transaction,
-    };
-    let updateConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-      transaction: transaction,
-    };
-    let deleteConfig = {
-      transaction: transaction,
-    };
-    let insertConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.INSERT,
-      transaction: transaction,
-    };
-
-    /* Check weather the transaction ID is already exists */
-
     let ifTransactionIdAlreadyExists =
-      await checkIfTransactionIdIsAlreadyExists(paymentId, selectConfig);
+      await checkIfTransactionIdIsAlreadyExists(paymentId);
     if (ifTransactionIdAlreadyExists) {
       return { status: -1, message: getMessage("transaction_id_is_missing") };
     }
@@ -224,16 +272,15 @@ exports.updateCartTransactionDetails = async ({
     });
 
     for (let i = 0; i < productDetails.length; i++) {
-      await updateCartItems(productDetails[i], cart_id, updateConfig);
+      await updateCartItems(productDetails[i], cart_id);
       await updateProductQuantity(
         productDetails[i]["deal_id"],
         productDetails[i]["sub_product_id"],
-        productDetails[i]["item_quantity"],
-        updateConfig
+        productDetails[i]["item_quantity"]
       );
     }
 
-    let transactionId = await getTransactionId(selectConfig);
+    let transactionId = await getTransactionId();
     let cartUpdateDetails = {
       tracking_id: paymentId,
       cart_transaction_status: 1,
@@ -247,7 +294,7 @@ exports.updateCartTransactionDetails = async ({
       grand_total_price: Number(grandTotal),
       coupon_code: promocode,
       coupon_apply: totalDiscount > 0 ? 1 : 0,
-      coupon_percentage: Number(discount),
+      coupon_percentage: String(Number(discount)),
       payment_status: 1,
       isCashOnDelivery: 0,
       type: 0,
@@ -297,24 +344,21 @@ exports.updateCartTransactionDetails = async ({
     };
 
     if (Number(paymentMethod) === -1 || paymentMethod === -2) {
-      await updateCartDetails(requestData, transaction);
+      await updateCartDetails(requestData);
     }
 
     if (sessionID) {
-      await removeCartDetailsFromSession(sessionID, updateConfig);
+      await removeCartDetailsFromSession(sessionID);
     }
 
-    await updateCart(cartUpdateDetails, cart_id, updateConfig);
-    await deleteOtherProductsInCart(itemIds, cart_id, deleteConfig);
-    await insertPaymentLog(paymentLogDetails, insertConfig);
+    await updateCart(cartUpdateDetails, cart_id);
+    await deleteOtherProductsInCart(itemIds, cart_id);
+    await insertPaymentLog(paymentLogDetails);
 
-    await transaction.commit();
     return { status: 1, transactionId: transactionId };
   } catch (err) {
     console.log(err);
     console.log("Error in updateCartTransactionDetails:", err);
-
-    await transaction.rollback();
     return { status: 0 };
   }
 };
@@ -343,32 +387,13 @@ exports.updateCartTransactionDetailsTabby = async ({
   sessionID,
   isDHLShipment,
 }) => {
-  let transaction = await global.SEQUELIZE?.transaction();
   try {
     if (!paymentId) {
       return { status: -1, message: getMessage("transaction_id_is_missing") };
     }
 
-    let selectConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-      transaction: transaction,
-    };
-    let updateConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-      transaction: transaction,
-    };
-    let deleteConfig = {
-      transaction: transaction,
-    };
-    let insertConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.INSERT,
-      transaction: transaction,
-    };
-
-    /* Check weather the transaction ID is already exists */
-
     let ifTransactionIdAlreadyExists =
-      await checkIfTransactionIdIsAlreadyExists(paymentId, selectConfig);
+      await checkIfTransactionIdIsAlreadyExists(paymentId);
     if (ifTransactionIdAlreadyExists) {
       return { status: -1, message: getMessage("transaction_id_is_missing") };
     }
@@ -387,16 +412,15 @@ exports.updateCartTransactionDetailsTabby = async ({
     });
 
     for (let i = 0; i < productDetails.length; i++) {
-      await updateCartItems(productDetails[i], cart_id, updateConfig);
+      await updateCartItems(productDetails[i], cart_id);
       await updateProductQuantity(
         productDetails[i]["deal_id"],
         productDetails[i]["sub_product_id"],
-        productDetails[i]["item_quantity"],
-        updateConfig
+        productDetails[i]["item_quantity"]
       );
     }
 
-    let transactionId = await getTransactionId(selectConfig);
+    let transactionId = await getTransactionId();
     let cartUpdateDetails = {
       tracking_id: paymentId,
       cart_transaction_status: 1,
@@ -410,7 +434,7 @@ exports.updateCartTransactionDetailsTabby = async ({
       grand_total_price: Number(grandTotal),
       coupon_code: promocode,
       coupon_apply: totalDiscount > 0 ? 1 : 0,
-      coupon_percentage: Number(discount),
+      coupon_percentage: String(Number(discount)),
       payment_status: 1,
       isCashOnDelivery: 0,
       type: 0,
@@ -466,287 +490,240 @@ exports.updateCartTransactionDetailsTabby = async ({
     };
 
     if (Number(paymentMethod) === -1 || paymentMethod === -2) {
-      await updateCartDetails(requestData, transaction);
+      await updateCartDetails(requestData);
     }
     if (sessionID) {
-      await removeCartDetailsFromSession(sessionID, updateConfig);
+      await removeCartDetailsFromSession(sessionID);
     }
 
-    await updateCartForTabby(cartUpdateDetails, cart_id, updateConfig);
-    await deleteOtherProductsInCart(itemIds, cart_id, deleteConfig);
+    await updateCartForTabby(cartUpdateDetails, cart_id);
+    await deleteOtherProductsInCart(itemIds, cart_id);
 
-    await insertPaymentLogForTabby(paymentLogDetails, insertConfig);
+    await insertPaymentLogForTabby(paymentLogDetails);
 
-    await transaction.commit();
     return { status: 1, transactionId: transactionId };
   } catch (err) {
     console.log(err);
     console.log("Error in updateCartTransactionDetails:", err);
-
-    await transaction.rollback();
     return { status: 0 };
   }
 };
 
 exports.updateTabbyCartDetails = async (requestData) => {
-  transaction = null;
-
-  let query = `
-    UPDATE ${tableConfig.cart}
-    SET
-      notes = '${
-        requestData.notes ? requestData.notes?.replace(/[']+/g, " ") : ""
-      }',
-      delivery_type = 1,
-      delivery_price = ${requestData.totalShippingCost},
-      grand_total_price = ${currencyFormatter(requestData.grandTotal)},
-      shipping_name = '${requestData.name?.replace(/[']+/g, " ") ?? ""}',
-      shipping_address = '${requestData.address?.replace(/[']+/g, " ") ?? ""}',
-      shipping_phone = '${
-        requestData.phone_number?.replace(/[']+/g, " ") ?? ""
-      }',
-      shipping_city = ${Number(requestData.city)},
-      shipping_state = ${Number(requestData.state)},
-      shipping_country = ${Number(requestData.country)},
-      isPickupFromStore = ${
-        !isNaN(Number(requestData.isPickupFromStore))
-          ? Number(requestData.isPickupFromStore)
-          : 0
-      },
-      total_cart_price=${currencyFormatter(requestData.subTotal)},
-      discount_amount=${currencyFormatter(requestData.totalDiscount)},
-      tax_amount=${currencyFormatter(requestData.totalTax)}
-
-    WHERE 
-      cart_id = ${requestData.cart_id};`;
-
-  let updateConfig = {
-    type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-  };
-  if (transaction) {
-    updateConfig["transaction"] = transaction;
-  }
-
-  await global?.SEQUELIZE?.query(query, updateConfig);
+  await updateOne(
+    "cart",
+    { cart_id: Number(requestData.cart_id) },
+    {
+      notes: requestData.notes
+        ? String(requestData.notes).replace(/[']+/g, " ")
+        : "",
+      delivery_type: 1,
+      delivery_price: requestData.totalShippingCost,
+      grand_total_price: currencyFormatter(requestData.grandTotal),
+      shipping_name: requestData.name
+        ? String(requestData.name).replace(/[']+/g, " ")
+        : "",
+      shipping_address: requestData.address
+        ? String(requestData.address).replace(/[']+/g, " ")
+        : "",
+      shipping_phone: requestData.phone_number
+        ? String(requestData.phone_number).replace(/[']+/g, " ")
+        : "",
+      shipping_city: String(Number(requestData.city)),
+      shipping_state: String(Number(requestData.state)),
+      shipping_country: String(Number(requestData.country)),
+      isPickupFromStore: !isNaN(Number(requestData.isPickupFromStore))
+        ? Number(requestData.isPickupFromStore)
+        : 0,
+      total_cart_price: currencyFormatter(requestData.subTotal),
+      discount_amount: currencyFormatter(requestData.totalDiscount),
+      tax_amount: currencyFormatter(requestData.totalTax),
+    }
+  );
 };
 
-const checkIfTransactionIdIsAlreadyExists = async (
-  transactionId,
-  selectConfig
-) => {
-  let query = `
-    SELECT 
-      count(cart_id) as transactionCount 
-    FROM ${tableConfig.cart}
-    WHERE tracking_id = "${transactionId}"`;
-
-  let response = await global?.SEQUELIZE?.query(query, selectConfig);
-  return response && response.length > 0 && response[0]["transactionCount"] > 0
-    ? true
-    : false;
-};
-// exports.fetchDimensionsFromService = async (subProductId, selectConfig) => {
-//   const formattedIds = subProductId.map((id) => `"${id}"`).join(", ");
-
-//   let query = `
-//     SELECT
-//       weight,
-//       height,
-//       length,
-//       width
-//     FROM ${tableConfig.sub_products}
-// //     WHERE id IN (${formattedIds})`;
-
-//   let response = await global?.SEQUELIZE?.query(query, selectConfig);
-//   return response && response.length > 0 ? response[0] : null;
-// };
-
-exports.fetchDimensionsFromService = async (subProductIds, selectConfig) => {
-  const formattedIds = subProductIds.map((id) => `"${id}"`).join(", ");
-
-  let query = `
-    SELECT
-    id,
-      weight,
-      height,
-      plength,
-      width
-    FROM ${tableConfig.sub_products}
-    WHERE id IN (${formattedIds})`;
-
-  let response = await global?.SEQUELIZE?.query(query, selectConfig);
-  return response && response.length > 0 ? response[0] : null;
+const checkIfTransactionIdIsAlreadyExists = async (transactionId) => {
+  const transactionCount = await count("cart", {
+    tracking_id: String(transactionId),
+  });
+  return transactionCount > 0;
 };
 
-const updateCartItems = async (productDetail, cartId, updateConfig) => {
-  let query = `
-    UPDATE ${tableConfig.cart_items}
-    SET
-      item_quantity=${Number(productDetail?.item_quantity)},
-      deal_value=${Number(productDetail.price)},
-      cart_transaction_status = 1
-    WHERE cart_id = ${Number(cartId)} 
-      AND 
-        sub_product_id = ${Number(productDetail?.sub_product_id)} 
-      AND 
-        item_id = ${Number(productDetail.item_id)};`;
-  let [result, modified] = await global?.SEQUELIZE?.query(query, updateConfig);
-  return modified;
+exports.fetchDimensionsFromService = async (subProductIds) => {
+  const ids = (subProductIds || [])
+    .map((id) => Number(id))
+    .filter((id) => !isNaN(id));
+  if (!ids.length) return null;
+
+  const rows = await findAll(
+    "sub_products",
+    { id: { $in: ids } },
+    { attributes: ["id", "weight", "height", "plength", "width"] }
+  );
+  return rows && rows.length > 0 ? rows[0] : null;
 };
 
-const updateProductQuantity = async (
-  productId,
-  subProductId,
-  quantity,
-  updateConfig
-) => {
-  /* Update sub product quantity */
-  let subProductQuantityUpdateQuery = `
-    UPDATE ${tableConfig.sub_products}
-    SET
-      quantity= quantity - ${Number(quantity)}
-    WHERE id=${Number(subProductId)};`;
-  await global?.SEQUELIZE?.query(subProductQuantityUpdateQuery, updateConfig);
-
-  /* update product quantity */
-  let productQuantityUpdateQuery = `
-    UPDATE ${tableConfig.product}
-    SET
-      user_limit_quantity= user_limit_quantity - ${Number(quantity)}
-    WHERE deal_id=${Number(productId)};`;
-  await global?.SEQUELIZE?.query(productQuantityUpdateQuery, updateConfig);
+const updateCartItems = async (productDetail, cartId) => {
+  const updated = await updateOne(
+    "cart_items",
+    {
+      cart_id: Number(cartId),
+      sub_product_id: Number(productDetail?.sub_product_id),
+      item_id: Number(productDetail.item_id),
+    },
+    {
+      item_quantity: Number(productDetail?.item_quantity),
+      deal_value: Number(productDetail.price),
+      cart_transaction_status: 1,
+    }
+  );
+  return updated ? 1 : 0;
 };
 
-const getTransactionId = async (selectConfig) => {
-  let query = `SELECT transaction_id FROM ${tableConfig.cart} ORDER BY transaction_id DESC LIMIT 1;`;
-  let response = await global?.SEQUELIZE?.query(query, selectConfig);
-  return response && response.length > 0 && response[0]["transaction_id"] > 0
-    ? Number(response[0]["transaction_id"]) + 1
+const updateProductQuantity = async (productId, subProductId, quantity) => {
+  await getModel("sub_products").updateOne(
+    { id: Number(subProductId) },
+    { $inc: { quantity: -Number(quantity) } }
+  );
+  await getModel("product").updateOne(
+    { deal_id: Number(productId) },
+    { $inc: { user_limit_quantity: -Number(quantity) } }
+  );
+};
+
+const getTransactionId = async () => {
+  const latest = await findOne(
+    "cart",
+    {},
+    {
+      attributes: ["transaction_id"],
+      order: [["transaction_id", "DESC"]],
+    }
+  );
+  return latest && latest["transaction_id"] > 0
+    ? Number(latest["transaction_id"]) + 1
     : 1;
 };
 
-const updateCart = async (cartUpdateDetails, cartId, updateConfig) => {
-  let query = `
-    UPDATE ${tableConfig.cart}
-    SET
-      tracking_id= '${cartUpdateDetails.tracking_id}',
-      cart_transaction_status= ${Number(
+const updateCart = async (cartUpdateDetails, cartId) => {
+  await updateOne(
+    "cart",
+    { cart_id: Number(cartId) },
+    {
+      tracking_id: cartUpdateDetails.tracking_id,
+      cart_transaction_status: Number(
         cartUpdateDetails.cart_transaction_status
-      )},
-      total_cart_price= ${cartUpdateDetails.total_cart_price},
-      total_cart_items= ${cartUpdateDetails.total_cart_items},
-      delivery_price= ${cartUpdateDetails.delivery_price},
-      discount_amount= ${cartUpdateDetails.discount_amount},
-      transaction_id= ${cartUpdateDetails.transaction_id},
-      transaction_date= ${cartUpdateDetails.transaction_date},
-      grand_total_price= ${cartUpdateDetails.grand_total_price},
-      payment_status= ${cartUpdateDetails.payment_status},
-      type= ${cartUpdateDetails.type},
-      isCashOnDelivery= ${Number(cartUpdateDetails.isCashOnDelivery)},
-      paymentStatusCOD= ${Number(cartUpdateDetails.paymentStatusCOD)},
-      isPickupFromStore= ${Number(cartUpdateDetails.isPickupFromStore)},
-      isDHLShipment= ${Number(cartUpdateDetails.isDHLShipment)},
-      DHLshippingCost= ${Number(cartUpdateDetails.DHLshippingCost)},
-      sessionID='${cartUpdateDetails.sessionID}',
-      isOrderFromSession= ${Number(cartUpdateDetails.isOrderFromSession)},
-      promocode_dump= '${cartUpdateDetails.promocode_dump}'
-    WHERE cart_id = ${Number(cartId)};`;
-  await global?.SEQUELIZE?.query(query, updateConfig);
+      ),
+      total_cart_price: cartUpdateDetails.total_cart_price,
+      total_cart_items: cartUpdateDetails.total_cart_items,
+      delivery_price: cartUpdateDetails.delivery_price,
+      discount_amount: cartUpdateDetails.discount_amount,
+      transaction_id: cartUpdateDetails.transaction_id,
+      transaction_date: cartUpdateDetails.transaction_date,
+      grand_total_price: cartUpdateDetails.grand_total_price,
+      payment_status: cartUpdateDetails.payment_status,
+      type: cartUpdateDetails.type,
+      isCashOnDelivery: Number(cartUpdateDetails.isCashOnDelivery),
+      paymentStatusCOD: Number(cartUpdateDetails.paymentStatusCOD),
+      isPickupFromStore: Number(cartUpdateDetails.isPickupFromStore),
+      isDHLShipment: Number(cartUpdateDetails.isDHLShipment),
+      DHLshippingCost: Number(cartUpdateDetails.DHLshippingCost),
+      sessionID: cartUpdateDetails.sessionID,
+      isOrderFromSession: Number(cartUpdateDetails.isOrderFromSession),
+      promocode_dump: cartUpdateDetails.promocode_dump,
+      coupon_code: cartUpdateDetails.coupon_code,
+      coupon_apply: cartUpdateDetails.coupon_apply,
+      coupon_percentage: String(cartUpdateDetails.coupon_percentage ?? "0"),
+      discount_type: cartUpdateDetails.discount_type,
+    }
+  );
 };
-const updateCartForTabby = async (cartUpdateDetails, cart_id, updateConfig) => {
-  let query = `
-    UPDATE ${tableConfig.cart}
-    SET
-      tracking_id= '${cartUpdateDetails.tracking_id}',
-      cart_transaction_status= ${Number(
+
+const updateCartForTabby = async (cartUpdateDetails, cart_id) => {
+  await updateOne(
+    "cart",
+    { cart_id: Number(cart_id) },
+    {
+      tracking_id: cartUpdateDetails.tracking_id,
+      cart_transaction_status: Number(
         cartUpdateDetails.cart_transaction_status
-      )},
-      total_cart_price= ${cartUpdateDetails.total_cart_price},
-      total_cart_items= ${cartUpdateDetails.total_cart_items},
-      delivery_price= ${cartUpdateDetails.delivery_price},
-      discount_amount= ${cartUpdateDetails.discount_amount},
-      transaction_id= ${cartUpdateDetails.transaction_id},
-      transaction_date= ${cartUpdateDetails.transaction_date},
-      grand_total_price= ${cartUpdateDetails.grand_total_price},
-      payment_status= ${cartUpdateDetails.payment_status},
-      type= ${cartUpdateDetails.type},
-      isCashOnDelivery= ${Number(cartUpdateDetails.isCashOnDelivery)},
-      paymentStatusCOD= ${Number(cartUpdateDetails.paymentStatusCOD)},
-      isPickupFromStore= ${Number(cartUpdateDetails.isPickupFromStore)},
-      sessionID='${cartUpdateDetails.sessionID}',
-      isDHLShipment= ${Number(cartUpdateDetails.isDHLShipment)},
-      DHLshippingCost= ${Number(cartUpdateDetails.DHLshippingCost)},
-      isOrderFromSession= ${Number(cartUpdateDetails.isOrderFromSession)},
-      promocode_dump= '${cartUpdateDetails.promocode_dump}'
-    WHERE cart_id = ${Number(cart_id)};`;
-  await global?.SEQUELIZE?.query(query, updateConfig);
+      ),
+      total_cart_price: cartUpdateDetails.total_cart_price,
+      total_cart_items: cartUpdateDetails.total_cart_items,
+      delivery_price: cartUpdateDetails.delivery_price,
+      discount_amount: cartUpdateDetails.discount_amount,
+      transaction_id: cartUpdateDetails.transaction_id,
+      transaction_date: cartUpdateDetails.transaction_date,
+      grand_total_price: cartUpdateDetails.grand_total_price,
+      payment_status: cartUpdateDetails.payment_status,
+      type: cartUpdateDetails.type,
+      isCashOnDelivery: Number(cartUpdateDetails.isCashOnDelivery),
+      paymentStatusCOD: Number(cartUpdateDetails.paymentStatusCOD),
+      isPickupFromStore: Number(cartUpdateDetails.isPickupFromStore),
+      sessionID: cartUpdateDetails.sessionID,
+      isDHLShipment: Number(cartUpdateDetails.isDHLShipment),
+      DHLshippingCost: Number(cartUpdateDetails.DHLshippingCost),
+      isOrderFromSession: Number(cartUpdateDetails.isOrderFromSession),
+      promocode_dump: cartUpdateDetails.promocode_dump,
+      coupon_code: cartUpdateDetails.coupon_code,
+      coupon_apply: cartUpdateDetails.coupon_apply,
+      coupon_percentage: String(cartUpdateDetails.coupon_percentage ?? "0"),
+      discount_type: cartUpdateDetails.discount_type,
+    }
+  );
 };
 
-const deleteOtherProductsInCart = async (itemIds, cartId, deleteConfig) => {
-  let query = `
-    DELETE FROM ${tableConfig.cart_items} 
-    WHERE cart_id = ${Number(cartId)} 
-      AND item_id NOT IN (${itemIds.join(",")});`;
-  await global?.SEQUELIZE?.query(query, deleteConfig);
+const deleteOtherProductsInCart = async (itemIds, cartId) => {
+  const ids = (itemIds || []).map((id) => Number(id)).filter((id) => !isNaN(id));
+  const filter = { cart_id: Number(cartId) };
+  if (ids.length) {
+    filter.item_id = { $nin: ids };
+  }
+  await deleteMany("cart_items", filter);
 };
 
-const insertPaymentLog = async (paymentLogDetails, insertConfig) => {
-  let query = `
-    INSERT INTO ${tableConfig.hesabe_payment_log}
-    ( 
-      status, 
-      payment_token, 
-      payment_id, 
-      paid_on, 
-      method, 
-      cart_id 
-    ) VALUES ( 
-      ${Number(paymentLogDetails.status)}, 
-      "${paymentLogDetails.paymentToken}",
-      "${paymentLogDetails.paymentId}",
-      '${paymentLogDetails.paid_on}',
-      ${Number(paymentLogDetails.method)},
-      ${Number(paymentLogDetails.cartId)}
-    );`;
-  await global?.SEQUELIZE?.query(query, insertConfig);
+const insertPaymentLog = async (paymentLogDetails) => {
+  await create("hesabe_payment_log", {
+    status: Number(paymentLogDetails.status),
+    payment_token: paymentLogDetails.paymentToken ?? "",
+    payment_id: String(paymentLogDetails.paymentId ?? ""),
+    paid_on: paymentLogDetails.paid_on,
+    method: Number(paymentLogDetails.method),
+    cart_id: Number(paymentLogDetails.cartId),
+    tabby_installment_count: 0,
+    tabby_installment_period: "",
+    tabby_payment_status: "",
+    tamara_payment_mode: "",
+    tamara_payment_status: "",
+    tamara_instalments_count: 0,
+  });
 };
 
-const insertPaymentLogForTabby = async (paymentLogDetails, insertConfig) => {
-  let query = `
-    INSERT INTO ${tableConfig.hesabe_payment_log}
-    ( 
-      status, 
-      payment_token, 
-      payment_id, 
-      paid_on, 
-      method, 
-      cart_id,
-      tabby_installment_count,
-      tabby_installment_period,
-      tabby_payment_status,
-      tamara_payment_mode,
-      tamara_payment_status,
-      tamara_instalments_count
-      
-    ) VALUES ( 
-      ${Number(paymentLogDetails.status)}, 
-      "${paymentLogDetails.paymentToken}",
-      "${paymentLogDetails.paymentId}",
-      "${paymentLogDetails.paid_on}",
-      ${Number(paymentLogDetails.method)},
-      ${Number(paymentLogDetails.cartId)},
-      ${Number(paymentLogDetails.tabby_installment_count)},
-      "${paymentLogDetails.tabby_installment_period}",
-      "${paymentLogDetails.tabby_payment_status}",
-      "${paymentLogDetails.tamara_payment_mode}",
-      "${paymentLogDetails.tamara_payment_status}",
-      ${Number(paymentLogDetails.tamara_instalments_count)}
-      
-
-
-    )`;
-
-  await global?.SEQUELIZE?.query(query, insertConfig);
+const insertPaymentLogForTabby = async (paymentLogDetails) => {
+  await create("hesabe_payment_log", {
+    status: Number(paymentLogDetails.status),
+    payment_token: paymentLogDetails.paymentToken ?? "",
+    payment_id: String(paymentLogDetails.paymentId ?? ""),
+    paid_on: paymentLogDetails.paid_on,
+    method: Number(paymentLogDetails.method),
+    cart_id: Number(paymentLogDetails.cartId),
+    tabby_installment_count: Number(
+      paymentLogDetails.tabby_installment_count || 0
+    ),
+    tabby_installment_period: String(
+      paymentLogDetails.tabby_installment_period || ""
+    ),
+    tabby_payment_status: String(
+      paymentLogDetails.tabby_payment_status || ""
+    ),
+    tamara_payment_mode: String(paymentLogDetails.tamara_payment_mode || ""),
+    tamara_payment_status: String(
+      paymentLogDetails.tamara_payment_status || ""
+    ),
+    tamara_instalments_count: Number(
+      paymentLogDetails.tamara_instalments_count || 0
+    ),
+  });
 };
 
 exports.updateTabbyInstallmentDetails = async (
@@ -755,35 +732,32 @@ exports.updateTabbyInstallmentDetails = async (
   status,
   paymentId
 ) => {
-  let query = `
-      UPDATE hesabe_payment_log
-      SET tabby_installment_count = ${installments_count},
-          tabby_installment_period = "${installment_period}",
-          tabby_payment_status = "${status}"
-      WHERE payment_id = "${paymentId}";
-    `;
-
-  await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-  });
+  await updateOne(
+    "hesabe_payment_log",
+    { payment_id: String(paymentId) },
+    {
+      tabby_installment_count: installments_count,
+      tabby_installment_period: installment_period,
+      tabby_payment_status: status,
+    }
+  );
 };
+
 exports.updateTamaraInstallmentDetails = async (
   installments_count,
   installment_period,
   status,
   paymentId
 ) => {
-  let query = `
-      UPDATE hesabe_payment_log
-      SET tamara_instalments_count = ${installments_count},
-          tamara_payment_mode = "${installment_period}",
-          tamara_payment_status = "${status}"
-      WHERE payment_id = "${paymentId}";
-    `;
-
-  await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-  });
+  await updateOne(
+    "hesabe_payment_log",
+    { payment_id: String(paymentId) },
+    {
+      tamara_instalments_count: installments_count,
+      tamara_payment_mode: installment_period,
+      tamara_payment_status: status,
+    }
+  );
 };
 
 exports.DHLShipmentEvent = async (
@@ -793,32 +767,26 @@ exports.DHLShipmentEvent = async (
   eventDate,
   eventTime
 ) => {
-  let query = `
-      UPDATE cart
-      SET DHLShipmentStatus = "${shipmentStatus}",
-          DHLShipmentDescription = "${eventDescription}",
-          DHLShipmentStatusDate = "${eventDate}",
-          DHLShipmentStatusTime = "${eventTime}"
-      WHERE DHL_shipmet_trackingID = "${trackingNumber}";
-    `;
-
-  await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-  });
+  await updateOne(
+    "cart",
+    { DHL_shipmet_trackingID: String(trackingNumber) },
+    {
+      DHLShipmentStatus: shipmentStatus,
+      DHLShipmentDescription: eventDescription,
+      DHLShipmentStatusDate: eventDate,
+      DHLShipmentStatusTime: eventTime,
+    }
+  );
 };
 
-const removeCartDetailsFromSession = async (sessionID, updateConfig) => {
+const removeCartDetailsFromSession = async (sessionID) => {
   try {
     let serializeCartDetails = serializeData([]);
-    let query = `UPDATE ${tableConfig.sessions} SET cart='${serializeCartDetails}' WHERE session_id = '${sessionID}' AND isMovedToUsers = 0`;
-    let config = {
-      type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-    };
-    if (updateConfig) {
-      config = updateConfig;
-    }
-
-    await global?.SEQUELIZE?.query(query, config);
+    await updateOne(
+      "sessions",
+      { session_id: sessionID, isMovedToUsers: 0 },
+      { cart: serializeCartDetails }
+    );
     return { status: 1 };
   } catch (err) {
     console.log(err);
@@ -826,44 +794,35 @@ const removeCartDetailsFromSession = async (sessionID, updateConfig) => {
   }
 };
 
-exports.getCartAndCartProductDetails = async (userId, selectConfig) => {
-  let query = `
-      SELECT 
-      ${tableConfig.cart}.cart_id,
-      ${tableConfig.cart_items}.deal_id,
-      ${tableConfig.cart_items}.item_id,
-      ${tableConfig.cart_items}.sub_product_id
-    FROM cart
-    JOIN ${tableConfig.cart_items} ON ${tableConfig.cart_items}.cart_id = ${tableConfig.cart}.cart_id
-    WHERE ${tableConfig.cart}.user_id = ${userId} AND ${tableConfig.cart}.cart_transaction_status = 0;
-  `;
-  let config = { type: global?.SEQUELIZE?.QueryTypes?.SELECT };
-  if (selectConfig) {
-    config = selectConfig;
-  }
-  let response = await global?.SEQUELIZE?.query(query, config);
-  return response;
+exports.getCartAndCartProductDetails = async (userId) => {
+  const carts = await findAll(
+    "cart",
+    { user_id: Number(userId), cart_transaction_status: 0 },
+    { attributes: ["cart_id"] }
+  );
+  if (!carts.length) return [];
+
+  const cartIds = carts.map((c) => c.cart_id);
+  const items = await findAll(
+    "cart_items",
+    { cart_id: { $in: cartIds } },
+    { attributes: ["cart_id", "deal_id", "item_id", "sub_product_id"] }
+  );
+
+  return items.map((item) => ({
+    cart_id: item.cart_id,
+    deal_id: item.deal_id,
+    item_id: item.item_id,
+    sub_product_id: item.sub_product_id,
+  }));
 };
 
 exports.removeExistingCartDetails = async (cartId, sessionID, userInfo) => {
-  let transaction = await global.SEQUELIZE.transaction();
   try {
     let cartDetails = null;
     let wishlist = null;
     if (sessionID && sessionID !== "") {
-      let deleteConfig = {
-        transaction: transaction,
-        type: global?.SEQUELIZE?.QueryTypes?.DELETE,
-      };
-      let selectConfig = {
-        transaction: transaction,
-        type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-      };
-
-      let sessionWishlistAndCart = await getUserSessionDetails(
-        sessionID,
-        selectConfig
-      );
+      let sessionWishlistAndCart = await getUserSessionDetails(sessionID);
 
       if (
         sessionWishlistAndCart &&
@@ -871,9 +830,7 @@ exports.removeExistingCartDetails = async (cartId, sessionID, userInfo) => {
         !sessionWishlistAndCart[0]["isMovedToUsers"]
       ) {
         if (cartId && cartId !== "" && !isNaN(cartId)) {
-          /* Remove existing cart items in cart */
-          let deleteQuery = `DELETE FROM ${tableConfig.cart_items} WHERE cart_id=${cartId}`;
-          await global?.SEQUELIZE?.query(deleteQuery, deleteConfig);
+          await deleteMany("cart_items", { cart_id: Number(cartId) });
         }
 
         wishlist = sessionWishlistAndCart[0]["wishlist"];
@@ -895,24 +852,20 @@ exports.removeExistingCartDetails = async (cartId, sessionID, userInfo) => {
         }
 
         if (wishlist && wishlist !== "") {
-          let query = `UPDATE ${
-            tableConfig.users
-          } SET wishlist="${wishlist}" WHERE user_id = ${Number(
-            userInfo.user_id
-          )}`;
-          await global?.SEQUELIZE?.query(query);
+          await updateOne(
+            "users",
+            { user_id: Number(userInfo.user_id) },
+            { wishlist: wishlist }
+          );
         }
 
-        transaction.commit();
         return { status: 1, message: "" };
       } else {
-        await transaction.rollback();
         return { status: 2, message: "" };
       }
     }
   } catch (err) {
     console.log(err);
-    await transaction.rollback();
     return { status: 0, message: "" };
   }
 };
