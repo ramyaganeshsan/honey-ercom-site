@@ -1,6 +1,4 @@
 import { t } from "i18next";
-import { env } from "../../env";
-
 const NoDataFound = ({ resetAllFilters }) => {
   return (
     <div className="error-page-ctnr">

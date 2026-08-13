@@ -1,6 +1,5 @@
 import { t } from "i18next";
 import { Link } from "react-router-dom";
-import { env } from "../../env";
 
 const EmptyCart = () => {
   return (

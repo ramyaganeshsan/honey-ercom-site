@@ -1,7 +1,5 @@
 import { t } from "i18next";
 import { Link } from "react-router-dom";
-import { env } from "../../env";
-
 const EmptyWishlist = () => {
   return (
     <div className="error-page-ctnr">

@@ -1,8 +1,6 @@
 import React, { useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import { t } from "i18next";
-import { env } from "../../env";
-
 const Error404 = () => {
   useLayoutEffect(() => {
     let searchBar = document.getElementById("cyr-search-bar");
