@@ -1,4 +1,2 @@
-/* Theme CSS served from Vite public/ (same origin as the app) */
-@import url("/css/style.css");
-@import url("/css/media_style.css");
-@import url("/css/bootstrap.min.css");
+/* Intentionally empty — theme CSS is linked from index.html / App.js
+   as plain /css/*.css files so Vite does not rewrite public asset URLs. */
