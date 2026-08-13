@@ -37,6 +37,15 @@ export const productsApi = {
   update: (id, payload) =>
     apiRequest(() => client.put(`/products/${id}`, payload)),
   remove: (id) => apiRequest(() => client.delete(`/products/${id}`)),
+  uploadImage: (id, file) => {
+    const fd = new FormData()
+    fd.append('image', file)
+    return apiRequest(() =>
+      client.post(`/products/${id}/image`, fd, {
+        headers: { 'Content-Type': undefined },
+      })
+    )
+  },
 }
 
 export const ordersApi = {
@@ -75,6 +84,15 @@ export const bannersApi = {
   update: (id, payload) =>
     apiRequest(() => client.put(`/banners/${id}`, payload)),
   remove: (id) => apiRequest(() => client.delete(`/banners/${id}`)),
+  uploadImage: (id, file) => {
+    const fd = new FormData()
+    fd.append('image', file)
+    return apiRequest(() =>
+      client.post(`/banners/${id}/image`, fd, {
+        headers: { 'Content-Type': undefined },
+      })
+    )
+  },
 }
 
 export const reviewsApi = {

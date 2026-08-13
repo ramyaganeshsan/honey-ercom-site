@@ -1,6 +1,7 @@
 const { findOne, create, updateOne, findAll } = require("../../mongo/repo");
 const { getCurrentTime, generateRandomString } = require("../../utils/index");
 const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { saveProductImage } = require("../services/upload.service");
 
 function slugify(text) {
   return String(text || "")
@@ -13,14 +14,26 @@ function slugify(text) {
 function productDefaults(body = {}) {
   const now = getCurrentTime().unix();
   const title = String(body.deal_title || "").trim();
+  // deal_value = original/MRP; deal_price = sale/discount price
   const deal_value = Number(body.deal_value) || Number(body.deal_price) || 0;
-  const deal_price = Number(body.deal_price) || deal_value;
+  const deal_price =
+    body.deal_price !== undefined && body.deal_price !== ""
+      ? Number(body.deal_price) || 0
+      : deal_value;
   const deal_savings = Math.max(0, deal_value - deal_price);
   const deal_percentage =
     deal_value > 0 ? Math.round((deal_savings / deal_value) * 100) : 0;
   const deal_key =
     String(body.deal_key || "").trim() ||
     `${slugify(title)}-${generateRandomString(4)}`.slice(0, 40);
+  const stock =
+    body.user_limit_quantity !== undefined && body.user_limit_quantity !== ""
+      ? Number(body.user_limit_quantity)
+      : body.stock !== undefined && body.stock !== ""
+        ? Number(body.stock)
+        : body.quantity !== undefined && body.quantity !== ""
+          ? Number(body.quantity)
+          : 0;
 
   return {
     deal_title: title,
@@ -47,7 +60,7 @@ function productDefaults(body = {}) {
     shop_id: Number(body.shop_id) || 1,
     deal_percentage,
     purchase_count: Number(body.purchase_count) || 0,
-    user_limit_quantity: Number(body.user_limit_quantity) || 0,
+    user_limit_quantity: Number.isFinite(stock) ? stock : 0,
     created_date: now,
     created_by: Number(body.created_by) || 1,
     deal_status: body.deal_status !== undefined ? Number(body.deal_status) : 1,
@@ -198,6 +211,17 @@ exports.updateProduct = async (req, res) => {
     delete body._id;
     delete body.created_date;
 
+    if (body.stock !== undefined && body.user_limit_quantity === undefined) {
+      body.user_limit_quantity = Number(body.stock) || 0;
+      delete body.stock;
+    }
+    if (body.quantity !== undefined && body.user_limit_quantity === undefined) {
+      body.user_limit_quantity = Number(body.quantity) || 0;
+    }
+    if (body.category_id !== undefined && body.category_ids === undefined) {
+      body.category_ids = String(body.category_id);
+    }
+
     if (body.deal_value != null || body.deal_price != null) {
       const existing = await findOne("product", { deal_id: dealId });
       if (!existing) {
@@ -232,6 +256,64 @@ exports.updateProduct = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.send(fail("Failed to update product"));
+  }
+};
+
+exports.uploadProductImage = async (req, res) => {
+  try {
+    const dealId = Number(req.params.dealId);
+    const product = await findOne("product", { deal_id: dealId });
+    if (!product) {
+      return res.send(fail("Product not found"));
+    }
+    if (!req.file?.buffer) {
+      return res.send(fail("Image file is required (field name: image)"));
+    }
+
+    const saved = await saveProductImage(product.deal_key, req.file.buffer);
+    const product_image = saved.filename;
+
+    await syncSubProduct(dealId, product, {
+      product_image,
+      quantity: product.user_limit_quantity,
+      price: product.deal_price,
+      discount: product.deal_value,
+    });
+
+    const subProducts = await findAll("sub_products", { product_id: dealId });
+    return res.send(
+      ok(
+        {
+          deal_id: dealId,
+          deal_key: product.deal_key,
+          product_image,
+          image_url: saved.relativeUrl,
+          sub_products: subProducts,
+        },
+        "Product image uploaded"
+      )
+    );
+  } catch (err) {
+    console.error(err);
+    return res.send(fail(err.message || "Failed to upload product image"));
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const dealId = Number(req.params.dealId);
+    const updated = await updateOne(
+      "product",
+      { deal_id: dealId },
+      { deal_status: 0 }
+    );
+    if (!updated) {
+      return res.send(fail("Product not found"));
+    }
+    return res.send(ok(updated, "Product deactivated"));
+  } catch (err) {
+    console.error(err);
+    return res.send(fail("Failed to delete product"));
   }
 };
 

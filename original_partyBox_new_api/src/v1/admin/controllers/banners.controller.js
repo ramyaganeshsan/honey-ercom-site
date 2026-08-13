@@ -1,5 +1,6 @@
 const { findOne, create, updateOne } = require("../../mongo/repo");
 const { ok, fail, listCollection } = require("../services/admin.helpers");
+const { saveBannerImage } = require("../services/upload.service");
 
 exports.listBanners = async (req, res) => {
   try {
@@ -96,5 +97,33 @@ exports.deleteBanner = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.send(fail("Failed to delete banner"));
+  }
+};
+
+exports.uploadBannerImage = async (req, res) => {
+  try {
+    const bannerId = Number(req.params.bannerId);
+    const item = await findOne("banner_image", { banner_id: bannerId });
+    if (!item) {
+      return res.send(fail("Banner not found"));
+    }
+    if (!req.file?.buffer) {
+      return res.send(fail("Image file is required (field name: image)"));
+    }
+
+    const saved = await saveBannerImage(bannerId, req.file.buffer);
+    return res.send(
+      ok(
+        {
+          banner_id: bannerId,
+          image_url: saved.relativeUrl,
+          filename: saved.filename,
+        },
+        "Banner image uploaded"
+      )
+    );
+  } catch (err) {
+    console.error(err);
+    return res.send(fail(err.message || "Failed to upload banner image"));
   }
 };

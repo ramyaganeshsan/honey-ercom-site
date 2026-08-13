@@ -1,17 +1,69 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import { categoriesApi, productsApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
 import Modal from '../../components/Modal'
+import { productImageUrl } from '../../utils/assets'
 import { formatMoney, isActiveStatus, pickList } from '../../utils/format'
 
 const emptyForm = {
   deal_title: '',
-  deal_price: '',
-  deal_value: '',
-  stock: '',
+  deal_title_french: '',
+  url_title: '',
+  deal_key: '',
+  deal_description: '',
+  deal_description_french: '',
   category_id: '',
+  sub_category_id: '',
+  sec_category_id: '',
+  third_category_id: '',
+  deal_value: '',
+  deal_price: '',
+  user_limit_quantity: '',
   deal_status: 1,
+  delivery_period: '2-3 days',
+  brand_id: 1,
+  brand_names: 'Thunayyan',
+  tags: '',
+  related_products: '',
+  having_size_color: 0,
+  shipping: 0,
+  meta_description: '',
+  meta_keywords: '',
+  meta_description_french: '',
+  meta_keywords_french: '',
+  terms_conditions: '',
+}
+
+function mapRowToForm(row) {
+  return {
+    deal_title: row.deal_title || '',
+    deal_title_french: row.deal_title_french || '',
+    url_title: row.url_title || '',
+    deal_key: row.deal_key || '',
+    deal_description: row.deal_description || '',
+    deal_description_french: row.deal_description_french || '',
+    category_id: row.category_id ?? '',
+    sub_category_id: row.sub_category_id ?? '',
+    sec_category_id: row.sec_category_id ?? '',
+    third_category_id: row.third_category_id ?? '',
+    deal_value: row.deal_value ?? '',
+    deal_price: row.deal_price ?? '',
+    user_limit_quantity: row.user_limit_quantity ?? row.stock ?? '',
+    deal_status: row.deal_status ?? 1,
+    delivery_period: row.delivery_period || '2-3 days',
+    brand_id: row.brand_id ?? 1,
+    brand_names: row.brand_names || 'Thunayyan',
+    tags: row.tags || '',
+    related_products: row.related_products || '',
+    having_size_color: row.having_size_color ?? 0,
+    shipping: row.shipping ?? 0,
+    meta_description: row.meta_description || '',
+    meta_keywords: row.meta_keywords || '',
+    meta_description_french: row.meta_description_french || '',
+    meta_keywords_french: row.meta_keywords_french || '',
+    terms_conditions: row.terms_conditions || '',
+  }
 }
 
 export default function ProductsPage() {
@@ -24,6 +76,9 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
+  const [imgBust, setImgBust] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -40,22 +95,42 @@ export default function ProductsPage() {
     load()
   }, [load])
 
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview)
+      }
+    }
+  }, [imagePreview])
+
+  const savings = useMemo(() => {
+    const value = Number(form.deal_value) || 0
+    const price = Number(form.deal_price) || 0
+    const amount = Math.max(0, value - price)
+    const pct = value > 0 ? Math.round((amount / value) * 100) : 0
+    return { amount, pct }
+  }, [form.deal_value, form.deal_price])
+
+  const resetImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview)
+    }
+    setImageFile(null)
+    setImagePreview('')
+  }
+
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    resetImage()
     setOpen(true)
   }
 
   const openEdit = (row) => {
     setEditing(row)
-    setForm({
-      deal_title: row.deal_title || row.title || '',
-      deal_price: row.deal_price ?? row.price ?? '',
-      deal_value: row.deal_value ?? row.value ?? '',
-      stock: row.stock ?? row.quantity ?? row.user_limit_quantity ?? '',
-      category_id: row.category_id ?? '',
-      deal_status: row.deal_status ?? row.status ?? 1,
-    })
+    setForm(mapRowToForm(row))
+    resetImage()
+    setImagePreview(productImageUrl(row.deal_key, Date.now()))
     setOpen(true)
   }
 
@@ -64,42 +139,100 @@ export default function ProductsPage() {
     setForm((f) => ({ ...f, [name]: value }))
   }
 
+  const onImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview)
+    }
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const buildPayload = () => {
+    const deal_value = Number(form.deal_value) || 0
+    const deal_price =
+      form.deal_price === '' || form.deal_price == null
+        ? deal_value
+        : Number(form.deal_price) || 0
+
+    return {
+      deal_title: form.deal_title.trim(),
+      deal_title_french: form.deal_title_french.trim() || form.deal_title.trim(),
+      url_title: form.url_title.trim(),
+      deal_key: form.deal_key.trim(),
+      deal_description: form.deal_description,
+      deal_description_french: form.deal_description_french,
+      category_id: Number(form.category_id) || 0,
+      category_ids: String(Number(form.category_id) || ''),
+      sub_category_id: Number(form.sub_category_id) || 0,
+      sec_category_id: Number(form.sec_category_id) || 0,
+      third_category_id: Number(form.third_category_id) || 0,
+      deal_value,
+      deal_price,
+      user_limit_quantity: Number(form.user_limit_quantity) || 0,
+      quantity: Number(form.user_limit_quantity) || 0,
+      deal_status: Number(form.deal_status),
+      delivery_period: form.delivery_period,
+      brand_id: Number(form.brand_id) || 1,
+      brand_names: form.brand_names,
+      tags: form.tags,
+      related_products: form.related_products,
+      having_size_color: Number(form.having_size_color) || 0,
+      shipping: Number(form.shipping) || 0,
+      meta_description: form.meta_description,
+      meta_keywords: form.meta_keywords,
+      meta_description_french: form.meta_description_french,
+      meta_keywords_french: form.meta_keywords_french,
+      terms_conditions: form.terms_conditions,
+    }
+  }
+
   const save = async () => {
     if (!form.deal_title.trim()) {
       toast.error('Title is required')
       return
     }
     setSaving(true)
-    const payload = {
-      deal_title: form.deal_title,
-      title: form.deal_title,
-      deal_price: Number(form.deal_price) || 0,
-      price: Number(form.deal_price) || 0,
-      deal_value: Number(form.deal_value) || 0,
-      value: Number(form.deal_value) || 0,
-      stock: Number(form.stock) || 0,
-      category_id: Number(form.category_id) || 0,
-      deal_status: Number(form.deal_status),
-      status: Number(form.deal_status),
-    }
+    const payload = buildPayload()
     const id = editing?.deal_id ?? editing?.id
     const res = editing
       ? await productsApi.update(id, payload)
       : await productsApi.create(payload)
-    setSaving(false)
-    if (res.ok) {
-      toast.success(editing ? 'Product updated' : 'Product created')
-      setOpen(false)
-      load()
+
+    if (!res.ok) {
+      setSaving(false)
+      return
     }
+
+    const savedId = res.data?.deal_id ?? id
+    const dealKey = res.data?.deal_key || form.deal_key
+
+    if (imageFile && savedId) {
+      const up = await productsApi.uploadImage(savedId, imageFile)
+      if (!up.ok) {
+        setSaving(false)
+        toast.error('Product saved, but image upload failed')
+        setOpen(false)
+        load()
+        return
+      }
+      setImgBust(Date.now())
+    }
+
+    setSaving(false)
+    toast.success(editing ? 'Product updated' : 'Product created')
+    setOpen(false)
+    if (dealKey) setImgBust(Date.now())
+    load()
   }
 
   const remove = async (row) => {
-    if (!window.confirm('Delete this product?')) return
+    if (!window.confirm('Deactivate this product?')) return
     const id = row.deal_id ?? row.id
     const res = await productsApi.remove(id)
     if (res.ok) {
-      toast.success('Product deleted')
+      toast.success('Product deactivated')
       load()
     }
   }
@@ -111,6 +244,23 @@ export default function ProductsPage() {
 
   const columns = [
     {
+      key: 'image',
+      header: 'Image',
+      render: (r) =>
+        r.deal_key ? (
+          <img
+            className="thumb-img"
+            src={productImageUrl(r.deal_key, imgBust)}
+            alt=""
+            onError={(e) => {
+              e.currentTarget.style.visibility = 'hidden'
+            }}
+          />
+        ) : (
+          '—'
+        ),
+    },
+    {
       key: 'deal_id',
       header: 'ID',
       render: (r) => r.deal_id ?? r.id,
@@ -118,22 +268,22 @@ export default function ProductsPage() {
     {
       key: 'deal_title',
       header: 'Title',
-      render: (r) => r.deal_title || r.title || '—',
-    },
-    {
-      key: 'deal_price',
-      header: 'Price',
-      render: (r) => formatMoney(r.deal_price ?? r.price),
+      render: (r) => r.deal_title || '—',
     },
     {
       key: 'deal_value',
-      header: 'Value',
-      render: (r) => formatMoney(r.deal_value ?? r.value),
+      header: 'Original',
+      render: (r) => formatMoney(r.deal_value),
+    },
+    {
+      key: 'deal_price',
+      header: 'Sale price',
+      render: (r) => formatMoney(r.deal_price),
     },
     {
       key: 'stock',
       header: 'Stock',
-      render: (r) => r.stock ?? r.quantity ?? r.user_limit_quantity ?? '—',
+      render: (r) => r.user_limit_quantity ?? r.stock ?? '—',
     },
     {
       key: 'category_id',
@@ -144,7 +294,7 @@ export default function ProductsPage() {
       key: 'deal_status',
       header: 'Status',
       render: (r) =>
-        isActiveStatus(r.deal_status ?? r.status) ? (
+        isActiveStatus(r.deal_status) ? (
           <span className="badge badge-ok">Active</span>
         ) : (
           <span className="badge badge-off">Inactive</span>
@@ -220,33 +370,119 @@ export default function ProductsPage() {
       >
         <div className="form-grid">
           <div className="form-field full">
-            <label>Title</label>
+            <label>Product image</label>
+            <div className="image-upload">
+              {imagePreview ? (
+                <img className="image-preview" src={imagePreview} alt="Product preview" />
+              ) : (
+                <div className="image-preview placeholder">No image</div>
+              )}
+              <div>
+                <input type="file" accept="image/*" onChange={onImageChange} />
+                <p className="field-hint">
+                  Uploads as {'{deal_key}_1.png'} into product image sizes (1000×800, 160×180, 80×80).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="form-field">
+            <label>Title (EN)</label>
             <input name="deal_title" value={form.deal_title} onChange={onChange} />
           </div>
           <div className="form-field">
-            <label>Price</label>
+            <label>Title (AR)</label>
             <input
-              name="deal_price"
-              type="number"
-              step="0.001"
-              value={form.deal_price}
+              name="deal_title_french"
+              value={form.deal_title_french}
               onChange={onChange}
             />
           </div>
+
           <div className="form-field">
-            <label>Value</label>
+            <label>URL slug</label>
+            <input
+              name="url_title"
+              value={form.url_title}
+              onChange={onChange}
+              placeholder="auto from title if empty"
+            />
+          </div>
+          <div className="form-field">
+            <label>Deal key (image filename base)</label>
+            <input
+              name="deal_key"
+              value={form.deal_key}
+              onChange={onChange}
+              placeholder="auto if empty"
+              disabled={!!editing}
+            />
+          </div>
+
+          <div className="form-field full">
+            <label>Description (EN)</label>
+            <textarea
+              name="deal_description"
+              value={form.deal_description}
+              onChange={onChange}
+            />
+          </div>
+          <div className="form-field full">
+            <label>Description (AR)</label>
+            <textarea
+              name="deal_description_french"
+              value={form.deal_description_french}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className="form-field">
+            <label>Original price (MRP)</label>
             <input
               name="deal_value"
               type="number"
               step="0.001"
+              min="0"
               value={form.deal_value}
               onChange={onChange}
             />
           </div>
           <div className="form-field">
-            <label>Stock</label>
-            <input name="stock" type="number" value={form.stock} onChange={onChange} />
+            <label>Sale / discount price</label>
+            <input
+              name="deal_price"
+              type="number"
+              step="0.001"
+              min="0"
+              value={form.deal_price}
+              onChange={onChange}
+            />
           </div>
+          <div className="form-field full">
+            <p className="field-hint">
+              Savings: {formatMoney(savings.amount)} ({savings.pct}%) — saved as deal_savings /
+              deal_percentage
+            </p>
+          </div>
+
+          <div className="form-field">
+            <label>Stock (user limit qty)</label>
+            <input
+              name="user_limit_quantity"
+              type="number"
+              min="0"
+              value={form.user_limit_quantity}
+              onChange={onChange}
+            />
+          </div>
+          <div className="form-field">
+            <label>Status</label>
+            <select name="deal_status" value={form.deal_status} onChange={onChange}>
+              <option value={1}>Active</option>
+              <option value={0}>Inactive</option>
+            </select>
+          </div>
+
           <div className="form-field">
             <label>Category</label>
             <select name="category_id" value={form.category_id} onChange={onChange}>
@@ -259,11 +495,115 @@ export default function ProductsPage() {
             </select>
           </div>
           <div className="form-field">
-            <label>Status</label>
-            <select name="deal_status" value={form.deal_status} onChange={onChange}>
-              <option value={1}>Active</option>
-              <option value={0}>Inactive</option>
+            <label>Sub category ID</label>
+            <input
+              name="sub_category_id"
+              type="number"
+              value={form.sub_category_id}
+              onChange={onChange}
+            />
+          </div>
+          <div className="form-field">
+            <label>Second category ID</label>
+            <input
+              name="sec_category_id"
+              type="number"
+              value={form.sec_category_id}
+              onChange={onChange}
+            />
+          </div>
+          <div className="form-field">
+            <label>Third category ID</label>
+            <input
+              name="third_category_id"
+              type="number"
+              value={form.third_category_id}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className="form-field">
+            <label>Brand name</label>
+            <input name="brand_names" value={form.brand_names} onChange={onChange} />
+          </div>
+          <div className="form-field">
+            <label>Brand ID</label>
+            <input name="brand_id" type="number" value={form.brand_id} onChange={onChange} />
+          </div>
+          <div className="form-field">
+            <label>Delivery period</label>
+            <input name="delivery_period" value={form.delivery_period} onChange={onChange} />
+          </div>
+          <div className="form-field">
+            <label>Shipping fee</label>
+            <input
+              name="shipping"
+              type="number"
+              step="0.001"
+              value={form.shipping}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className="form-field">
+            <label>Has size / color</label>
+            <select
+              name="having_size_color"
+              value={form.having_size_color}
+              onChange={onChange}
+            >
+              <option value={0}>No</option>
+              <option value={1}>Yes</option>
             </select>
+          </div>
+          <div className="form-field">
+            <label>Tags (comma separated)</label>
+            <input name="tags" value={form.tags} onChange={onChange} />
+          </div>
+          <div className="form-field full">
+            <label>Related product IDs (comma separated)</label>
+            <input
+              name="related_products"
+              value={form.related_products}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className="form-field full">
+            <label>Meta description (EN)</label>
+            <textarea
+              name="meta_description"
+              value={form.meta_description}
+              onChange={onChange}
+            />
+          </div>
+          <div className="form-field full">
+            <label>Meta keywords (EN)</label>
+            <input name="meta_keywords" value={form.meta_keywords} onChange={onChange} />
+          </div>
+          <div className="form-field full">
+            <label>Meta description (AR)</label>
+            <textarea
+              name="meta_description_french"
+              value={form.meta_description_french}
+              onChange={onChange}
+            />
+          </div>
+          <div className="form-field full">
+            <label>Meta keywords (AR)</label>
+            <input
+              name="meta_keywords_french"
+              value={form.meta_keywords_french}
+              onChange={onChange}
+            />
+          </div>
+          <div className="form-field full">
+            <label>Terms &amp; conditions</label>
+            <textarea
+              name="terms_conditions"
+              value={form.terms_conditions}
+              onChange={onChange}
+            />
           </div>
         </div>
       </Modal>

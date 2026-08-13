@@ -28,6 +28,14 @@ client.interceptors.request.use((config) => {
   if (token) {
     config.headers.token = `Bearer ${token}`
   }
+  // Let the browser set multipart boundary for FormData
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    if (config.headers && typeof config.headers.set === 'function') {
+      config.headers.set('Content-Type', false)
+    } else {
+      delete config.headers['Content-Type']
+    }
+  }
   return config
 })
 

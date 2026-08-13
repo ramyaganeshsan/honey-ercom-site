@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { bannersApi } from '../../api/adminApi'
 import DataTable from '../../components/DataTable'
 import Modal from '../../components/Modal'
+import { bannerImageUrl } from '../../utils/assets'
 import { isActiveStatus, pickList } from '../../utils/format'
 
 const emptyForm = {
@@ -10,10 +11,11 @@ const emptyForm = {
   image_title_french: '',
   image_info: '',
   image_info_french: '',
-  redirect_url: '',
+  redirect_url: '/products',
   position: 0,
   home: 1,
   status: 1,
+  product: 0,
 }
 
 export default function BannersPage() {
@@ -23,6 +25,9 @@ export default function BannersPage() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
+  const [imgBust, setImgBust] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -35,9 +40,26 @@ export default function BannersPage() {
     load()
   }, [load])
 
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview)
+      }
+    }
+  }, [imagePreview])
+
+  const resetImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview)
+    }
+    setImageFile(null)
+    setImagePreview('')
+  }
+
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    resetImage()
     setOpen(true)
   }
 
@@ -48,11 +70,15 @@ export default function BannersPage() {
       image_title_french: row.image_title_french || '',
       image_info: row.image_info || '',
       image_info_french: row.image_info_french || '',
-      redirect_url: row.redirect_url || '',
+      redirect_url: row.redirect_url || '/products',
       position: row.position ?? 0,
       home: row.home ?? 1,
       status: row.status ?? 1,
+      product: row.product ?? 0,
     })
+    resetImage()
+    const id = row.banner_id ?? row.id
+    setImagePreview(bannerImageUrl(id, Date.now()))
     setOpen(true)
   }
 
@@ -61,10 +87,23 @@ export default function BannersPage() {
     setForm((f) => ({
       ...f,
       [name]:
-        name === 'position' || name === 'home' || name === 'status'
+        name === 'position' ||
+        name === 'home' ||
+        name === 'status' ||
+        name === 'product'
           ? Number(value)
           : value,
     }))
+  }
+
+  const onImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview)
+    }
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
   }
 
   const save = async () => {
@@ -72,30 +111,69 @@ export default function BannersPage() {
       toast.error('Title is required')
       return
     }
+    if (!editing && !imageFile) {
+      toast.error('Banner image is required')
+      return
+    }
+
     setSaving(true)
     const id = editing?.banner_id ?? editing?.id
     const res = editing
       ? await bannersApi.update(id, form)
       : await bannersApi.create(form)
-    setSaving(false)
-    if (res.ok) {
-      toast.success(editing ? 'Banner updated' : 'Banner created')
-      setOpen(false)
-      load()
+
+    if (!res.ok) {
+      setSaving(false)
+      return
     }
+
+    const savedId = res.data?.banner_id ?? id
+    if (imageFile && savedId) {
+      const up = await bannersApi.uploadImage(savedId, imageFile)
+      if (!up.ok) {
+        setSaving(false)
+        toast.error('Banner saved, but image upload failed')
+        setOpen(false)
+        load()
+        return
+      }
+      setImgBust(Date.now())
+    }
+
+    setSaving(false)
+    toast.success(editing ? 'Banner updated' : 'Banner created')
+    setOpen(false)
+    load()
   }
 
   const remove = async (row) => {
-    if (!window.confirm('Delete this banner?')) return
+    if (!window.confirm('Deactivate this banner?')) return
     const id = row.banner_id ?? row.id
     const res = await bannersApi.remove(id)
     if (res.ok) {
-      toast.success('Banner deleted')
+      toast.success('Banner deactivated')
       load()
     }
   }
 
   const columns = [
+    {
+      key: 'image',
+      header: 'Image',
+      render: (r) => {
+        const id = r.banner_id ?? r.id
+        return (
+          <img
+            className="thumb-img thumb-wide"
+            src={bannerImageUrl(id, imgBust)}
+            alt=""
+            onError={(e) => {
+              e.currentTarget.style.visibility = 'hidden'
+            }}
+          />
+        )
+      },
+    },
     {
       key: 'banner_id',
       header: 'ID',
@@ -168,6 +246,23 @@ export default function BannersPage() {
         }
       >
         <div className="form-grid">
+          <div className="form-field full">
+            <label>Banner image</label>
+            <div className="image-upload">
+              {imagePreview ? (
+                <img className="image-preview wide" src={imagePreview} alt="Banner preview" />
+              ) : (
+                <div className="image-preview wide placeholder">No image</div>
+              )}
+              <div>
+                <input type="file" accept="image/*" onChange={onImageChange} />
+                <p className="field-hint">
+                  Saved as {'{banner_id}.png'} under cloud/uploads/banner_images/
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="form-field">
             <label>Title (EN)</label>
             <input name="image_title" value={form.image_title} onChange={onChange} />
@@ -195,6 +290,10 @@ export default function BannersPage() {
           <div className="form-field">
             <label>Redirect URL</label>
             <input name="redirect_url" value={form.redirect_url} onChange={onChange} />
+          </div>
+          <div className="form-field">
+            <label>Linked product ID</label>
+            <input name="product" type="number" value={form.product} onChange={onChange} />
           </div>
           <div className="form-field">
             <label>Position</label>
