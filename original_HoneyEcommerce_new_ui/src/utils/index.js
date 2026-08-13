@@ -16,12 +16,11 @@ const toastConfiguration = {
 
 export const toastConfig = toastConfiguration;
 
+// Stable default so Vite/.env mismatches don't break AES decrypt
+const SECRET_KEY = env.SECRECT_KEY || "local-dev-secret";
+
 export const encrypteString = (string) => {
-  var encryptedData = CryptoJS.AES.encrypt(
-    string,
-    env.SECRECT_KEY
-  ).toString();
-  return encryptedData;
+  return CryptoJS.AES.encrypt(String(string ?? ""), SECRET_KEY).toString();
 };
 
 const clearCorruptUserDetails = () => {
@@ -32,26 +31,46 @@ const clearCorruptUserDetails = () => {
   }
 };
 
+/**
+ * Safe AES decrypt. Never throws — CryptoJS can raise "Malformed UTF-8 data"
+ * when ciphertext was encrypted with a different secret.
+ */
 const decrypteString = (string) => {
-  if (!string) return "";
+  if (string == null || string === "") return "";
   try {
-    const key = env.SECRECT_KEY || "";
-    if (!key) {
+    const decryptBytes = CryptoJS.AES.decrypt(String(string), SECRET_KEY);
+    if (!decryptBytes || decryptBytes.sigBytes <= 0) {
       clearCorruptUserDetails();
       return "";
     }
-    const decryptBytes = CryptoJS.AES.decrypt(string, key);
-    const decryptData = decryptBytes.toString(CryptoJS.enc.Utf8);
-    // Wrong key / corrupt ciphertext yields empty string from CryptoJS
+    let decryptData = "";
+    try {
+      decryptData = CryptoJS.enc.Utf8.stringify(decryptBytes) || "";
+    } catch (_) {
+      // Explicit Utf8 path that throws Malformed UTF-8 data
+      decryptData = "";
+    }
     if (!decryptData) {
       clearCorruptUserDetails();
       return "";
     }
     return decryptData;
-  } catch (err) {
-    // e.g. "Malformed UTF-8 data" when localStorage was encrypted with another key
+  } catch (_) {
     clearCorruptUserDetails();
     return "";
+  }
+};
+
+/** Call once at app boot before any RTK query reads the token. */
+export const sanitizeAuthStorage = () => {
+  try {
+    const stored = localStorage.getItem("user_details");
+    if (!stored) return;
+    const plain = decrypteString(stored);
+    if (!plain) return;
+    JSON.parse(plain);
+  } catch (_) {
+    clearCorruptUserDetails();
   }
 };
 

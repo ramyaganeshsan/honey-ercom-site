@@ -21,7 +21,11 @@ export const env = {
     "http://localhost:5000/public"
   ),
   SITE_NAME: read("VITE_SITE_NAME", "REACT_APP_SITE_NAME", ""),
-  SECRECT_KEY: read("VITE_SECRECT_KEY", "REACT_APP_SECRECT_KEY", ""),
+  SECRECT_KEY: read(
+    "VITE_SECRECT_KEY",
+    "REACT_APP_SECRECT_KEY",
+    "local-dev-secret"
+  ),
   GOOGLE_CLIENT_ID: read(
     "VITE_GOOGLE_CLIENT_ID",
     "REACT_APP_GOOGLE_CLIENT_ID",

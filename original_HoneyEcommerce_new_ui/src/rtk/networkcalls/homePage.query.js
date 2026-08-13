@@ -7,13 +7,19 @@ export const HomePageQuery = createApi({
   endpoints: (builder) => ({
     getHomePage: builder.query({
       query: () => {
+        let token = "";
+        try {
+          token = getToken() || "";
+        } catch (_) {
+          token = "";
+        }
         return {
           url: `/`,
           method: "GET",
           headers: {
-            token: getToken(),
+            token,
             lang: getLanguage(),
-            sessionID: getToken() !== "" ? "" : getSessionID(),
+            sessionID: token !== "" ? "" : getSessionID(),
           },
         };
       },
