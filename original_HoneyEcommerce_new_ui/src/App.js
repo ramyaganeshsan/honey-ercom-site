@@ -19,7 +19,11 @@ import TwitterCallback from "./components/TwitterCallback";
 import { toast } from "react-toastify";
 import { env } from "./env";
 
-const clientId = env.GOOGLE_CLIENT_ID;
+// GoogleOAuthProvider throws if clientId is empty — use a placeholder when unset
+const clientId =
+  env.GOOGLE_CLIENT_ID && String(env.GOOGLE_CLIENT_ID).trim() !== ""
+    ? env.GOOGLE_CLIENT_ID
+    : "google-oauth-not-configured.apps.googleusercontent.com";
 
 if (getPageDirection() === "ltr") {
   import("./assets/css/ltr.css");

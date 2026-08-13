@@ -129,11 +129,13 @@ const SignIn = ({ loginImage }) => {
   const GoogleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
     onError: handleGoogleFailure,
-    googleClinetId,
-    googleRedirectURl,
     scope: "openid profile email",
   });
   const triggerGoogleSignIn = () => {
+    if (!googleClinetId) {
+      toast.error("Google sign-in is not configured", toastConfig);
+      return;
+    }
     GoogleLogin();
   };
 

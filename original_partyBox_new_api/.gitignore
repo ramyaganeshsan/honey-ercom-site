@@ -1,13 +1,8 @@
 /node_modules
 /logs
-/assets/images/*
-!/assets/images/img-500.png
-!/assets/images/login-image.png
-!/assets/images/poster.png
-!/assets/images/no_image_available.png
-!/assets/images/no_profile.png
-!/assets/images/footer-logo.svg
-!/assets/images/dummy-product-*.png
+
+# Keep design assets tracked (CSS backgrounds / icons). Do not blanket-ignore images.
+# Large optional dumps can still be ignored individually if needed later.
 
 .env
 dump.rdb

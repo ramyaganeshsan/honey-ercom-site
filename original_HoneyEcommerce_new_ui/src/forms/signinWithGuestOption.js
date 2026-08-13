@@ -134,6 +134,10 @@ const SignInWithGuestOption = ({
     scope: "openid profile email",
   });
   const triggerGoogleSignIn = () => {
+    if (!env.GOOGLE_CLIENT_ID) {
+      toast.error("Google sign-in is not configured", toastConfig);
+      return;
+    }
     GoogleLogin();
   };
   const handleFacebookLogin = () => {
