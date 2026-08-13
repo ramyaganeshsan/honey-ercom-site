@@ -1,10 +1,4 @@
-/* @import url("http://ecdemoapi.indiprotechnologies.com/public/css/bootstrap.min.css");
-@import url("http://ecdemoapi.indiprotechnologies.com/public/css/style.css");
-@import url("http://ecdemoapi.indiprotechnologies.com//public/css/media_style.css"); */
-
-@import url("http://localhost:5000/public/css/style.css");
-@import url("http://localhost:5000/public/css/media_style.css");
-
-@import url("http://localhost:5000/public/css/bootstrap.min.css");
-/* @import url("https://ecomapi.indiprotechnologies.com/public/css/style.css");
-@import url("https://ecomapi.indiprotechnologies.com/public/css/media_style.css"); */
+/* Theme CSS served from Vite public/ (same origin as the app) */
+@import url("/css/style.css");
+@import url("/css/media_style.css");
+@import url("/css/bootstrap.min.css");

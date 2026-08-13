@@ -1,12 +1,6 @@
 import { t } from "i18next";
-import { env } from "../../env";
 
 const SomethingWentWrong = () => {
-  const assetsUrl = env.ASSETS_URL;
-  const imageSrc = assetsUrl
-    ? `${assetsUrl}/images/img-500.png`
-    : "/images/img-500.png";
-
   return (
     <div className="error-page-ctnr">
       <div className="container">
@@ -14,11 +8,11 @@ const SomethingWentWrong = () => {
           <div className="col-12">
             <div className="error-page-blk">
               <img
-                src={imageSrc}
+                src="/images/img-500.png"
                 alt="Error 500"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src = "/images/img-500.png";
+                  e.currentTarget.src = "/images/no_image_available.png";
                 }}
               />
               <div className="error-cont-blk">

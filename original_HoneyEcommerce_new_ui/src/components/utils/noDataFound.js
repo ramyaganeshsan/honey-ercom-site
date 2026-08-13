@@ -9,7 +9,7 @@ const NoDataFound = ({ resetAllFilters }) => {
           <div className="col-12">
             <div className="error-page-blk">
               <img
-                src={`${env.ASSETS_URL}/images/no_data.png`}
+                src="/images/no_data.png"
                 alt="Error 500"
               />
               <div className="error-cont-blk">

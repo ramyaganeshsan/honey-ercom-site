@@ -11,7 +11,7 @@ const AccountBlocked = ({ handleLogout }) => {
             <div className="error-page-blk">
               <img
                 style={{ width: "400px" }}
-                src={`${env.ASSETS_URL}/images/account-blocked.jpeg`}
+                src="/images/account-blocked.jpeg"
                 alt="blocked image"
               />
               <div className="error-cont-blk">

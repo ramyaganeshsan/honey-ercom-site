@@ -21,7 +21,7 @@ const Error404 = () => {
           <div className="col-12">
             <div className="error-page-blk">
               <img
-                src={`${env.ASSETS_URL}/images/img-404.svg`}
+                src="/images/img-404.svg"
                 alt="Error 404"
               />
               <div className="error-cont-blk">
