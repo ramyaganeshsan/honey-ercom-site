@@ -372,7 +372,11 @@ export default function CategoriesPage() {
           <h2>Categories</h2>
           <p>Setup order: Category → Sub category → then add Products</p>
         </div>
-        <button type="button" className="btn btn-primary" onClick={openCreate}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => openCreate(tab)}
+        >
           {tab === 'categories' ? 'Add category' : 'Add sub category'}
         </button>
       </div>
