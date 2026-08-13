@@ -1,0 +1,64 @@
+const mongoose = require("mongoose");
+const { getNextSequence } = require("../counters");
+
+const cartSchema = new mongoose.Schema(
+  {
+    cart_id: { type: Number, required: false },
+    tax_amount: { type: Number, required: true, default: 0 },
+    user_id: { type: Number, required: true },
+    total_cart_items: { type: Number, required: true },
+    total_cart_price: { type: Number, required: true },
+    cancel_amount: { type: Number, required: true, default: 0 },
+    is_cancel: { type: Number, required: true, default: 0 },
+    delivery_type: { type: Number, required: true, default: 1 },
+    delivery_price: { type: Number, required: true },
+    delivery_period: { type: String, required: true, default: "1" },
+    delivery_terms: { type: String, required: true },
+    delivery_terms_arabic: { type: String, required: true },
+    grand_total_price: { type: Number, required: true },
+    created_on: { type: Number, required: true },
+    cart_transaction_status: { type: Number, required: true },
+    transaction_id: { type: Number, required: true },
+    tracking_id: { type: String, required: true },
+    shipping_name: { type: String, required: true },
+    shipping_address: { type: String, required: true },
+    shipping_address1: { type: String, required: true },
+    shipping_phone: { type: String, required: true },
+    shipping_city: { type: String, required: true },
+    shipping_state: { type: String, required: true },
+    shipping_country: { type: String, required: true },
+    shipping_zip: { type: String, required: true },
+    shipping_date: { type: Number, required: true },
+    transaction_date: { type: Number, required: true },
+    shipping_time: { type: Number, required: true },
+    billing_info: { type: String, required: true },
+    order_date: { type: Number, required: true },
+    shipping_log: { type: String, required: true },
+    type: { type: Number, required: true },
+    gateway_opened: { type: Boolean, required: true, default: false },
+    gateway_opened_time: { type: Number, required: true },
+    coupon_code: { type: String, required: true },
+    coupon_apply: { type: Number, required: true, default: 0 },
+    wallet_apply: { type: Number, required: true, default: 0 },
+    wallet_amount: { type: Number, required: true, default: 0 },
+    coupon_percentage: { type: String, required: true, default: "0" },
+    payment_status: { type: Number, required: true, default: 0 },
+    notes: { type: String, required: true },
+    discount_amount: { type: Number, required: true, default: 0 },
+    isPaymentFromTabby: { type: Number, required: true, default: 0 },
+    promocode_dump: { type: String },
+  },
+  {
+    collection: "cart",
+    timestamps: false,
+  }
+);
+
+cartSchema.pre("save", async function (next) {
+  if (this.cart_id == null) {
+    this.cart_id = await getNextSequence("cart");
+  }
+  next();
+});
+
+module.exports = mongoose.models.cart || mongoose.model("cart", cartSchema);
