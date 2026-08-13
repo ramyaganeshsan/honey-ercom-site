@@ -92,10 +92,42 @@ async function wipeDemoCollections() {
   await Counter.deleteMany({});
 }
 
+/**
+ * MongoDB Compass only lists collections that exist.
+ * Create every mapped collection (even empty) so all ~73 tables appear.
+ */
+async function ensureAllCollections() {
+  const { mongoose } = require("./connection");
+  const db = mongoose.connection.db;
+  const existing = new Set(
+    (await db.listCollections().toArray()).map((c) => c.name)
+  );
+
+  const collectionNames = new Set();
+  for (const model of Object.values(models)) {
+    if (model?.collection?.name) {
+      collectionNames.add(model.collection.name);
+    }
+  }
+  collectionNames.add("counters");
+
+  let created = 0;
+  for (const name of collectionNames) {
+    if (!existing.has(name)) {
+      await db.createCollection(name);
+      created += 1;
+    }
+  }
+  console.log(
+    `Collections ready: ${collectionNames.size} total (${created} newly created)`
+  );
+}
+
 async function seed() {
   await connectMongo();
   console.log("Connected to MongoDB");
 
+  await ensureAllCollections();
   await wipeDemoCollections();
 
   const now = Math.floor(Date.now() / 1000);
@@ -634,6 +666,9 @@ async function seed() {
   console.log("Demo seed complete.");
   console.log("  Login: demo@thunayanhoney.com / Demo@123");
   console.log(`  Products: ${products.length}, Categories: ${categories.length}`);
+  console.log(
+    "  Note: all mapped collections now exist in MongoDB; demo data is filled for catalog/auth/geo/cms. Other collections stay empty until used by the app (cart, orders, etc.)."
+  );
   await disconnectMongo();
 }
 

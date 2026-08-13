@@ -14,7 +14,11 @@ function read(viteKey, reactKey, fallback = "") {
 }
 
 export const env = {
-  BASE_URL: read("VITE_BASE_URL", "REACT_APP_BASE_URL", ""),
+  BASE_URL: read(
+    "VITE_BASE_URL",
+    "REACT_APP_BASE_URL",
+    "http://localhost:5000/api"
+  ),
   ASSETS_URL: read(
     "VITE_ASSETS_URL",
     "REACT_APP_ASSETS_URL",

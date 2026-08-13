@@ -62,3 +62,5 @@ VITE_SECRECT_KEY=local-dev-secret
 - Redis is optional; the API starts without it.
 - Sequelize models remain under `src/v1/models/` for reference; runtime uses `src/v1/mongo/`.
 - `checkout` and `checkoutTest` both remain.
+- **All ~73 collections** are registered as Mongoose models. `npm run seed:demo` creates every collection in MongoDB (so Compass shows them). Demo documents are loaded for catalog/auth/geo/cms; other collections stay empty until the app writes to them (cart, orders, OTP, etc.).
+- UI `VITE_BASE_URL` must be `http://localhost:5000/api` (include `/api`). Wrong value causes `http://localhost:5000//home/` 404.

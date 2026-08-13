@@ -189,8 +189,23 @@ export const getDate = () => {
   return today.getDate();
 };
 
-export const getUrl = (url) => {
-  return `${env.BASE_URL}${url}`;
+/**
+ * Build API URL. Normalizes BASE_URL so we never call
+ * http://localhost:5000//home (missing /api + double slash).
+ */
+export const getUrl = (url = "") => {
+  let base = String(env.BASE_URL || "http://localhost:5000/api").trim();
+  // Host only (with or without trailing slash) → append /api
+  const hostOnly = base.match(/^(https?:\/\/[^/?#]+)\/?$/i);
+  if (hostOnly && !/\/api\/?$/i.test(base)) {
+    base = `${hostOnly[1]}/api`;
+  }
+  base = base.replace(/\/+$/, "");
+  if (!/\/api$/i.test(base) && /localhost:\d+$/i.test(base)) {
+    base = `${base}/api`;
+  }
+  const path = String(url || "").replace(/^\/+/, "");
+  return path ? `${base}/${path}` : `${base}/`;
 };
 
 /* 
