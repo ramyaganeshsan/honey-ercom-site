@@ -56,7 +56,8 @@ applyThemeDirection();
 
 function App() {
   const navigate = useNavigate();
-  const { data, isLoading, refetch, isFetching } = useGetHomePageQuery();
+  const { data, isLoading, isError, refetch, isFetching } =
+    useGetHomePageQuery();
   const [userCartDetails, setUserCartDetails] = React.useState({
     wishList: [],
   });
@@ -66,18 +67,30 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    if (!isLoading && data && +data?.status === 1) {
+    // Only handle real API responses — never toast/navigate while loading
+    // or when the query has not returned yet (was spamming errors on boot).
+    if (isLoading || data == null) {
+      applyThemeDirection();
+      return;
+    }
+    if (Number(data?.status) === 1) {
       document.title =
         data?.data?.siteSettings?.title ?? env.SITE_NAME;
+      const cartDetails = data?.data?.userCartDetails || {};
+      const incomingWishList = Array.isArray(cartDetails.wishList)
+        ? cartDetails.wishList
+        : [];
       setUserCartDetails((prev) => ({
-        ...data?.data?.userCartDetails,
-        wishList: [...prev?.wishList, ...data?.data?.userCartDetails?.wishList],
+        ...cartDetails,
+        wishList: [
+          ...new Set([...(prev?.wishList || []), ...incomingWishList]),
+        ],
       }));
     } else {
       handleResponse(data, toast, navigate);
     }
     applyThemeDirection();
-  }, [data, isLoading]);
+  }, [data, isLoading, navigate]);
 
   const removeProductFromUserWishlist = React.useCallback(
     (id) => {
@@ -105,12 +118,16 @@ function App() {
     [userCartDetails]
   );
 
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return <Spinner height="100vh" />;
   }
 
-  if (!isLoading && (Number(data?.status) !== 1 || !data?.status)) {
+  if (isError || (data != null && Number(data?.status) !== 1)) {
     return <SomethingWentWrong />;
+  }
+
+  if (!data) {
+    return <Spinner height="100vh" />;
   }
 
   return (

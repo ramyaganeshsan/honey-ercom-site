@@ -125,11 +125,15 @@ async function startServer() {
   try {
     await connectRedis();
     global.REDIS_CLIENT = getRedisClient();
-    logger.info("Redis connection established");
+    if (global.REDIS_CLIENT) {
+      logger.info("Redis connection established");
+    } else {
+      logger.info("Redis skipped (development/local) — continuing without cache");
+    }
   } catch (err) {
     // Redis is optional for local/demo — cache helpers already tolerate failures
     global.REDIS_CLIENT = null;
-    logger.error(err ?? "Failed to start REDIS SERVER (continuing without Redis)");
+    logger.warn("Redis unavailable — continuing without cache");
   }
 
   app.listen(PORT, () => {

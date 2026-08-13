@@ -7,15 +7,26 @@ const {
 const { findOne } = require("../mongo/repo");
 
 exports.getCMSDetails = async (id) => {
-  let newProducts = await getValueFromRedis("cms_about_us");
-  if (newProducts) {
-    let parsedResponse = parseData(newProducts);
-    if (parsedResponse?.status) return parsedResponse?.data;
+  const cacheKey = `cms_page_${Number(id)}`;
+  try {
+    const cached = await getValueFromRedis(cacheKey);
+    if (cached) {
+      const parsedResponse = parseData(cached);
+      if (
+        parsedResponse?.status &&
+        Array.isArray(parsedResponse?.data) &&
+        parsedResponse.data.length > 0
+      ) {
+        return parsedResponse.data;
+      }
+    }
+  } catch (_) {
+    /* ignore cache errors */
   }
 
   const doc = await findOne(
     "cms",
-    { cms_id: Number(id) },
+    { cms_id: Number(id), cms_status: 1 },
     {
       attributes: [
         "cms_desc",
@@ -27,10 +38,11 @@ exports.getCMSDetails = async (id) => {
   );
 
   const response = doc ? [doc] : [];
-  console.log("response : ", response);
-  let stringifyResponse = stringifyData(response);
-  if (stringifyResponse?.status) {
-    await setValueRedis("cms_about_us", stringifyResponse.data, 1800); // 30 minutes
+  if (response.length > 0) {
+    const stringifyResponse = stringifyData(response);
+    if (stringifyResponse?.status) {
+      await setValueRedis(cacheKey, stringifyResponse.data, 1800);
+    }
   }
   return response;
 };

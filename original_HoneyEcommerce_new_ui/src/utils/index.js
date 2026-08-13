@@ -137,30 +137,34 @@ export const removeSessionID = () => {
 };
 
 export const handleResponse = (response, toast, navigate, refetch = null) => {
-  let status = Number(response?.status) ?? "";
-  if (status === "" && status !== 0) return;
+  if (response == null || response?.status === undefined || response?.status === null) {
+    return;
+  }
+  const status = Number(response.status);
+  if (Number.isNaN(status)) return;
 
   let message = response?.message;
   if (status === 0 || status === -2) {
-    toast.error(message, toastConfiguration);
+    if (message) toast.error(message, toastConfiguration);
   } else if (status === -1) {
-    // localStorage.clear();
     message = message ? message : "Your token got expired";
     toast.error(message, toastConfiguration);
     localStorage.removeItem("user_details");
     navigate("/");
-    // window.location.reload();
   } else if (status === -10) {
-    toast.error(message, toastConfiguration);
+    if (message) toast.error(message, toastConfiguration);
     navigate("/");
   } else if (status === 3) {
     localStorage.removeItem("sessionID");
-    toast.error(message, toastConfiguration);
+    if (message) toast.error(message, toastConfiguration);
     navigate("/");
     if (refetch) {
       refetch();
     }
-  } else {
+  } else if (status === 1 || status === 2) {
+    // success / COD placed — no toast here unless caller wants one
+    return;
+  } else if (message) {
     toast.info(message, toastConfiguration);
   }
 };

@@ -560,24 +560,47 @@ async function seed() {
     city_status: 1,
   });
 
+  // IDs must match cms.controller.js (ABOUTUS=6, TERMS=8, PRIVACY=33, FAQS=56)
   await models.cms.collection.insertMany([
     {
-      cms_id: 1,
+      cms_id: 6,
       cms_title: "About Us",
       cms_title_french: "من نحن",
       cms_desc: "<p>Premium honey from Manahel Althunayyan.</p>",
-      cms_desc_french: "",
+      cms_desc_french: "<p>عسل فاخر من مناحل الثنيان.</p>",
       cms_url: "about-us",
       type: 0,
       cms_status: 1,
     },
     {
-      cms_id: 2,
+      cms_id: 8,
+      cms_title: "Terms and Conditions",
+      cms_title_french: "الشروط والأحكام",
+      cms_desc: "<p>Terms and conditions content.</p>",
+      cms_desc_french: "<p>محتوى الشروط والأحكام.</p>",
+      cms_url: "terms-and-conditions",
+      type: 0,
+      cms_status: 1,
+    },
+    {
+      cms_id: 33,
       cms_title: "Privacy Policy",
       cms_title_french: "سياسة الخصوصية",
       cms_desc: "<p>Privacy policy content.</p>",
-      cms_desc_french: "",
+      cms_desc_french: "<p>محتوى سياسة الخصوصية.</p>",
       cms_url: "privacy-policy",
+      type: 0,
+      cms_status: 1,
+    },
+    {
+      cms_id: 56,
+      cms_title: "FAQs",
+      cms_title_french: "الأسئلة الشائعة",
+      cms_desc:
+        "<p><strong>How do I place an order?</strong><br/>Add products to cart and checkout with Cash on Delivery.</p>",
+      cms_desc_french:
+        "<p><strong>كيف أقدم طلباً؟</strong><br/>أضف المنتجات إلى السلة وأكمل الدفع عند الاستلام.</p>",
+      cms_url: "faqs",
       type: 0,
       cms_status: 1,
     },
@@ -741,7 +764,7 @@ async function seed() {
     { _id: "country", seq: 254 },
     { _id: "state", seq: 22 },
     { _id: "city", seq: 132 },
-    { _id: "cms", seq: 2 },
+    { _id: "cms", seq: 56 },
     { _id: "users", seq: 1 },
     { _id: "email_settings", seq: 1 },
     { _id: "notification_template", seq: 24 },
