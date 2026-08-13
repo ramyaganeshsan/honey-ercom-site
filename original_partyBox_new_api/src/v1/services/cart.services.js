@@ -566,8 +566,15 @@ const insertProductIntoCartItems = async (
       productDetails[0]["deal_description_french"] || ""
     ).replace(/[']+/g, " "),
     shop_id: 1,
-    deal_value: Number(subProductDetails[0]["discount"]),
-    deal_price: Number(subProductDetails[0]["price"]),
+    deal_value: Number(
+      subProductDetails[0]["discount"] ||
+        productDetails[0]["deal_value"] ||
+        subProductDetails[0]["price"] ||
+        0
+    ),
+    deal_price: Number(
+      subProductDetails[0]["price"] || productDetails[0]["deal_price"] || 0
+    ),
     deal_savings: Number(productDetails[0]["deal_savings"] || 0),
     deal_percentage: Number(productDetails[0]["deal_percentage"] || 0),
     deal_status: Number(productDetails[0]["deal_status"] || 1),

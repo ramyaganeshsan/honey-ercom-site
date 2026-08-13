@@ -493,7 +493,7 @@ async function seed() {
     color_id: 0,
     quantity: p.user_limit_quantity,
     price: p.deal_price,
-    discount: 0,
+    discount: p.deal_value,
     product_key: p.deal_key,
     product_image: `${p.deal_key}_1.png`,
     sku: `SKU-${p.deal_id}`,
