@@ -130,7 +130,8 @@ exports.changePassword = async (req, res, next) => {
 
     let updateResponse = await updateUserPassword(
       encryptedNewPassword,
-      userDetails.user_id
+      userDetails.user_id,
+      new_password
     );
     if (!updateResponse) {
       response["status"] = getStatusCode("failed");

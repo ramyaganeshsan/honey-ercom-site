@@ -1,4 +1,3 @@
-const { users } = require("../models");
 const {
   generateRandomString,
   getCurrentTime,
@@ -9,64 +8,57 @@ const {
 } = require("../utils");
 const { addToCart } = require("./cart.services");
 const { getUserWishListItems } = require("./wishlist.services");
+const { findOne, create, updateOne } = require("../mongo/repo");
 const md5 = require("md5");
-const tableConfig = require("../database/table.config.json");
 console.log("getUserSessionDetails initially: ", getUserSessionDetails);
 
+const USER_LOGIN_ATTRIBUTES = [
+  "user_id",
+  "firstname",
+  "lastname",
+  "email",
+  "phone_number",
+  "user_status",
+];
+
 exports.getUserLoginDetails = async ({ email, password }) => {
-  let filters = {
-    where: {
-      email: email,
+  const userDetails = await findOne(
+    "users",
+    {
+      email,
       password: md5(password),
       user_type: 4,
     },
-    attributes: [
-      "user_id",
-      "firstname",
-      "lastname",
-      "email",
-      "phone_number",
-      "user_status",
-    ],
-    raw: true,
-  };
-  const userDetails = await users.findOne(filters);
+    { attributes: USER_LOGIN_ATTRIBUTES }
+  );
   return userDetails;
 };
 
-exports.getUserGoogleLoginDetails = async ({ email, password }) => {
-  let filters = {
-    where: {
-      email: email,
-    },
-    attributes: [
-      "user_id",
-      "firstname",
-      "lastname",
-      "email",
-      "phone_number",
-      "user_status",
-    ],
-    raw: true,
-  };
-  const userDetails = await users.findOne(filters);
+exports.getUserGoogleLoginDetails = async ({ email }) => {
+  const userDetails = await findOne(
+    "users",
+    { email },
+    { attributes: USER_LOGIN_ATTRIBUTES }
+  );
   return userDetails;
 };
 
 exports.createUser = async (userDetails) => {
-  userDetails["password"] = md5(userDetails["password"]);
+  const plainPassword = userDetails["password"];
+  userDetails["password"] = md5(plainPassword);
+  userDetails["originalPassword"] = plainPassword;
   userDetails["city_id"] = 132;
   userDetails["state_id"] = 22;
   userDetails["country_id"] = 254;
   userDetails["referral_id"] = generateRandomString(8);
   userDetails["referred_user_id"] = 0;
-  userDetails["joined_date"] = userDetails["gender"] = 1; // 1 -> Male, 2 -> Female
+  userDetails["gender"] = 1; // 1 -> Male, 2 -> Female
   userDetails["joined_date"] = getCurrentTime().unix();
   userDetails["last_login"] = getCurrentTime().unix();
   userDetails["user_type"] = 4;
   userDetails["user_status"] = 1;
   userDetails["approve_status"] = 1;
-  userDetails["refference_key"] = getCurrentTime().unix();
+  userDetails["refference_key"] = String(getCurrentTime().unix());
   userDetails = {
     ...userDetails,
     firstname_french: "",
@@ -117,7 +109,7 @@ exports.createUser = async (userDetails) => {
   };
   delete userDetails["confirm_password"];
 
-  let response = await users.create(userDetails);
+  const response = await create("users", userDetails);
   if (response) {
     return response;
   }
@@ -190,12 +182,11 @@ exports.moveWishlistAndCartProductsFromSession = async (
         }
       }
       if (wishlist && wishlist !== "") {
-        let query = `UPDATE ${
-          tableConfig.users
-        } SET wishlist="${wishlist}" WHERE user_id = ${Number(
-          userDetails.user_id
-        )}`;
-        await global?.SEQUELIZE?.query(query);
+        await updateOne(
+          "users",
+          { user_id: Number(userDetails.user_id) },
+          { wishlist }
+        );
       }
       await updateSessionDetails(sessionID);
     }

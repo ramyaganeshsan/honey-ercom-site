@@ -1,7 +1,3 @@
-const { users, settings, city, country, state } = require("../models");
-const sequelize = require("sequelize");
-const tableConfig = require("../database/table.config.json");
-const { Op } = sequelize;
 const {
   getValueFromRedis,
   setValueRedis,
@@ -14,48 +10,29 @@ const {
   getCurrentTimestamp,
   generateRandomString,
   getCurrentTime,
-  serializeData,
   deserializeData,
   getUserSessionDetails,
+  updateSessionDetails,
 } = require("../utils");
 const { PUBLIC_IMAGE_FOLDER } = require("../utils/constants");
 const md5 = require("md5");
-const {
-  moveWishlistAndCartProductsFromSession,
-  createUser,
-} = require("./auth.services");
 const { addToCart } = require("./cart.services");
+const { count, findOne, findAll, create, updateOne } = require("../mongo/repo");
 
 exports.checkUserEmailExists = async (email, id = "") => {
-  let condition = {
-    email: email,
-  };
+  const condition = { email };
   if (id && id != "") {
-    condition["user_id"] = {
-      [Op.not]: parseInt(id),
-    };
+    condition.user_id = { $ne: parseInt(id, 10) };
   }
-  let filter = {
-    where: condition,
-  };
-  let response = await users.count(filter);
-  return response;
+  return count("users", condition);
 };
 
 exports.checkUserPhoneNumberExists = async (phoneNumber, id = "") => {
-  let condition = {
-    phone_number: phoneNumber,
-  };
+  const condition = { phone_number: phoneNumber };
   if (id && id != "") {
-    condition["user_id"] = {
-      [Op.not]: parseInt(id),
-    };
+    condition.user_id = { $ne: parseInt(id, 10) };
   }
-  let filter = {
-    where: condition,
-  };
-  let response = await users.count(filter);
-  return response;
+  return count("users", condition);
 };
 
 const SITE_SETTINGS_ATTRIBUTES = [
@@ -121,12 +98,6 @@ const DUMMY_SITE_SETTINGS = {
   sendOutOfStockNotification: false,
 };
 
-const isUnknownColumnError = (err) =>
-  Boolean(
-    err?.message &&
-      /Unknown column|does not exist|no such column/i.test(err.message)
-  );
-
 exports.getSiteInfo = async () => {
   let siteSettingsDetails = await getValueFromRedis("site_settings");
   if (siteSettingsDetails) {
@@ -134,26 +105,12 @@ exports.getSiteInfo = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let response = null;
-  try {
-    response = await settings.findOne({
-      attributes: [
-        ...SITE_SETTINGS_ATTRIBUTES,
-        ...OPTIONAL_SITE_SETTINGS_ATTRIBUTES,
-      ],
-      raw: true,
-    });
-  } catch (err) {
-    // Older DBs may not have the optional notification columns yet.
-    if (isUnknownColumnError(err)) {
-      response = await settings.findOne({
-        attributes: SITE_SETTINGS_ATTRIBUTES,
-        raw: true,
-      });
-    } else {
-      throw err;
-    }
-  }
+  let response = await findOne("settings", {}, {
+    attributes: [
+      ...SITE_SETTINGS_ATTRIBUTES,
+      ...OPTIONAL_SITE_SETTINGS_ATTRIBUTES,
+    ],
+  });
 
   if (!response) {
     response = { ...DUMMY_SITE_SETTINGS };
@@ -216,49 +173,69 @@ exports.getShippingStateCityInfo = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let condition = {
-    country_status: 1,
-  };
-  let filters = {
-    where: condition,
-    attributes: ["country_name", "country_id", "country_code"],
-    // attributes: ["country_name", "country_id"],
+  const countries = await findAll(
+    "country",
+    { country_status: 1 },
+    { attributes: ["country_name", "country_id", "country_code"] }
+  );
+  const cities = await findAll(
+    "city",
+    { city_status: 1 },
+    {
+      attributes: [
+        "city_id",
+        "country_id",
+        "stateid",
+        "city_name",
+        "city_name_french",
+        "delivery_charge",
+      ],
+    }
+  );
+  const states = await findAll(
+    "state",
+    { statestatus: 1 },
+    { attributes: ["state_id", "state_name", "state_name_arabic", "state_country_id"] }
+  );
 
-    include: [
+  let response = (countries || []).map((c) => ({
+    ...c,
+    ISO_country_code: c?.ISO_country_code ?? c?.country_code ?? "",
+    cities: (cities || []).filter((x) => Number(x.country_id) === Number(c.country_id)),
+    states: (states || []).filter(
+      (x) => Number(x.state_country_id) === Number(c.country_id)
+    ),
+  }));
+
+  // Demo fallback so profile/checkout work before geo seed
+  if (!response.length) {
+    response = [
       {
-        model: city,
-        attributes: [
-          "city_id",
-          "country_id",
-          "stateid",
-          "city_name",
-          "city_name_french",
-          "delivery_charge",
+        country_id: 254,
+        country_name: "United Arab Emirates",
+        country_code: "AE",
+        ISO_country_code: "AE",
+        states: [
+          {
+            state_id: 22,
+            state_name: "Sharjah",
+            state_name_arabic: "الشارقة",
+            state_country_id: 254,
+          },
         ],
-        where: {
-          city_status: 1,
-        },
+        cities: [
+          {
+            city_id: 132,
+            country_id: 254,
+            stateid: 22,
+            city_name: "Muwaileh",
+            city_name_french: "مویله",
+            delivery_charge: 15,
+          },
+        ],
       },
-      {
-        model: state,
-        attributes: ["state_id", "state_name", "state_name_arabic"],
-        where: {
-          statestatus: 1,
-        },
-      },
-    ],
-  };
-
-  let response = await country.findAll(filters);
-
-  // Normalize for older UI code that still reads ISO_country_code
-  response = (response || []).map((row) => {
-    const plain = typeof row?.toJSON === "function" ? row.toJSON() : row;
-    return {
-      ...plain,
-      ISO_country_code: plain?.ISO_country_code ?? plain?.country_code ?? "",
-    };
-  });
+    ];
+  }
 
   let stringifyResponse = stringifyData(response);
   if (stringifyResponse?.status) {
@@ -269,137 +246,62 @@ exports.getShippingStateCityInfo = async () => {
 };
 
 exports.addCountriesAndStateInfo = async (countriesAndStates) => {
-  /*
-  let transaction = await global.SEQUELIZE.transaction();
-
   try {
     for (let i = 0; i < countriesAndStates.length; i++) {
-       
-        let countryDetails = countriesAndStates[i];
+      const countryDetails = countriesAndStates[i];
+      const country = await create("country", {
+        country_url: countryDetails?.name?.toLowerCase()?.replace(/[" "]+/g, "-"),
+        country_name: countryDetails?.name?.replace(/[']+/g, "") || "",
+        country_name_french: countryDetails?.name?.replace(/[']+/g, "") || "",
+        country_code: "971",
+        country_status: 1,
+        currency_symbol: "UAD",
+        currency_code: "UAD",
+      });
 
-        let insertConfig = {
-          type: global?.SEQUELIZE?.QueryTypes?.INSERT,
-          transaction: transaction,
-        };
-
-        let insertCountryQuery = `
-          INSERT 
-          INTO 
-          ${tableConfig.country}
-          (
-            country_url,
-            country_name,
-            country_name_french,
-            country_code,
-            country_status,
-            currency_symbol,
-            currency_code
-          ) 
-          VALUES (
-            '${countryDetails?.name?.toLowerCase()?.replace(/[" "]+/g, "-")}',
-            '${countryDetails?.name?.replace(/[']+/g, "")}',
-            '${countryDetails?.name?.replace(/[']+/g, "")}',
-            '${971}',
-            '${1}',
-            '${"UAD"}',
-            '${"UAD"}'
-          );
-        `;
-
-        let [insertedId] = await global?.SEQUELIZE?.query(
-          insertCountryQuery,
-          insertConfig
-        );
-        console.log(insertedId);
-      
-
-      let insertConfig = {
-        type: global?.SEQUELIZE?.QueryTypes?.INSERT,
-        transaction: transaction,
-      };
-
-      let states = countriesAndStates[i]["states"];
+      const states = countryDetails["states"] || [];
       for (let j = 0; j < states.length; j++) {
-        let state = states[j];
-        let insertStateQuery = `
-          INSERT 
-          INTO 
-          ${tableConfig.state}
-          (
-            state_url,
-            state_name,
-            state_name_arabic,
-            state_country_id,
-            statestatus
-          ) 
-          VALUES (
-            '${state?.name?.toLowerCase()?.replace(/[" "]+/g, "-")}',
-            '${state?.name?.replace(/[']+/g, "")}',
-            '${state?.name?.replace(/[']+/g, "")}',
-            ${254},
-            ${1}
-          );
-        `;
+        const state = states[j];
+        const createdState = await create("state", {
+          state_url: state?.name?.toLowerCase()?.replace(/[" "]+/g, "-"),
+          state_name: state?.name?.replace(/[']+/g, "") || "",
+          state_name_arabic: state?.name?.replace(/[']+/g, "") || "",
+          state_country_id: country?.country_id || 254,
+          statestatus: 1,
+        });
 
-        let [insertedId] = await global?.SEQUELIZE?.query(
-          insertStateQuery,
-          insertConfig
-        );
-
-        let cities = state["cities"];
+        const cities = state["cities"] || [];
         for (let k = 0; k < cities.length; k++) {
-          let city = cities[k];
-          let insertCityQuery = `
-            INSERT 
-            INTO 
-            ${tableConfig.city}
-            (
-              country_id,
-              city_name,
-              city_name_french,
-              city_url,
-              delivery_charge,
-              city_latitude,
-              city_longitude,
-              city_status,
-              stateid
-            ) 
-            VALUES (
-              ${254},
-              '${city?.name?.replace(/[']+/g, "")}',
-              '${city?.name?.replace(/[']+/g, "")}',
-              '${city?.name?.toLowerCase()?.replace(/[" "]+/g, "-")}',
-              ${0.0},
-              '${city?.latitude}',
-              '${city?.longitude}',
-              ${1},
-              ${insertedId}
-            );
-          `;
-          await global?.SEQUELIZE?.query(insertCityQuery, insertConfig);
+          const city = cities[k];
+          await create("city", {
+            country_id: country?.country_id || 254,
+            city_name: city?.name?.replace(/[']+/g, "") || "",
+            city_name_french: city?.name?.replace(/[']+/g, "") || "",
+            city_url: city?.name?.toLowerCase()?.replace(/[" "]+/g, "-"),
+            delivery_charge: 0.0,
+            city_latitude: String(city?.latitude ?? ""),
+            city_longitude: String(city?.longitude ?? ""),
+            default: 0,
+            city_status: 1,
+            stateid: createdState?.state_id,
+          });
         }
       }
     }
-    await transaction.commit();
   } catch (err) {
     console.log(err);
-    transaction.rollback();
   }
-  */
 };
 
-exports.createSessionUser = async (sessionID, insertConfig = null) => {
-  let query = `INSERT INTO ${
-    tableConfig.sessions
-  } (session_id, created_at, wishlist, cart) VALUES ("${sessionID}", ${getCurrentTimestamp()}, "", "")`;
-
-  let config = { type: global?.SEQUELIZE?.QueryTypes?.INSERT };
-  if (insertConfig) {
-    config = insertConfig;
-  }
-
+exports.createSessionUser = async (sessionID) => {
   try {
-    await global?.SEQUELIZE?.query(query, config);
+    await create("sessions", {
+      session_id: sessionID,
+      created_at: getCurrentTimestamp(),
+      wishlist: "",
+      cart: "",
+      isMovedToUsers: 0,
+    });
     return true;
   } catch (err) {
     console.log(err);
@@ -407,63 +309,70 @@ exports.createSessionUser = async (sessionID, insertConfig = null) => {
   }
 };
 
-exports.getUserProfileUsingPhoneNumber = async (phoneNumber, selectConfig) => {
-  let query = `SELECT 
-    user_id, 
-    firstname, 
-    lastname, 
-    email,
-    isGuestUser 
-  FROM ${tableConfig.users} WHERE phone_number='${phoneNumber}'`;
-  let config = { type: global?.SEQUELIZE?.QueryTypes?.SELECT };
-  if (selectConfig) {
-    config = selectConfig;
-  }
-  let response = await global?.SEQUELIZE?.query(query, config);
-  return response && response.length > 0 ? response[0] : {};
+exports.getUserProfileUsingPhoneNumber = async (phoneNumber) => {
+  const response = await findOne(
+    "users",
+    { phone_number: phoneNumber },
+    {
+      attributes: [
+        "user_id",
+        "firstname",
+        "lastname",
+        "email",
+        "isGuestUser",
+      ],
+    }
+  );
+  return response || {};
 };
 
 exports.createUserAndMoveProductFromSession = async (
   userDetails,
   sessionID
 ) => {
-  let transaction = await global.SEQUELIZE.transaction();
   try {
-    userDetails["password"] = md5(userDetails["password"]);
-    userDetails["city_id"] = 132;
-    userDetails["state_id"] = 22;
-    userDetails["country_id"] = 254;
-    userDetails["referral_id"] = generateRandomString(8);
-    userDetails["referred_user_id"] = 0;
-    userDetails["gender"] = 1; // 1 -> Male, 2 -> Female
-    userDetails["joined_date"] = getCurrentTime().unix();
-    userDetails["last_login"] = getCurrentTime().unix();
-    userDetails["user_type"] = 4;
-    userDetails["user_status"] = 1;
-    userDetails["approve_status"] = 1;
-    userDetails["refference_key"] = getCurrentTime().unix();
-    userDetails = {
-      ...userDetails,
+    const plainPassword = userDetails["password"];
+    const originalPassword =
+      userDetails["originalPassword"] != null
+        ? userDetails["originalPassword"]
+        : plainPassword;
+
+    const payload = {
+      firstname: userDetails.firstname || "",
+      lastname: userDetails.lastname || "",
       firstname_french: "",
       lastname_french: "",
-      fb_session_key: "",
+      email: userDetails.email || "",
+      password: md5(plainPassword),
+      originalPassword,
       fb_user_id: "",
+      fb_session_key: "",
       twitter_id: "",
       twitter_access_token: "",
-      // Numeric columns must be 0 (not "") — MySQL 8 rejects '' for INT/DOUBLE
       twitter_secret_token: 0,
-      address1: "",
+      address1: userDetails.address || "",
       address2: "",
       dob: "",
+      city_id: Number(userDetails?.city) || 132,
+      state_id: Number(userDetails?.state) || 22,
+      country_id: Number(userDetails?.country) || 254,
+      phone_number: userDetails?.phone_number,
       my_favouites: "",
       payment_account_id: "",
       user_referral_balance: 0,
       merchant_account_balance: 0,
       merchant_commission: 0,
+      referral_id: generateRandomString(8),
+      referred_user_id: 0,
       deal_bought_count: 0,
       created_by: 0,
+      user_type: 4,
+      user_status: 1,
       login_type: 0,
+      joined_date: getCurrentTime().unix(),
+      last_login: getCurrentTime().unix(),
       facebook_update: 0,
+      approve_status: 1,
       wishlist: "",
       ship_name: "",
       ship_address1: "",
@@ -481,147 +390,77 @@ exports.createUserAndMoveProductFromSession = async (
       ShippingPassword: "",
       flat_amount: 0,
       change_password_must: 0,
+      gender: 1,
       gplus_id: "",
       gplus_access_token: "",
       about_us: "",
       fbid: "",
       login_count: 0,
+      refference_key: String(getCurrentTime().unix()),
       lang: 0,
       is_guest: 0,
       user_reg_type: 0,
+      isGuestUser: userDetails?.isGuestUser != null ? Number(userDetails.isGuestUser) : 0,
     };
 
-    let insertQuery = `INSERT INTO ${tableConfig.users} (
-    firstname,lastname,
-    firstname_french,lastname_french,email,
-    password,fb_user_id,fb_session_key,
-    twitter_id,twitter_access_token,twitter_secret_token,
-    address1,address2,dob,
-    city_id,state_id,country_id,
-    phone_number,my_favouites,payment_account_id,
-    user_referral_balance,merchant_account_balance,merchant_commission,
-    referral_id,referred_user_id,deal_bought_count,
-    created_by,user_type,user_status,
-    login_type,joined_date,last_login,
-    facebook_update,approve_status,wishlist,
-    ship_name,ship_address1,ship_address2,
-    ship_state,ship_country,ship_city,
-    ship_mobileno,ship_zipcode,AccountCountryCode,
-    AccountEntity,AccountNumber,AccountPin,UserName,
-    ShippingPassword,flat_amount,change_password_must,
-    gender,gplus_id,gplus_access_token,about_us,
-    fbid,login_count,refference_key,lang,
-    is_guest,user_reg_type,isGuestUser,originalPassword) 
-  VALUES (
-    '${userDetails.firstname?.replace(/[']+/g, " ")}',
-    '${userDetails.lastname?.replace(/[']+/g, " ")}',
-    '','',
-    '${userDetails.email?.replace(/[']+/g, " ")}',
-    '${userDetails.password?.replace(/[']+/g, " ")}',
-    '','','','',0,
-    '${userDetails.address?.replace(/[']+/g, " ")}',
-    '','',
-    ${Number(userDetails?.city)},${Number(userDetails?.state)},${Number(
-      userDetails?.country
-    )},
-    '${userDetails?.phone_number}',
-    '','',0,0,0,
-    '${userDetails?.referral_id}',
-    0,0,0,4,1,0,
-    ${userDetails["joined_date"]},
-    ${userDetails["joined_date"]},
-    0,1,'','','','','',0,0,'',0,'','','','','','',0,0,1,'','','','',0,
-    ${userDetails["refference_key"]},
-    0,0,0,1,'${userDetails?.originalPassword}'
-  )`;
-
-    let insertConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.INSERT,
-      transaction: transaction,
-    };
-    let selectConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-      transaction: transaction,
-    };
-    let updateConfig = {
-      type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-      transaction: transaction,
-    };
-
-    let [user] = await global?.SEQUELIZE?.query(insertQuery, insertConfig);
+    const user = await create("users", payload);
 
     if (user) {
-      let userInfo = {
-        user_id: user,
+      const userInfo = {
+        user_id: user.user_id,
         firstname: userDetails["firstname"],
         lastname: userDetails["lastname"],
         email: userDetails["email"],
         phone_number: userDetails["phone_number"],
-        user_status: userDetails["user_status"],
+        user_status: payload["user_status"],
       };
 
-      if (sessionID) {
+      if (sessionID && sessionID !== "") {
         let cartDetails = null;
         let wishlist = null;
-        if (sessionID && sessionID !== "") {
-          let sessionWishlistAndCart = await getUserSessionDetails(
-            sessionID,
-            selectConfig
-          );
+        const sessionWishlistAndCart = await getUserSessionDetails(sessionID);
 
+        if (
+          sessionWishlistAndCart &&
+          sessionWishlistAndCart.length > 0 &&
+          !sessionWishlistAndCart[0]["isMovedToUsers"]
+        ) {
+          wishlist = sessionWishlistAndCart[0]["wishlist"];
           if (
-            sessionWishlistAndCart &&
-            sessionWishlistAndCart.length > 0 &&
-            !sessionWishlistAndCart[0]["isMovedToUsers"]
+            sessionWishlistAndCart[0]["cart"] &&
+            sessionWishlistAndCart[0]["cart"] !== ""
           ) {
-            wishlist = sessionWishlistAndCart[0]["wishlist"];
-            if (
-              sessionWishlistAndCart[0]["cart"] &&
-              sessionWishlistAndCart[0]["cart"] !== ""
-            ) {
-              let deserializedCartDetails = deserializeData(
-                sessionWishlistAndCart[0]["cart"]
-              );
-              if (Array.isArray(deserializedCartDetails)) {
-                cartDetails = deserializedCartDetails;
-              }
+            const deserializedCartDetails = deserializeData(
+              sessionWishlistAndCart[0]["cart"]
+            );
+            if (Array.isArray(deserializedCartDetails)) {
+              cartDetails = deserializedCartDetails;
             }
-            if (cartDetails && cartDetails?.length > 0) {
-              try {
-                /* Insert cart details into cart_items collection */
-                for (let i = 0; i < cartDetails.length; i++) {
-                  await addToCart(cartDetails[i], userInfo, true);
-                }
-              } catch (err) {
-                console.log(err);
-                await transaction.rollback();
-                return { status: 0, userInfo: {} };
-              }
-            }
-            if (wishlist && wishlist !== "") {
-              let query = `UPDATE ${
-                tableConfig.users
-              } SET wishlist="${wishlist}" WHERE user_id = ${Number(
-                userInfo.user_id
-              )}`;
-              await global?.SEQUELIZE?.query(query, updateConfig);
-            }
-
-            /* Remove session cart details. */
-            // let serializeCartDetails = serializeData([]);
-            // let query = `UPDATE ${tableConfig.sessions} SET cart='${serializeCartDetails}' WHERE session_id = '${sessionID}' AND isMovedToUsers = 0`;
-            // await global?.SEQUELIZE?.query(query, updateConfig);
           }
+          if (cartDetails && cartDetails?.length > 0) {
+            try {
+              for (let i = 0; i < cartDetails.length; i++) {
+                await addToCart(cartDetails[i], userInfo, true);
+              }
+            } catch (err) {
+              console.log(err);
+              return { status: 0, userInfo: {} };
+            }
+          }
+          if (wishlist && wishlist !== "") {
+            await updateOne(
+              "users",
+              { user_id: Number(userInfo.user_id) },
+              { wishlist }
+            );
+          }
+          await updateSessionDetails(sessionID);
         }
       }
-      await transaction.commit();
       return { status: 1, userInfo };
-    } else {
-      await transaction.rollback();
-      return { status: 0, userInfo: {} };
     }
+    return { status: 0, userInfo: {} };
   } catch (err) {
-    await transaction.rollback();
     console.log(err);
     return { status: 0, userInfo: {} };
   }

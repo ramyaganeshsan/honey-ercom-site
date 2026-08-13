@@ -1,5 +1,5 @@
 const md5 = require("md5");
-const { sms_otp } = require("../models");
+const { findOne, create, updateOne } = require("../mongo/repo");
 const { getCurrentTime, generateRandomString } = require("../utils");
 const logger = require("../utils/logger");
 
@@ -27,7 +27,7 @@ exports.createAndStoreOtp = async (userEmailOrPhone, options = {}) => {
     created_on: String(getCurrentTime().unix()),
   };
 
-  const record = await sms_otp.create(payload);
+  const record = await create("sms_otp", payload);
   return {
     record,
     otp: plainOtp,
@@ -45,13 +45,14 @@ exports.verifyStoredOtp = async (userEmailOrPhone, plainOtp) => {
   if (!userEmailOrPhone || !value) return { valid: false, record: null };
 
   const hashed = md5(value);
-  const record = await sms_otp.findOne({
-    where: {
+  const record = await findOne(
+    "sms_otp",
+    {
       user_emailph: String(userEmailOrPhone).trim(),
       status: 0,
     },
-    order: [["otp_id", "DESC"]],
-  });
+    { order: [["otp_id", "DESC"]] }
+  );
 
   if (!record) return { valid: false, record: null };
 
@@ -62,7 +63,12 @@ exports.verifyStoredOtp = async (userEmailOrPhone, plainOtp) => {
 
   if (valid) {
     try {
-      await record.update({ status: 1 });
+      await updateOne(
+        "sms_otp",
+        { otp_id: record.otp_id },
+        { status: 1 }
+      );
+      record.status = 1;
     } catch (err) {
       logger.error(err?.message || err);
     }
@@ -72,11 +78,12 @@ exports.verifyStoredOtp = async (userEmailOrPhone, plainOtp) => {
 };
 
 exports.getLatestOtpRecord = async (userEmailOrPhone) => {
-  return sms_otp.findOne({
-    where: {
+  return findOne(
+    "sms_otp",
+    {
       user_emailph: String(userEmailOrPhone).trim(),
       status: 0,
     },
-    order: [["otp_id", "DESC"]],
-  });
+    { order: [["otp_id", "DESC"]] }
+  );
 };

@@ -244,23 +244,25 @@ exports.getUUID = () => {
 };
 
 exports.updateSessionDetails = async (sessionID) => {
-  let query = `UPDATE ${tableConfig.sessions} SET isMovedToUsers = 1 WHERE session_id = "${sessionID}"`;
-  await global?.SEQUELIZE?.query(query);
+  const { updateOne } = require("../mongo/repo");
+  await updateOne("sessions", { session_id: sessionID }, { isMovedToUsers: 1 });
 };
 
 exports.checkProductIsActive = async (productId) => {
-  let query = `SELECT count(deal_id) as productCount FROM ${tableConfig.product} WHERE deal_id = ${productId} AND deal_status = 1;`;
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  const { count } = require("../mongo/repo");
+  const productCount = await count("product", {
+    deal_id: Number(productId),
+    deal_status: 1,
   });
-  return response[0] && response[0]["productCount"] > 0 ? true : false;
+  return productCount > 0;
 };
-exports.getUserSessionDetails = async (sessionID, selectConfig) => {
-  let query = `SELECT cart, wishlist, isMovedToUsers FROM ${tableConfig.sessions} WHERE session_id="${sessionID}"`;
-  let config = { type: global?.SEQUELIZE?.QueryTypes?.SELECT };
-  if (selectConfig) {
-    config = selectConfig;
-  }
-  let response = await global?.SEQUELIZE?.query(query, config);
-  return response;
+
+exports.getUserSessionDetails = async (sessionID) => {
+  const { findOne } = require("../mongo/repo");
+  const doc = await findOne(
+    "sessions",
+    { session_id: sessionID },
+    { attributes: ["cart", "wishlist", "isMovedToUsers"] }
+  );
+  return doc ? [doc] : [];
 };

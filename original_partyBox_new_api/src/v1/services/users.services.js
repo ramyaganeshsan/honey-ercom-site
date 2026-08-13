@@ -1,26 +1,24 @@
-const { users } = require("../models");
-const tableConfig = require("../database/table.config.json");
+const { findOne, updateOne, count } = require("../mongo/repo");
 
 exports.getUserInfo = async (userId) => {
-  let condition = {
-    user_id: Number(userId),
-  };
-  let filters = {
-    where: condition,
-    attributes: [
-      "firstname",
-      "lastname",
-      "email",
-      "address1",
-      "city_id",
-      "state_id",
-      "country_id",
-      "phone_number",
-      "gender",
-      "user_status",
-    ],
-  };
-  const userDetails = await users.findOne(filters);
+  const userDetails = await findOne(
+    "users",
+    { user_id: Number(userId) },
+    {
+      attributes: [
+        "firstname",
+        "lastname",
+        "email",
+        "address1",
+        "city_id",
+        "state_id",
+        "country_id",
+        "phone_number",
+        "gender",
+        "user_status",
+      ],
+    }
+  );
   return userDetails;
 };
 
@@ -37,22 +35,19 @@ exports.updateUserInfo = async (userDetails, userId) => {
     gender,
   } = userDetails;
 
-  const updatedUser = await users.update(
+  const updatedUser = await updateOne(
+    "users",
+    { user_id: Number(userId) },
     {
       firstname,
       lastname,
       email,
       address1,
-      city_id: parseInt(city_id),
-      state_id: parseInt(state_id),
-      country_id: parseInt(country_id),
+      city_id: parseInt(city_id, 10),
+      state_id: parseInt(state_id, 10),
+      country_id: parseInt(country_id, 10),
       phone_number,
-      gender: parseInt(gender),
-    },
-    {
-      where: {
-        user_id: userId,
-      },
+      gender: parseInt(gender, 10),
     }
   );
 
@@ -60,28 +55,30 @@ exports.updateUserInfo = async (userDetails, userId) => {
 };
 
 exports.checkIsOriginalPassword = async (password, userId) => {
-  let query = `
-    SELECT 
-      COUNT("user_id") AS user_count 
-    FROM ${tableConfig.users} 
-    WHERE 
-      password = "${password}" 
-    AND 
-      user_id = ${userId};
-  `;
-  let response = await global?.SEQUELIZE?.query(query, {
-    type: global?.SEQUELIZE?.QueryTypes?.SELECT,
+  const userCount = await count("users", {
+    password,
+    user_id: Number(userId),
   });
-  return response && response[0] && response[0]["user_count"] ? true : false;
+  return userCount > 0;
 };
 
-exports.updateUserPassword = async (password, userID) => {
+/**
+ * @param {string} password md5 hash (controller hashes before calling)
+ * @param {number|string} userID
+ * @param {string} [plainPassword] optional plain password for originalPassword storage
+ */
+exports.updateUserPassword = async (password, userID, plainPassword = null) => {
   try {
-    let query = `UPDATE ${tableConfig.users} SET password = "${password}" WHERE user_id = ${userID}`;
-    await global?.SEQUELIZE?.query(query, {
-      type: global?.SEQUELIZE?.QueryTypes?.UPDATE,
-    });
-    return true;
+    const fields = { password };
+    if (plainPassword != null && String(plainPassword) !== "") {
+      fields.originalPassword = plainPassword;
+    }
+    const updated = await updateOne(
+      "users",
+      { user_id: Number(userID) },
+      fields
+    );
+    return !!updated;
   } catch (err) {
     return false;
   }
@@ -89,14 +86,12 @@ exports.updateUserPassword = async (password, userID) => {
 
 exports.validateUser = async (userId) => {
   try {
-    let query = `SELECT user_status 
-    FROM ${tableConfig.users}
-    WHERE user_id = ${userId}`;
-    console.log("query : ", query);
-    let repsonse = await global?.SEQUELIZE?.query(query, {
-      type: global?.SEQUELIZE?.QueryTypes?.SELECT,
-    });
-    return repsonse[0]?.user_status;
+    const user = await findOne(
+      "users",
+      { user_id: Number(userId) },
+      { attributes: ["user_status"] }
+    );
+    return user?.user_status;
   } catch (err) {
     return false;
   }
