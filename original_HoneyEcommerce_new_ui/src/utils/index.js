@@ -24,38 +24,75 @@ export const encrypteString = (string) => {
   return encryptedData;
 };
 
+const clearCorruptUserDetails = () => {
+  try {
+    localStorage.removeItem("user_details");
+  } catch (_) {
+    /* ignore */
+  }
+};
+
 const decrypteString = (string) => {
-  var decryptBytes = CryptoJS.AES.decrypt(
-    string,
-    env.SECRECT_KEY
-  );
-  var decryptData = decryptBytes.toString(CryptoJS.enc.Utf8);
-  return decryptData;
+  if (!string) return "";
+  try {
+    const key = env.SECRECT_KEY || "";
+    if (!key) {
+      clearCorruptUserDetails();
+      return "";
+    }
+    const decryptBytes = CryptoJS.AES.decrypt(string, key);
+    const decryptData = decryptBytes.toString(CryptoJS.enc.Utf8);
+    // Wrong key / corrupt ciphertext yields empty string from CryptoJS
+    if (!decryptData) {
+      clearCorruptUserDetails();
+      return "";
+    }
+    return decryptData;
+  } catch (err) {
+    // e.g. "Malformed UTF-8 data" when localStorage was encrypted with another key
+    clearCorruptUserDetails();
+    return "";
+  }
 };
 
 export const decrypteData = (string) => {
   if (!string) return {};
 
   try {
-    return JSON.parse(decrypteString(string));
+    const plain = decrypteString(string);
+    if (!plain) return {};
+    return JSON.parse(plain);
   } catch (err) {
-    console.log(err);
+    clearCorruptUserDetails();
     return {};
   }
 };
 
 export const getUserInfo = () => {
-  let userDetails = localStorage.getItem("user_details");
-  return userDetails ? JSON.parse(decrypteString(userDetails)) : {};
+  try {
+    const userDetails = localStorage.getItem("user_details");
+    if (!userDetails) return {};
+    const plain = decrypteString(userDetails);
+    if (!plain) return {};
+    return JSON.parse(plain);
+  } catch (err) {
+    clearCorruptUserDetails();
+    return {};
+  }
 };
 
 export const getToken = () => {
-  let userDetails = localStorage.getItem("user_details");
-  if (userDetails) {
-    userDetails = JSON.parse(decrypteString(userDetails));
+  try {
+    const stored = localStorage.getItem("user_details");
+    if (!stored) return "";
+    const plain = decrypteString(stored);
+    if (!plain) return "";
+    const userDetails = JSON.parse(plain);
     return userDetails?.token ? `Bearer ${userDetails.token}` : "";
+  } catch (err) {
+    clearCorruptUserDetails();
+    return "";
   }
-  return "";
 };
 
 export const getSessionID = () => {
