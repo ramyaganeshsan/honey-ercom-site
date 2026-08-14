@@ -3,14 +3,15 @@ import Header from "./header";
 import Footer from "./footer";
 import { Outlet } from "react-router-dom";
 import { siteSettingsContext } from "../../contexts";
-import { getUserInfo } from "../../utils";
 import SignIn from "../../forms/signin";
 import SignUp from "../../forms/signup";
 import { useLocation } from "react-router-dom";
+import useUserInfo from "../../hooks/useUserInfo";
 
 const ApplicationLayout = () => {
-  const [userInfo] = React.useState(getUserInfo);
+  const userInfo = useUserInfo();
   const siteCongifurationDetails = React.useContext(siteSettingsContext);
+  const isLoggedIn = Boolean(userInfo?.user_id || userInfo?.token);
 
   const { pathname } = useLocation();
   React.useEffect(() => {
@@ -30,11 +31,9 @@ const ApplicationLayout = () => {
         userInfo={userInfo}
         categories={siteCongifurationDetails?.categories ?? []}
       />
-      {/* <div className="layout_content"> */}
       <main>
         <Outlet />
       </main>
-      {/* </div> */}
       <Footer
         userInfo={userInfo}
         footer_logo={siteCongifurationDetails?.siteSettings?.footer_logo}
@@ -55,21 +54,20 @@ const ApplicationLayout = () => {
         youtube_url={siteCongifurationDetails?.siteSettings?.youtube_url}
         pinterest={siteCongifurationDetails?.siteSettings?.pinterest}
       />
-      {!userInfo ||
-        (Object.keys(userInfo).length <= 0 && (
-          <>
-            <SignIn
-              loginImage={
-                siteCongifurationDetails?.siteSettings?.login_page_image
-              }
-            />
-            <SignUp
-              signupImage={
-                siteCongifurationDetails?.siteSettings?.signin_page_image
-              }
-            />
-          </>
-        ))}
+      {!isLoggedIn && (
+        <>
+          <SignIn
+            loginImage={
+              siteCongifurationDetails?.siteSettings?.login_page_image
+            }
+          />
+          <SignUp
+            signupImage={
+              siteCongifurationDetails?.siteSettings?.signin_page_image
+            }
+          />
+        </>
+      )}
     </>
   );
 };

@@ -9,7 +9,7 @@ import { profileSchema } from "../../validation/user.validaton";
 import { validateForm, extractErrors } from "../../validation";
 import { useGetStatesAndCitiesMutation } from "../../rtk/networkcalls/common.query";
 import { toast } from "react-toastify";
-import { handleResponse, removeSessionID, toastConfig } from "../../utils";
+import { clearUserDetails, handleResponse, removeSessionID, toastConfig } from "../../utils";
 import { Link, useNavigate } from "react-router-dom";
 import TransparentSpinner from "../../components/utils/transparentSpinner";
 import {
@@ -279,9 +279,9 @@ const UserProfile = () => {
   };
 
   const handleLogout = () => {
-    navigate("/");
     removeSessionID();
-    localStorage.clear("user_details");
+    clearUserDetails();
+    navigate("/");
     window.location.reload();
   };
 

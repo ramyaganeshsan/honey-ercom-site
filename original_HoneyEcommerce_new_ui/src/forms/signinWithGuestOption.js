@@ -12,13 +12,13 @@ import {
   useTwitterSignInMutation,
 } from "../rtk/networkcalls/auth.query";
 import {
-  encrypteString,
   getSessionID,
   handleResponse,
   removeSessionID,
   toastConfig,
   resolveAssetUrl,
   handleAssetImageError,
+  persistUserDetails,
 } from "../utils";
 import { toast } from "react-toastify";
 import { siteSettingsContext } from "../contexts";
@@ -57,9 +57,8 @@ const SignInWithGuestOption = ({
         } else if (Number(response.data?.status) === 1) {
           let userDetails = response?.data?.data?.userDetails;
           let message = response?.data?.message;
-          userDetails = JSON.stringify(userDetails);
           e.target.reset();
-          localStorage.setItem("user_details", encrypteString(userDetails));
+          persistUserDetails(userDetails);
           toast.success(message, toastConfig);
           let closeButton = document.getElementById(
             "signin_with_guest_close_button"
@@ -96,8 +95,7 @@ const SignInWithGuestOption = ({
         if (Number(googleResponse.data?.status) === 1) {
           let userDetails = googleResponse.data?.data?.userDetails;
           let message = googleResponse.data?.message;
-          userDetails = JSON.stringify(userDetails);
-          localStorage.setItem("user_details", encrypteString(userDetails));
+          persistUserDetails(userDetails);
           toast.success(message, toastConfig);
           let closeButton = document.getElementById(
             "signin_with_guest_close_button"

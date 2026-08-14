@@ -5,11 +5,11 @@ import { Link } from "react-router-dom";
 import {
   changeActiveLink,
   getLanguage,
-  encrypteString,
   getSessionID,
   handleResponse,
   removeSessionID,
   toastConfig,
+  persistUserDetails,
 } from "../../utils";
 import { t } from "i18next";
 import { useGetAboutusCMSDetailsQuery } from "../../rtk/networkcalls/cms.query";
@@ -85,9 +85,8 @@ const SignInTest = ({ loginImage }) => {
         } else if (Number(response.data?.status) === 1) {
           let userDetails = response?.data?.data?.userDetails;
           let message = response?.data?.message;
-          userDetails = JSON.stringify(userDetails);
           e.target.reset();
-          localStorage.setItem("user_details", encrypteString(userDetails));
+          persistUserDetails(userDetails);
           toast.success(message, toastConfig);
           settingsContext?.refetch();
           let sessionID = getSessionID();
@@ -115,8 +114,7 @@ const SignInTest = ({ loginImage }) => {
         if (Number(googleResponse.data?.status) === 1) {
           let userDetails = googleResponse.data?.data?.userDetails;
           let message = googleResponse.data?.message;
-          userDetails = JSON.stringify(userDetails);
-          localStorage.setItem("user_details", encrypteString(userDetails));
+          persistUserDetails(userDetails);
           toast.success(message, toastConfig);
           settingsContext?.refetch();
           let sessionID = getSessionID();

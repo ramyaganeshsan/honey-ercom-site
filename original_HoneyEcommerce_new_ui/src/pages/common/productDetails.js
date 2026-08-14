@@ -18,7 +18,6 @@ import {
 import {
   changeActiveLink,
   encrypteQueryData,
-  getUserInfo,
   productFilters,
   toastConfig,
   convertTimestampToDate,
@@ -31,6 +30,7 @@ import {
   setSessionID,
   removeSessionID,
 } from "../../utils";
+import useUserInfo from "../../hooks/useUserInfo";
 import { t } from "i18next";
 import BreadCrumb from "../../components/utils/breadcrumb";
 import Spinner from "../../components/utils/spinner";
@@ -108,7 +108,7 @@ const ProductDetails = () => {
     useAddToMyCartMutation();
   const [removeFromWishlist, { isLoading: removingProductFromWishlist }] =
     useRemoveFromWishlistMutation();
-  const [userInfo] = useState(getUserInfo);
+  const userInfo = useUserInfo();
   const siteInfo = useContext(siteSettingsContext);
   const userCartDetails = useContext(userCartDetailsContext);
   const [searchParams] = useSearchParams();

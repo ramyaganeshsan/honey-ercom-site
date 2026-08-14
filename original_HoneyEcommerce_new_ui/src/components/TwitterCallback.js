@@ -4,10 +4,10 @@ import { useTwitterCallbackMutation } from "../rtk/networkcalls/auth.query";
 import { toast } from "react-toastify";
 import {
   handleResponse,
-  encrypteString,
   getSessionID,
   removeSessionID,
   toastConfig,
+  persistUserDetails,
 } from "../utils";
 
 const TwitterCallback = () => {
@@ -27,8 +27,7 @@ const TwitterCallback = () => {
           if (Number(response.data.status) === 1) {
             let userDetails = response.data.data.userDetails;
             let message = response.data.message;
-            userDetails = JSON.stringify(userDetails);
-            localStorage.setItem("user_details", encrypteString(userDetails));
+            persistUserDetails(userDetails);
             toast.success(message, toastConfig);
             let sessionID = getSessionID();
             let location = window.location.pathname;

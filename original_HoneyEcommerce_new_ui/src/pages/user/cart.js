@@ -12,13 +12,13 @@ import {
   changeActiveLink,
   currencyFormatter,
   encrypteQueryData,
-  getUserInfo,
   handleResponse,
   productFilters,
   removeSessionID,
   toastConfig,
   updateCartItemsBatch,
 } from "../../utils";
+import useUserInfo from "../../hooks/useUserInfo";
 import BreadCrumb from "../../components/utils/breadcrumb";
 import { t } from "i18next";
 import {
@@ -51,7 +51,7 @@ const breadcrumbLinks = [
 
 const Cart = () => {
   const siteInfo = useContext(siteSettingsContext);
-  const [userInfo] = useState(getUserInfo);
+  const userInfo = useUserInfo();
   const [loading, setLoading] = useState(false);
   const [emptyCart, setEmptycart] = useState(false);
   const navigate = useNavigate();

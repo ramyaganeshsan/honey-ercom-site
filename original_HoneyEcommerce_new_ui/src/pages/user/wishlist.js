@@ -9,7 +9,6 @@ import {
 import Spinner from "../../components/utils/spinner";
 import { useNavigate } from "react-router-dom";
 import {
-  getUserInfo,
   handleResponse,
   removeSessionID,
   setSessionID,
@@ -17,6 +16,7 @@ import {
   updateCartItemsBatch,
   updateWishlistItemsBatch,
 } from "../../utils";
+import useUserInfo from "../../hooks/useUserInfo";
 import { toast } from "react-toastify";
 import { useEffect, useLayoutEffect, useState } from "react";
 import EmptyWishlist from "../../components/utils/emptyWishlist";
@@ -43,7 +43,7 @@ const breadcrumbLinks = [
 const Wishlist = () => {
   const siteInfo = useContext(siteSettingsContext);
   const userCartDetails = useContext(userCartDetailsContext);
-  const [userInfo] = useState(getUserInfo);
+  const userInfo = useUserInfo();
   const [addToMyCart, { isLoading: loadingAddToCart }] =
     useAddToMyCartMutation();
   const [removeFromWishlist, { isLoading: removingProductFromWishlist }] =

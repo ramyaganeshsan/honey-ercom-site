@@ -100,6 +100,29 @@ export const getUserInfo = () => {
   }
 };
 
+/** Fired after login/signup/logout so layout chrome can leave guest mode. */
+export const AUTH_CHANGED_EVENT = "honey-auth-changed";
+
+export const notifyAuthChanged = () => {
+  try {
+    window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+  } catch (_) {
+    /* ignore */
+  }
+};
+
+export const persistUserDetails = (userDetails) => {
+  const payload =
+    typeof userDetails === "string" ? userDetails : JSON.stringify(userDetails);
+  localStorage.setItem("user_details", encrypteString(payload));
+  notifyAuthChanged();
+};
+
+export const clearUserDetails = () => {
+  localStorage.removeItem("user_details");
+  notifyAuthChanged();
+};
+
 export const getToken = () => {
   try {
     const stored = localStorage.getItem("user_details");
@@ -149,7 +172,7 @@ export const handleResponse = (response, toast, navigate, refetch = null) => {
   } else if (status === -1) {
     message = message ? message : "Your token got expired";
     toast.error(message, toastConfiguration);
-    localStorage.removeItem("user_details");
+    clearUserDetails();
     navigate("/");
   } else if (status === -10) {
     if (message) toast.error(message, toastConfiguration);

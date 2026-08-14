@@ -7,13 +7,13 @@ import ErrorMessage from "../components/utils/error";
 import { useNavigate } from "react-router-dom";
 import { useSignupMutation } from "../rtk/networkcalls/auth.query";
 import {
-  encrypteString,
   getSessionID,
   handleResponse,
   removeSessionID,
   toastConfig,
   resolveAssetUrl,
   handleAssetImageError,
+  persistUserDetails,
 } from "../utils";
 import { toast } from "react-toastify";
 import { siteSettingsContext } from "../contexts";
@@ -61,9 +61,8 @@ const SignUp = ({ signupImage }) => {
         } else if (Number(response.data?.status) === 1) {
           let userDetails = response?.data?.data?.userDetails;
           let message = response?.data?.message;
-          userDetails = JSON.stringify(userDetails);
           e.target.reset();
-          localStorage.setItem("user_details", encrypteString(userDetails));
+          persistUserDetails(userDetails);
           toast.success(message, toastConfig);
           let closeButton = document.getElementById("signup_close_button");
           if (closeButton) {
