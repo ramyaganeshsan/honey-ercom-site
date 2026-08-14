@@ -1,5 +1,6 @@
 import { t } from "i18next";
 import { Link } from "react-router-dom";
+import { resolveAssetUrl, handleAssetImageError } from "../../utils";
 
 const Footer = ({
   footer_logo,
@@ -29,9 +30,16 @@ const Footer = ({
             <div className="col-12 col-sm-12 col-md-4 mb-4 mb-md-0">
               <div className="ftr-blocks ftr-blk1">
                 <div className="ftr-logo">
-                  {/* <img src={footer_logo} alt={t("footer_logo_alt_text")} /> */}
-                  {/* <img src="Our Logo" alt={t("footer_logo_alt_text")} /> */}
-                  <p>Our Logo</p>
+                  <img
+                    src={resolveAssetUrl(
+                      footer_logo,
+                      "/images/footer-logo.svg"
+                    )}
+                    alt={t("footer_logo_alt_text")}
+                    onError={(e) =>
+                      handleAssetImageError(e, "/images/footer-logo.svg")
+                    }
+                  />
                 </div>
                 <p>
                   {address1}

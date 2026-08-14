@@ -51,7 +51,7 @@
     flex-wrap: wrap;
   }
   footer {
-    background-size: contain;
+    background-size: cover;
   }
 }
 @media (max-width: 1200px) {
@@ -374,8 +374,14 @@
   .login-lft {
     display: none;
   }
+  .login-wrapper {
+    min-height: 0;
+    max-height: none;
+  }
   .login-rgt {
     width: 100%;
+    max-height: none;
+    padding: 20px 16px;
   }
   /*.product-list-lft .btn-close {position: absolute;right: 0px;top: 0px;}*/
   .product-list-lft .mCSB_inside > .mCSB_container {
