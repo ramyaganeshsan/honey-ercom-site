@@ -35,34 +35,48 @@ function setupImages(products, banners) {
     path.join(CLOUD, "products", "160_180"),
     path.join(CLOUD, "products", "80_80"),
   ];
+  const logoDir = path.join(CLOUD, "logo");
   ensureDir(bannerDir);
+  ensureDir(logoDir);
   productDirs.forEach(ensureDir);
 
-  const bannerSrc =
-    path.join(ASSETS, "images", "banner-1.png") ||
-    path.join(ASSETS, "images", "poster.png");
   const uiPublic = path.resolve(ROOT, "../original_HoneyEcommerce_new_ui/public/images");
 
   for (const b of banners) {
     const candidates = [
+      path.join(ASSETS, "images", `banner-${b.banner_id}.png`),
       path.join(uiPublic, `banner-${b.banner_id}.png`),
       path.join(ASSETS, "images", "poster.png"),
       path.join(ASSETS, "images", "img-500.png"),
     ];
-    const src = candidates.find((p) => fs.existsSync(p));
+    const src = candidates.find((p) => fs.existsSync(p) && fs.statSync(p).size > 0);
     if (src) {
       copyIfExists(src, path.join(bannerDir, `${b.banner_id}.png`));
     }
   }
 
+  // Invoice / PDF logo
+  copyIfExists(
+    path.join(ASSETS, "images", "logo.svg"),
+    path.join(logoDir, "logo.svg")
+  );
+  const logoPngCandidates = [
+    path.join(ASSETS, "images", "dummy-product-1.png"),
+    path.join(uiPublic, "dummy-product-1.png"),
+  ];
+  const logoPng = logoPngCandidates.find((p) => fs.existsSync(p) && fs.statSync(p).size > 0);
+  if (logoPng) copyIfExists(logoPng, path.join(logoDir, "logo.png"));
+
   const dummyProducts = [
     path.join(ASSETS, "images", "dummy-product-1.png"),
     path.join(ASSETS, "images", "dummy-product-2.png"),
     path.join(ASSETS, "images", "dummy-product-3.png"),
-  ];
+    path.join(ASSETS, "images", "dummy-product-4.png"),
+  ].filter((p) => fs.existsSync(p) && fs.statSync(p).size > 0);
 
   products.forEach((p, idx) => {
     const src = dummyProducts[idx % dummyProducts.length];
+    if (!src) return;
     for (const dir of productDirs) {
       copyIfExists(src, path.join(dir, `${p.deal_key}_1.png`));
     }

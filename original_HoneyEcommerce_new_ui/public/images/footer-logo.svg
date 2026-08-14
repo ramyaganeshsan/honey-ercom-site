@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="180" height="48" viewBox="0 0 180 48"><rect width="180" height="48" rx="6" fill="#c9a227"/><text x="90" y="30" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#fff">Honey Shop</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64" viewBox="0 0 220 64" role="img" aria-label="Thunayyan Honey">
+  <defs>
+    <linearGradient id="fg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F2D06B"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </linearGradient>
+  </defs>
+  <rect width="220" height="64" rx="10" fill="#3D2A14"/>
+  <path d="M28 10 C28 10 12 30 12 42 C12 51 19 57 28 57 C37 57 44 51 44 42 C44 30 28 10 28 10 Z" fill="url(#fg)"/>
+  <text x="58" y="30" font-family="Georgia, 'Times New Roman', serif" font-size="18" font-weight="700" fill="#F7E7A8">Thunayyan</text>
+  <text x="58" y="48" font-family="Georgia, 'Times New Roman', serif" font-size="13" fill="#D4A017" letter-spacing="2">HONEY</text>
+</svg>

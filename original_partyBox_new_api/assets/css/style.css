@@ -744,7 +744,7 @@ header {
   width: 80px;
   height: 80px;
   flex-shrink: 0;
-  background: url(/images/logo.svg) no-repeat;
+  background: url(/images/logo.svg) no-repeat center / contain;
   color: transparent;
   font-size: 0;
 }

@@ -531,7 +531,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat center / contain;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -565,7 +565,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat center / contain;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -599,7 +599,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat center / contain;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -633,7 +633,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat center / contain;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -667,7 +667,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat center / contain;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -701,7 +701,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat center / contain;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -735,7 +735,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat center / contain;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;
@@ -932,7 +932,7 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat;
+    background: url(/images/logo.svg) no-repeat center / contain;
     background-size: 40px 58px;
     height: 58px;
     width: 42px;

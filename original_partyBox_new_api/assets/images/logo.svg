@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="180" height="48" viewBox="0 0 180 48"><rect width="180" height="48" rx="6" fill="#c9a227"/><text x="90" y="30" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#fff">Honey Shop</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Thunayyan Honey">
+  <defs>
+    <linearGradient id="honeyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F2D06B"/>
+      <stop offset="45%" stop-color="#D4A017"/>
+      <stop offset="100%" stop-color="#8B5A1A"/>
+    </linearGradient>
+    <linearGradient id="dropShine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF3C4" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="#F2D06B" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="80" r="76" fill="#3D2A14"/>
+  <circle cx="80" cy="80" r="70" fill="#5C3B16"/>
+  <!-- honey drop -->
+  <path d="M80 28 C80 28 52 62 52 88 C52 106 64 118 80 118 C96 118 108 106 108 88 C108 62 80 28 80 28 Z" fill="url(#honeyGrad)"/>
+  <path d="M70 48 C66 58 62 72 62 86 C62 98 70 108 80 110" fill="none" stroke="url(#dropShine)" stroke-width="6" stroke-linecap="round"/>
+  <!-- honeycomb hint -->
+  <g fill="none" stroke="#F7E7A8" stroke-opacity="0.35" stroke-width="1.5">
+    <path d="M58 74 l8-4 8 4 v8 l-8 4 -8-4 z"/>
+    <path d="M78 70 l8-4 8 4 v8 l-8 4 -8-4 z"/>
+  </g>
+  <!-- brand wordmark -->
+  <text x="80" y="140" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="13" font-weight="700" fill="#F7E7A8" letter-spacing="0.5">THUNAYYAN</text>
+</svg>
