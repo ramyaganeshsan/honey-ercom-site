@@ -194,6 +194,7 @@ let english = {
   duration: "within",
   order_placed: "Placed",
   order_processing: "Processing",
+  confirmed: "Confirmed",
   order_cancelled: "Cancelled",
   update_cart: "Update cart",
   calcel_order: "Cancel order",

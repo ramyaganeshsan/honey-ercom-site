@@ -85,6 +85,26 @@ exports.getMyOrderDetails = async (ids) => {
     const cart = cartMap[item.cart_id] || {};
     const sub = subMap[item.sub_product_id] || {};
     const product = productMap[sub.product_id] || {};
+    // Prefer cart-level admin_status (set by admin panel) when syncing to storefront
+    const cartAdmin = Number(cart.admin_status);
+    const itemDelivery = Number(item.delivery_status);
+    const mappedFromCart =
+      Number.isFinite(cartAdmin) && cartAdmin > 0
+        ? (() => {
+            switch (cartAdmin) {
+              case 1:
+                return { admin_status: 1, delivery_status: itemDelivery || 1 };
+              case 2:
+                return { admin_status: 1, delivery_status: 2 };
+              case 3:
+                return { admin_status: 1, delivery_status: 4 };
+              case 4:
+                return { admin_status: 1, delivery_status: 6 };
+              default:
+                return null;
+            }
+          })()
+        : null;
     return {
       cart_id: cart.cart_id,
       transaction_id: cart.transaction_id,
@@ -98,8 +118,10 @@ exports.getMyOrderDetails = async (ids) => {
       deal_title: product.deal_title,
       deal_title_french: product.deal_title_french,
       deal_value: item.deal_value,
-      delivery_status: item.delivery_status,
-      admin_status: item.admin_status,
+      delivery_status:
+        mappedFromCart?.delivery_status ?? item.delivery_status,
+      admin_status: mappedFromCart?.admin_status ?? item.admin_status,
+      cart_admin_status: Number.isFinite(cartAdmin) ? cartAdmin : 0,
       dealID: item.deal_id,
       quantity: item.item_quantity,
       sizeId: sub.size_id,

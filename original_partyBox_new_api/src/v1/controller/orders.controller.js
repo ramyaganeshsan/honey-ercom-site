@@ -80,6 +80,7 @@ exports.getMyOrdersList = async (req, res, next) => {
             details["transaction_date"] = products[0]["transaction_date"];
             details["grand_total_price"] = products[0]["grand_total_price"];
             details["is_cancel"] = products[0]["is_cancel"];
+            details["admin_status"] = products[0]["cart_admin_status"] ?? 0;
 
             for (let j = 0; j < products.length; j++) {
               let productDetail = {

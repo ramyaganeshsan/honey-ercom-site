@@ -43,7 +43,19 @@ const breadcrumbLinks = [
   },
 ];
 
-const getStatus = (products) => {
+const getStatus = (products, orderAdminStatus) => {
+  // Cart-level status from admin panel (Pending/Processing/Shipped/Completed/Cancelled)
+  if (orderAdminStatus !== undefined && orderAdminStatus !== null && orderAdminStatus !== "") {
+    const n = Number(orderAdminStatus);
+    if (Number.isFinite(n)) {
+      if (n === 4) return "order_cancelled";
+      if (n === 3) return "Order_has_been_delivered";
+      if (n === 2) return "Shipped_at_delivery_center";
+      if (n === 1) return "confirmed";
+      if (n === 0) return "order_placed";
+    }
+  }
+
   let status = "order_placed";
   if (products.some((product) => product.delivery_status === 4)) {
     status = "Order_has_been_delivered";
@@ -67,10 +79,6 @@ const getStatus = (products) => {
       otherProducts += 1;
     }
   });
-
-  // if (otherProducts > 0) {
-  //   status = "order_processing";
-  // }
 
   if (cancelledProducts > 0 && Number(cancelledProducts) === totalProducts) {
     status = "order_cancelled";
@@ -434,7 +442,7 @@ const MyOrders = () => {
                           <p className="my-orders-order-details-info">
                             <span>{t("order_status")}</span>
                             <span>:</span>
-                            <span>{t(getStatus(order.products))}</span>
+                            <span>{t(getStatus(order.products, order.admin_status))}</span>
                           </p>
                           <p className="my-orders-order-details-info">
                             <span>{t("order_date")}</span>

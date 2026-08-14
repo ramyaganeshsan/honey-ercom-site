@@ -16,7 +16,9 @@ export const OrdersQuery = createApi({
           },
         };
       },
-      keepUnusedDataFor: 3600,
+      keepUnusedDataFor: 30,
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
     }),
     cancelMyOrder: builder.mutation({
       query: (orderDetails) => {

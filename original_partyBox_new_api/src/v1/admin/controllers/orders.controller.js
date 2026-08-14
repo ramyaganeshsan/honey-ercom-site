@@ -1,4 +1,4 @@
-const { findOne, updateOne, count, findAll } = require("../../mongo/repo");
+const { findOne, updateOne, updateMany, count, findAll } = require("../../mongo/repo");
 const { ok, fail, listCollection } = require("../services/admin.helpers");
 
 async function useTransactionsAsOrders() {
@@ -67,6 +67,32 @@ function paymentStatusLabel(order = {}) {
       : "COD pending";
   }
   return Number(order.payment_status) === 1 ? "Paid" : "Unpaid";
+}
+
+/**
+ * Map cart.admin_status → cart_items fields that the storefront My Orders
+ * page reads (delivery_status / admin_status).
+ */
+function cartItemFieldsForAdminStatus(adminStatus) {
+  switch (Number(adminStatus)) {
+    case ORDER_STATUS.processing:
+      return { admin_status: 1, delivery_status: 1 }; // confirmed / packed
+    case ORDER_STATUS.shipped:
+      return { admin_status: 1, delivery_status: 2 }; // shipped
+    case ORDER_STATUS.completed:
+      return { admin_status: 1, delivery_status: 4 }; // delivered
+    case ORDER_STATUS.cancelled:
+      return { admin_status: 1, delivery_status: 6 }; // cancelled
+    case ORDER_STATUS.pending:
+    default:
+      return { admin_status: 0, delivery_status: 0 }; // placed
+  }
+}
+
+async function syncCartItemsStatus(cartId, adminStatus) {
+  if (!Number.isFinite(Number(cartId)) || adminStatus == null) return;
+  const fields = cartItemFieldsForAdminStatus(adminStatus);
+  await updateMany("cart_items", { cart_id: Number(cartId) }, fields);
 }
 
 function normalizeCartItems(items = []) {
@@ -289,6 +315,8 @@ exports.updateOrderStatus = async (req, res) => {
       cartUpdate.admin_status = parsedStatus;
       if (parsedStatus === ORDER_STATUS.cancelled) {
         cartUpdate.is_cancel = 1;
+      } else {
+        cartUpdate.is_cancel = 0;
       }
       if (parsedStatus === ORDER_STATUS.completed) {
         // Mark COD collected when completing a COD order
@@ -344,6 +372,9 @@ exports.updateOrderStatus = async (req, res) => {
       }
       if (txn.cart_id) {
         await updateOne("cart", { cart_id: txn.cart_id }, cartUpdate);
+        if (cartUpdate.admin_status !== undefined) {
+          await syncCartItemsStatus(txn.cart_id, cartUpdate.admin_status);
+        }
       }
       const cart = txn.cart_id
         ? await findOne("cart", { cart_id: txn.cart_id })
@@ -356,6 +387,9 @@ exports.updateOrderStatus = async (req, res) => {
     const updated = await updateOne("cart", { cart_id: id }, cartUpdate);
     if (!updated) {
       return res.send(fail("Order not found"));
+    }
+    if (cartUpdate.admin_status !== undefined) {
+      await syncCartItemsStatus(id, cartUpdate.admin_status);
     }
     return res.send(ok(await enrichCartOrder(updated), "Order status updated"));
   } catch (err) {
