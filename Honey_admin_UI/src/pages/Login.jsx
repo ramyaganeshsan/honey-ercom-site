@@ -65,24 +65,6 @@ export default function Login() {
         </h1>
         <p className="login-sub">Sign in to the admin panel</p>
 
-        <div className="login-hint" style={{
-          marginBottom: 16,
-          padding: '10px 12px',
-          background: '#f7efd9',
-          border: '1px solid #e2d3a3',
-          borderRadius: 8,
-          fontSize: 13,
-          lineHeight: 1.45,
-          color: '#3d2a14',
-        }}>
-          <strong>Local demo login</strong>
-          <div>Email: <code>admin@thunayanhoney.com</code></div>
-          <div>Password: <code>Admin@123</code></div>
-          <div style={{ marginTop: 6, opacity: 0.85 }}>
-            If this fails, run <code>npm run seed:admin</code> in <code>original_partyBox_new_api</code>.
-          </div>
-        </div>
-
         <form onSubmit={onSubmit} noValidate>
           <p className="legend-required">
             <span className="req-star">*</span> Required fields
