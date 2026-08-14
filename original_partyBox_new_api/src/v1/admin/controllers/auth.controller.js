@@ -33,7 +33,11 @@ exports.login = async (req, res) => {
     );
 
     if (!user) {
-      return res.send(fail("Invalid admin credentials"));
+      return res.send(
+        fail(
+          "Invalid admin credentials. For local setup run: npm run seed:admin (admin@thunayanhoney.com / Admin@123)"
+        )
+      );
     }
     if (Number(user.user_status) !== 1) {
       return res.send(fail("Admin account is inactive"));

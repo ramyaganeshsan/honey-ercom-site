@@ -12,8 +12,8 @@ Shared storefront API on **port 5000**; admin UI on **port 3001**.
 # API (same as storefront)
 cd original_partyBox_new_api
 npm install
-npm run seed:demo      # catalog (optional)
-npm run seed:admin     # admin@thunayanhoney.com / Admin@123
+npm run seed:demo      # catalog + demo customer + admin user
+npm run seed:admin     # upsert admin@thunayanhoney.com / Admin@123
 npm run dev            # :5000
 
 # Admin UI
@@ -24,6 +24,10 @@ npm run dev            # :3001
 
 Open http://localhost:3001  
 Login: `admin@thunayanhoney.com` / `Admin@123`
+
+> If login says **Invalid admin credentials**, your DB likely lost the admin user
+> (e.g. after an older `seed:demo` wipe). Run `npm run seed:admin` and retry.
+> Current `seed:demo` also recreates the admin user automatically.
 
 ## Modules
 Dashboard, Users, Categories, Products, Orders, Transactions, Promocodes, CMS, Banners, Reviews, Settings, Shipping (country/state/city), Contact, Reports.

@@ -12,6 +12,7 @@ const md5 = require("md5");
 const { connectMongo, disconnectMongo } = require("./connection");
 const { Counter } = require("./counters");
 const models = require("./models");
+const { ensureAdminUser, ADMIN_EMAIL, ADMIN_PASSWORD } = require("./ensureAdminUser");
 
 const ROOT = path.resolve(__dirname, "../../..");
 const ASSETS = path.join(ROOT, "assets");
@@ -779,15 +780,24 @@ async function seed() {
     { _id: "state", seq: 22 },
     { _id: "city", seq: 132 },
     { _id: "cms", seq: 56 },
-    { _id: "users", seq: 1 },
+    { _id: "users", seq: 2 },
     { _id: "email_settings", seq: 1 },
     { _id: "notification_template", seq: 24 },
   ]);
 
   setupImages(products, banners);
 
+  // Always recreate admin after demo wipe so admin panel login keeps working
+  const admin = await ensureAdminUser(models);
+  await Counter.findOneAndUpdate(
+    { _id: "users" },
+    { $set: { seq: Math.max(2, admin.user_id) } },
+    { upsert: true }
+  );
+
   console.log("Demo seed complete.");
-  console.log("  Login: demo@thunayanhoney.com / Demo@123");
+  console.log("  Storefront login: demo@thunayanhoney.com / Demo@123");
+  console.log(`  Admin login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
   console.log(`  Products: ${products.length}, Categories: ${categories.length}`);
   console.log(
     "  Seeded notification_template (20-24) + email_settings placeholders."
