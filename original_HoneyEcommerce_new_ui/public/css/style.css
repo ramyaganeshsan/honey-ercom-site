@@ -1574,39 +1574,40 @@ footer {
 .ftr-links li {
   display: flex;
   align-items: center;
+  margin-bottom: 12px;
   /* width: 100%;
   float: left;
   margin-bottom: 18px; */
 }
-.ftr-links li a.phone_ico {
-  display: flex;
+.ftr-links li a.phone_ico,
+.ftr-links li a.mail_ico {
+  display: inline-flex;
   align-items: center;
-  padding-left: 25px;
+  gap: 10px;
+  padding-left: 0;
   position: relative;
+  max-width: 100%;
+  word-break: break-word;
+}
+.ftr-links li a.phone_ico::before,
+.ftr-links li a.mail_ico::before {
+  position: static;
+  transform: none;
+  top: auto;
+  left: auto;
+  content: "";
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 .ftr-links li a.phone_ico::before {
-  position: absolute;
-  left: 0;
-  top: 1px;
-  content: "";
-  width: 24px;
-  height: 16px;
-  background: url(/images/icon-phone.svg) no-repeat;
-  background-size: contain;
-  transform: translateY(-50%);
-}
-.ftr-links li a.mail_ico {
-  padding-left: 25px;
-  position: relative;
+  background-image: url(/images/icon-phone.svg);
 }
 .ftr-links li a.mail_ico::before {
-  position: absolute;
-  left: 0;
-  top: 3px;
-  content: "";
-  width: 24px;
-  height: 16px;
-  background: url(/images/icon-email.svg) no-repeat;
+  background-image: url(/images/icon-email.svg);
 }
 .ftr-blocks .ftr-links li p {
   line-height: 26px;
