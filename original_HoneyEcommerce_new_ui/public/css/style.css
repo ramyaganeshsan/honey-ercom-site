@@ -3981,18 +3981,18 @@ span.review_count {
 }
 [dir="rtl"] .ftr-links li a.mail_ico,
 [dir="rtl"] .ftr-links li a.phone_ico {
-  padding-right: 25px;
+  padding-right: 0;
   padding-left: 0;
 }
 [dir="rtl"] .ftr-links li a.mail_ico::before,
 [dir="rtl"] .ftr-links li a.phone_ico::before {
-  left: inherit;
-  right: 0;
-  background-position: right;
+  left: auto;
+  right: auto;
+  background-position: center;
 }
 [dir="rtl"] .ftr-links li a.phone_ico::before {
-  transform: rotate(-90deg);
-  width: 16px;
+  transform: none;
+  width: 18px;
 }
 [dir="rtl"] .navbar-right li {
   margin-left: 0;
