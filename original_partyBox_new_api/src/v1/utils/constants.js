@@ -1,10 +1,33 @@
 const ensureTrailingSlash = (url = "") =>
   url ? (url.endsWith("/") ? url : `${url}/`) : "";
 
+/**
+ * Clean env URL values.
+ * Common mistake: pasting the whole line as the value, e.g.
+ *   DASHBOARD_URL=DASHBOARD_URL=https://api.example.com/
+ * which produces broken image URLs in the browser.
+ */
+const cleanEnvUrl = (raw = "") => {
+  let value = String(raw || "").trim().replace(/^['"]|['"]$/g, "");
+  value = value.replace(
+    /^(DASHBOARD_URL|API_URL|ASSETS_URL|WEBSITE_URL)\s*=\s*/i,
+    ""
+  );
+  return value.trim();
+};
+
 const API_BASE_URL = ensureTrailingSlash(
-  process.env.ASSETS_URL || process.env.API_URL || "http://localhost:5000/"
+  cleanEnvUrl(
+    process.env.ASSETS_URL || process.env.API_URL || "http://localhost:5000/"
+  )
 );
-const DASHBOARD_BASE_URL = ensureTrailingSlash(process.env.DASHBOARD_URL || "");
+
+// Uploads (/cloud/...) must be served by the API host, not the admin UI host.
+const DASHBOARD_BASE_URL = ensureTrailingSlash(
+  cleanEnvUrl(process.env.DASHBOARD_URL) ||
+    cleanEnvUrl(process.env.API_URL) ||
+    API_BASE_URL
+);
 
 exports.BANNER_IMAGE_URL = `${DASHBOARD_BASE_URL}cloud/uploads/banner_images/`;
 exports.PRODUCT_DISPLAY_IMAGE = `${DASHBOARD_BASE_URL}cloud/uploads/products/1000_800/`;
@@ -13,16 +36,10 @@ exports.PRODUCT_LIST_DISPLAY_IMAGE = `${DASHBOARD_BASE_URL}cloud/uploads/product
 exports.PUBLIC_IMAGE_FOLDER = `${API_BASE_URL}public/images/`;
 exports.NO_IMAGE_URL = `${API_BASE_URL}public/images/no_image_available.png`;
 exports.NO_PROFILE_URL = `${API_BASE_URL}public/images/no_profile.png`;
-// exports.PAYMENT_GATEWAY_BASE_URL = "https://api.myfatoorah.com";
-// exports.PAYMENT_SUCCESS_URL = "https://www.thunyanhoneyuae.com/success";
-// exports.PAYMENT_FAILED_URL = "https://www.thunyanhoneyuae.com/failed";
 
 exports.PAYMENT_GATEWAY_BASE_URL = "https://apitest.myfatoorah.com";
 exports.PAYMENT_SUCCESS_URL = "https://ecom.indiprotechnologies.com/success";
 exports.PAYMENT_FAILED_URL = "https://ecom.indiprotechnologies.com/failed";
-
-// exports.PAYMENT_SUCCESS_URL = "http://localhost:3000/success";
-// exports.PAYMENT_FAILED_URL = "http://localhost:3000/failed";
 
 exports.LOGO_FOR_INVOICE = `${DASHBOARD_BASE_URL}cloud/uploads/logo/logo.png`;
 exports.QR_CODE_FOR_INVOICE = `${DASHBOARD_BASE_URL}cloud/uploads/logo/qrCode.jpg`;
