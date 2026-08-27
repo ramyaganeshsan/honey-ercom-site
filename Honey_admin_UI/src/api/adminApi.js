@@ -42,9 +42,10 @@ export const productsApi = {
   update: (id, payload) =>
     apiRequest(() => client.put(`/products/${id}`, payload)),
   remove: (id) => apiRequest(() => client.delete(`/products/${id}`)),
-  uploadImage: (id, file) => {
+  uploadImage: (id, file, index = 1) => {
     const fd = new FormData()
     fd.append('image', file)
+    fd.append('index', String(index))
     return apiRequest(() =>
       client.post(`/products/${id}/image`, fd, {
         headers: { 'Content-Type': undefined },

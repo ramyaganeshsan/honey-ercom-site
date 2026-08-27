@@ -11,15 +11,42 @@ const PRODUCT_SIZES = [
   { folder: "80_80", width: 80, height: 80 },
 ];
 
+/** Max gallery images per product (Amazon-style PDP). */
+const MAX_PRODUCT_IMAGES = 8;
+
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
+function normalizeImageIndex(index) {
+  const n = Number(index);
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(MAX_PRODUCT_IMAGES, Math.max(1, Math.floor(n)));
+}
+
 /**
- * Save product image as {deal_key}_1.png into all size folders
- * (matches storefront PRODUCT_DISPLAY_IMAGE paths).
+ * List which image slots exist on disk for a deal_key (1..MAX).
  */
-async function saveProductImage(dealKey, buffer) {
+function listProductImageIndexes(dealKey, max = MAX_PRODUCT_IMAGES) {
+  const key = String(dealKey || "").trim();
+  if (!key) return [];
+  const dir = path.join(CLOUD, "products", "1000_800");
+  const indexes = [];
+  for (let i = 1; i <= max; i += 1) {
+    if (fs.existsSync(path.join(dir, `${key}_${i}.png`))) {
+      indexes.push(i);
+    }
+  }
+  return indexes;
+}
+
+/**
+ * Save product image as {deal_key}_{index}.png into all size folders.
+ * @param {string} dealKey
+ * @param {Buffer} buffer
+ * @param {number} [index=1]
+ */
+async function saveProductImage(dealKey, buffer, index = 1) {
   const key = String(dealKey || "").trim();
   if (!key) {
     throw new Error("deal_key is required");
@@ -28,7 +55,8 @@ async function saveProductImage(dealKey, buffer) {
     throw new Error("Image file is required");
   }
 
-  const filename = `${key}_1.png`;
+  const slot = normalizeImageIndex(index);
+  const filename = `${key}_${slot}.png`;
   const paths = [];
 
   for (const size of PRODUCT_SIZES) {
@@ -48,6 +76,7 @@ async function saveProductImage(dealKey, buffer) {
 
   return {
     filename,
+    index: slot,
     paths,
     relativeUrl: `cloud/uploads/products/1000_800/${filename}`,
   };
@@ -89,5 +118,8 @@ async function saveBannerImage(bannerId, buffer) {
 module.exports = {
   saveProductImage,
   saveBannerImage,
+  listProductImageIndexes,
+  normalizeImageIndex,
   PRODUCT_SIZES,
+  MAX_PRODUCT_IMAGES,
 };

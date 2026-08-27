@@ -13,10 +13,11 @@ export function dashboardBaseUrl() {
   }
 }
 
-export function productImageUrl(dealKey, bust) {
+export function productImageUrl(dealKey, bust, index = 1) {
   if (!dealKey) return ''
+  const slot = Math.min(8, Math.max(1, Number(index) || 1))
   const base = dashboardBaseUrl()
-  const url = `${base}cloud/uploads/products/1000_800/${dealKey}_1.png`
+  const url = `${base}cloud/uploads/products/1000_800/${dealKey}_${slot}.png`
   return bust ? `${url}?t=${bust}` : url
 }
 

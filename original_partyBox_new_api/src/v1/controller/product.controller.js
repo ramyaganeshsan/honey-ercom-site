@@ -22,6 +22,9 @@ const {
   NO_IMAGE_URL,
   NO_PROFILE_URL,
 } = require("../utils/constants");
+const {
+  listProductImageIndexes,
+} = require("../admin/services/upload.service");
 
 exports.getProducts = async (req, res, next) => {
   try {
@@ -80,6 +83,14 @@ exports.getProductDetail = async (req, res, next) => {
       productDetail["image_url"] = PRODUCT_DISPLAY_IMAGE;
       productDetail["no_image_url"] = NO_IMAGE_URL;
       productDetail["no_profile_image"] = NO_PROFILE_URL;
+      const imageIndexes = listProductImageIndexes(productDetail.deal_key);
+      productDetail["image_indexes"] = imageIndexes.length
+        ? imageIndexes
+        : [1];
+      productDetail["images"] = productDetail["image_indexes"].map(
+        (index) => `${productDetail.deal_key}_${index}.png`
+      );
+      productDetail["image_count"] = productDetail["images"].length;
       let promises = [null, null];
 
       let relatedProducts = productDetail["related_products"]

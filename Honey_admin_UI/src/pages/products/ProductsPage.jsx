@@ -15,6 +15,16 @@ import {
 } from '../../utils/form'
 import { formatMoney, isActiveStatus, pickList } from '../../utils/format'
 
+const MAX_PRODUCT_IMAGES = 8
+
+function emptyImageSlots() {
+  return Array.from({ length: MAX_PRODUCT_IMAGES }, (_, i) => ({
+    index: i + 1,
+    file: null,
+    preview: '',
+  }))
+}
+
 const emptyForm = {
   deal_title: '',
   deal_title_french: '',
@@ -88,8 +98,7 @@ export default function ProductsPage() {
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState('')
+  const [imageSlots, setImageSlots] = useState(emptyImageSlots)
   const [imgBust, setImgBust] = useState(0)
 
   const load = useCallback(async () => {
@@ -115,11 +124,14 @@ export default function ProductsPage() {
 
   useEffect(() => {
     return () => {
-      if (imagePreview && imagePreview.startsWith('blob:')) {
-        URL.revokeObjectURL(imagePreview)
-      }
+      imageSlots.forEach((slot) => {
+        if (slot.preview && slot.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(slot.preview)
+        }
+      })
     }
-  }, [imagePreview])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const savings = useMemo(() => {
     const value = Number(form.deal_value) || 0
@@ -141,11 +153,14 @@ export default function ProductsPage() {
   }, [categories, form.category_id])
 
   const resetImage = () => {
-    if (imagePreview && imagePreview.startsWith('blob:')) {
-      URL.revokeObjectURL(imagePreview)
-    }
-    setImageFile(null)
-    setImagePreview('')
+    setImageSlots((prev) => {
+      prev.forEach((slot) => {
+        if (slot.preview && slot.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(slot.preview)
+        }
+      })
+      return emptyImageSlots()
+    })
   }
 
   const closeForm = () => {
@@ -164,14 +179,38 @@ export default function ProductsPage() {
     setOpen(true)
   }
 
-  const openEdit = (row) => {
+  const openEdit = async (row) => {
     setEditing(row)
     setForm(mapRowToForm(row))
     setErrors({})
     setFormError('')
     resetImage()
-    setImagePreview(productImageUrl(row.deal_key, Date.now()))
     setOpen(true)
+
+    const dealId = row.deal_id ?? row.id
+    const bust = Date.now()
+    if (dealId) {
+      const detail = await productsApi.get(dealId)
+      const indexes =
+        detail.ok && Array.isArray(detail.data?.image_indexes)
+          ? detail.data.image_indexes
+          : [1]
+      setImageSlots(
+        emptyImageSlots().map((slot) => ({
+          ...slot,
+          preview: indexes.includes(slot.index)
+            ? productImageUrl(row.deal_key, bust, slot.index)
+            : '',
+        }))
+      )
+    } else if (row.deal_key) {
+      setImageSlots(
+        emptyImageSlots().map((slot, i) => ({
+          ...slot,
+          preview: i === 0 ? productImageUrl(row.deal_key, bust, 1) : '',
+        }))
+      )
+    }
   }
 
   const onChange = (e) => {
@@ -196,15 +235,37 @@ export default function ProductsPage() {
     setFormError('')
   }
 
-  const onImageChange = (e) => {
+  const onImageSlotChange = (slotIndex, e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (imagePreview && imagePreview.startsWith('blob:')) {
-      URL.revokeObjectURL(imagePreview)
-    }
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+    setImageSlots((prev) =>
+      prev.map((slot) => {
+        if (slot.index !== slotIndex) return slot
+        if (slot.preview && slot.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(slot.preview)
+        }
+        return {
+          ...slot,
+          file,
+          preview: URL.createObjectURL(file),
+        }
+      })
+    )
     setErrors((prev) => ({ ...prev, image: '' }))
+    // allow re-selecting the same file
+    e.target.value = ''
+  }
+
+  const clearImageSlot = (slotIndex) => {
+    setImageSlots((prev) =>
+      prev.map((slot) => {
+        if (slot.index !== slotIndex) return slot
+        if (slot.preview && slot.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(slot.preview)
+        }
+        return { ...slot, file: null, preview: '' }
+      })
+    )
   }
 
   const buildPayload = () => {
@@ -301,21 +362,27 @@ export default function ProductsPage() {
     }
 
     const savedId = res.data?.deal_id ?? id
-    if (imageFile) {
+    const pendingUploads = imageSlots.filter((slot) => slot.file)
+    if (pendingUploads.length) {
       if (!savedId) {
         setSaving(false)
-        toast.error('Product saved, but image could not be uploaded (missing ID)')
+        toast.error('Product saved, but images could not be uploaded (missing ID)')
         setOpen(false)
         load()
         return
       }
-      const up = await productsApi.uploadImage(savedId, imageFile)
-      if (!up.ok) {
-        setSaving(false)
-        toast.error(up.message || 'Product saved, but image upload failed')
-        setOpen(false)
-        load()
-        return
+      for (const slot of pendingUploads) {
+        const up = await productsApi.uploadImage(savedId, slot.file, slot.index)
+        if (!up.ok) {
+          setSaving(false)
+          toast.error(
+            up.message ||
+              `Product saved, but image ${slot.index} upload failed`
+          )
+          setOpen(false)
+          load()
+          return
+        }
       }
       setImgBust(Date.now())
     }
@@ -535,19 +602,55 @@ export default function ProductsPage() {
             </select>
           </Field>
 
-          <Field label="3. Product image" className="full" error={errors.image}>
-            <div className="image-upload">
-              {imagePreview ? (
-                <img className="image-preview" src={imagePreview} alt="Product preview" />
-              ) : (
-                <div className="image-preview placeholder">No image</div>
-              )}
-              <div>
-                <input type="file" accept="image/*" onChange={onImageChange} />
-                <p className="field-hint">
-                  Optional. Saved as {'{deal_key}_1.png'} in product image sizes.
-                </p>
-              </div>
+          <Field
+            label="3. Product images (up to 8)"
+            className="full"
+            error={errors.image}
+          >
+            <p className="field-hint" style={{ marginBottom: 10 }}>
+              Slot 1 is the main catalog image. Extra slots appear as a gallery
+              on the website product detail page (Amazon-style).
+            </p>
+            <div className="image-slots-grid">
+              {imageSlots.map((slot) => (
+                <div className="image-slot" key={slot.index}>
+                  {slot.preview ? (
+                    <img
+                      className="image-preview"
+                      src={slot.preview}
+                      alt={`Product image ${slot.index}`}
+                    />
+                  ) : (
+                    <div className="image-preview placeholder">
+                      Image {slot.index}
+                    </div>
+                  )}
+                  <div className="image-slot-actions">
+                    <label className="btn btn-ghost btn-sm">
+                      {slot.preview ? 'Replace' : 'Add'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={(e) => onImageSlotChange(slot.index, e)}
+                      />
+                    </label>
+                    {slot.file ? (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => clearImageSlot(slot.index)}
+                      >
+                        Undo
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="field-hint">
+                    {slot.index === 1 ? 'Main' : `Gallery ${slot.index}`} ·{' '}
+                    {`{deal_key}_${slot.index}.png`}
+                  </div>
+                </div>
+              ))}
             </div>
           </Field>
 

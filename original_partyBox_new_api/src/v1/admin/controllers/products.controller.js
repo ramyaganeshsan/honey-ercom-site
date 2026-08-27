@@ -1,7 +1,8 @@
 const { findOne, create, updateOne, findAll } = require("../../mongo/repo");
 const { getCurrentTime, generateRandomString } = require("../../utils/index");
 const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
-const { saveProductImage } = require("../services/upload.service");
+const { saveProductImage, listProductImageIndexes } = require("../services/upload.service");
+const { PRODUCT_DISPLAY_IMAGE } = require("../../utils/constants");
 
 function slugify(text) {
   return String(text || "")
@@ -169,6 +170,20 @@ exports.listProducts = async (req, res) => {
   }
 };
 
+function productImagePayload(dealKey) {
+  const indexes = listProductImageIndexes(dealKey);
+  const images = indexes.map((index) => ({
+    index,
+    filename: `${dealKey}_${index}.png`,
+    url: `${PRODUCT_DISPLAY_IMAGE}${dealKey}_${index}.png`,
+  }));
+  return {
+    image_indexes: indexes,
+    images,
+    image_count: images.length,
+  };
+}
+
 exports.getProduct = async (req, res) => {
   try {
     const dealId = Number(req.params.dealId);
@@ -177,7 +192,13 @@ exports.getProduct = async (req, res) => {
       return res.send(fail("Product not found"));
     }
     const subProducts = await findAll("sub_products", { product_id: dealId });
-    return res.send(ok({ ...product, sub_products: subProducts }));
+    return res.send(
+      ok({
+        ...product,
+        sub_products: subProducts,
+        ...productImagePayload(product.deal_key),
+      })
+    );
   } catch (err) {
     console.error(err);
     return res.send(fail("Failed to load product"));
@@ -273,15 +294,23 @@ exports.uploadProductImage = async (req, res) => {
       return res.send(fail("Image file is required (field name: image)"));
     }
 
-    const saved = await saveProductImage(product.deal_key, req.file.buffer);
+    const index = req.body?.index ?? req.query?.index ?? 1;
+    const saved = await saveProductImage(
+      product.deal_key,
+      req.file.buffer,
+      index
+    );
     const product_image = saved.filename;
 
-    await syncSubProduct(dealId, product, {
-      product_image,
-      quantity: product.user_limit_quantity,
-      price: product.deal_price,
-      discount: product.deal_value,
-    });
+    // Keep primary (_1) as the catalog / cart thumbnail reference
+    if (saved.index === 1) {
+      await syncSubProduct(dealId, product, {
+        product_image,
+        quantity: product.user_limit_quantity,
+        price: product.deal_price,
+        discount: product.deal_value,
+      });
+    }
 
     const subProducts = await findAll("sub_products", { product_id: dealId });
     return res.send(
@@ -290,10 +319,12 @@ exports.uploadProductImage = async (req, res) => {
           deal_id: dealId,
           deal_key: product.deal_key,
           product_image,
+          image_index: saved.index,
           image_url: saved.relativeUrl,
           sub_products: subProducts,
+          ...productImagePayload(product.deal_key),
         },
-        "Product image uploaded"
+        `Product image ${saved.index} uploaded`
       )
     );
   } catch (err) {

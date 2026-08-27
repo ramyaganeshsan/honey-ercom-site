@@ -114,8 +114,6 @@ const ProductDetails = () => {
   const [searchParams] = useSearchParams();
   const prevQuery = useRef(null);
   const removingNode = useRef(false);
-
-  const numberOfProductImages = useRef([1, 2, 3, 4]);
   const navigate = useNavigate();
 
   const [state, setState] = useState({
@@ -127,6 +125,7 @@ const ProductDetails = () => {
     totalQuantity: 1,
     currentImage: null,
     imageName: `${searchParams.get("q")}_1.png`,
+    galleryImages: [`${searchParams.get("q")}_1.png`],
   });
 
   useLayoutEffect(() => {
@@ -161,6 +160,7 @@ const ProductDetails = () => {
         totalQuantity: 1,
         currentImage: null,
         imageName: `${searchParams.get("q")}_1.png`,
+        galleryImages: [`${searchParams.get("q")}_1.png`],
       }));
     }
   }, [searchParams.get("q")]);
@@ -171,6 +171,18 @@ const ProductDetails = () => {
       toast.error(message, toastConfig);
       navigate("/");
     } else if (Number(data?.status) === 1) {
+      const dealKey = data?.data?.deal_key || searchParams.get("q");
+      const gallery =
+        Array.isArray(data?.data?.images) && data.data.images.length
+          ? data.data.images
+          : [`${dealKey}_1.png`];
+      setState((prev) => ({
+        ...prev,
+        galleryImages: gallery,
+        imageName: gallery.includes(prev.imageName)
+          ? prev.imageName
+          : gallery[0],
+      }));
       if (
         data?.data?.having_size_color &&
         data?.data?.sizeAndQuantity &&
@@ -386,6 +398,19 @@ const ProductDetails = () => {
     }));
   };
 
+  const handleGalleryStep = (direction) => {
+    setState((prev) => {
+      const list = prev.galleryImages || [];
+      if (list.length < 2) return prev;
+      const current = list.indexOf(prev.imageName);
+      const next =
+        direction === "next"
+          ? (current + 1) % list.length
+          : (current - 1 + list.length) % list.length;
+      return { ...prev, imageName: list[next] };
+    });
+  };
+
   const handleProductQuantityChange = (type) => {
     if (type === "add") {
       if (state.totalQuantity < 25) {
@@ -475,7 +500,6 @@ const ProductDetails = () => {
                         <img
                           onError={handleImageLoadFailedMainImage}
                           src={`${data?.data?.image_url}${state.imageName}`}
-                          // alt={data?.data?.deal_title}
                           alt={getWordBasedOnLanguage(
                             data?.data?.deal_title,
                             data?.data?.deal_title_french
@@ -483,31 +507,48 @@ const ProductDetails = () => {
                         />
                       </span>
                     </div>
+                    {(state.galleryImages || []).length > 1 ? (
+                      <div className="product-gallery-nav">
+                        <button
+                          type="button"
+                          className="product-gallery-nav-btn"
+                          onClick={() => handleGalleryStep("prev")}
+                          aria-label="Previous image"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          type="button"
+                          className="product-gallery-nav-btn"
+                          onClick={() => handleGalleryStep("next")}
+                          aria-label="Next image"
+                        >
+                          ›
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
                 <ul className="thumbnails">
-                  {!removingNode.current &&
-                    numberOfProductImages.current.map((imageId) => {
-                      let imageName = `${searchParams.get("q")}_${imageId}.png`;
-                      if (state.imageName !== imageName) {
-                        return (
-                          <li key={imageName}>
-                            <span onClick={() => handleImageChange(imageName)}>
-                              <img
-                                onError={handleImageLoadFailed}
-                                src={`${data?.data?.image_url}${imageName}`}
-                                // alt={data?.data?.deal_title}
-                                alt={getWordBasedOnLanguage(
-                                  data?.data?.deal_title,
-                                  data?.data?.deal_title_french
-                                )}
-                              />
-                            </span>
-                          </li>
-                        );
+                  {(state.galleryImages || []).map((imageName) => (
+                    <li
+                      key={imageName}
+                      className={
+                        state.imageName === imageName ? "active" : undefined
                       }
-                      return null;
-                    })}
+                    >
+                      <span onClick={() => handleImageChange(imageName)}>
+                        <img
+                          onError={handleImageLoadFailed}
+                          src={`${data?.data?.image_url}${imageName}`}
+                          alt={getWordBasedOnLanguage(
+                            data?.data?.deal_title,
+                            data?.data?.deal_title_french
+                          )}
+                        />
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </div>
               <div className="product_details_right">
