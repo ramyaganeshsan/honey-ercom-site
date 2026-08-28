@@ -83,13 +83,22 @@ exports.getProductDetail = async (req, res, next) => {
       productDetail["image_url"] = PRODUCT_DISPLAY_IMAGE;
       productDetail["no_image_url"] = NO_IMAGE_URL;
       productDetail["no_profile_image"] = NO_PROFILE_URL;
-      const imageIndexes = listProductImageIndexes(productDetail.deal_key);
+      // Prefer DB deal_key; fall back to the query key used to load the product
+      const imageKey = String(
+        productDetail.deal_key || deal_key || ""
+      ).trim();
+      productDetail.deal_key = imageKey || productDetail.deal_key;
+      const imageIndexes = listProductImageIndexes(imageKey);
       productDetail["image_indexes"] = imageIndexes.length
         ? imageIndexes
-        : [1];
-      productDetail["images"] = productDetail["image_indexes"].map(
-        (index) => `${productDetail.deal_key}_${index}.png`
-      );
+        : imageKey
+          ? [1]
+          : [];
+      productDetail["images"] = imageKey
+        ? productDetail["image_indexes"].map(
+            (index) => `${imageKey}_${index}.png`
+          )
+        : [];
       productDetail["image_count"] = productDetail["images"].length;
       let promises = [null, null];
 

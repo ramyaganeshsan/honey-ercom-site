@@ -171,17 +171,28 @@ const ProductDetails = () => {
       toast.error(message, toastConfig);
       navigate("/");
     } else if (Number(data?.status) === 1) {
-      const dealKey = data?.data?.deal_key || searchParams.get("q");
-      const gallery =
-        Array.isArray(data?.data?.images) && data.data.images.length
-          ? data.data.images
-          : [`${dealKey}_1.png`];
+      const dealKey =
+        data?.data?.deal_key || searchParams.get("q") || "";
+      const fromApi = Array.isArray(data?.data?.images)
+        ? data.data.images.filter(
+            (name) =>
+              typeof name === "string" &&
+              name &&
+              !name.startsWith("undefined_")
+          )
+        : [];
+      const gallery = fromApi.length
+        ? fromApi
+        : dealKey
+          ? [`${dealKey}_1.png`]
+          : [];
       setState((prev) => ({
         ...prev,
         galleryImages: gallery,
-        imageName: gallery.includes(prev.imageName)
-          ? prev.imageName
-          : gallery[0],
+        imageName:
+          gallery.includes(prev.imageName) && prev.imageName
+            ? prev.imageName
+            : gallery[0] || "",
       }));
       if (
         data?.data?.having_size_color &&

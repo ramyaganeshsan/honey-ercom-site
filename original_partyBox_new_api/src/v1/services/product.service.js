@@ -358,6 +358,8 @@ exports.getProductDetail = async (deal_key) => {
     deal_title: product.deal_title,
     deal_title_french: product.deal_title_french,
     deal_id: product.deal_id,
+    deal_key: product.deal_key,
+    url_title: product.url_title,
     deal_description: product.deal_description,
     deal_description_french: product.deal_description_french,
     deal_value: product.deal_value,
