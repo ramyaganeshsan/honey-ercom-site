@@ -36,3 +36,22 @@ Dashboard, Users, Categories, Products, Orders, Transactions, Promocodes, CMS, B
 - Admin `user_type` = `1` (or `2`)
 - Storefront customers remain `user_type` = `4`
 - Header: `token: Bearer <jwt>`
+
+## Staging URLs
+| App | URL |
+|-----|-----|
+| Storefront | https://ecdemo.indiprotechnologies.com/ |
+| Admin | https://ecadmin.indiprotechnologies.com/ |
+| API | https://ecdemoapi.indiprotechnologies.com/ |
+
+Env templates (copy to `.env` on each server, then rebuild/restart):
+- API: `original_partyBox_new_api/.env.staging.example`
+- Admin: `Honey_admin_UI/.env.staging.example`
+- Storefront: `original_HoneyEcommerce_new_ui/.env.staging.example`
+
+Critical:
+- API `API_URL` + `DASHBOARD_URL` = API host (not admin)
+- Admin `VITE_API_BASE` must end with `/api/admin`
+- Storefront `VITE_BASE_URL` must end with `/api`
+- Set the same `APP_SECRECT_KEY` / `VITE_SECRECT_KEY` on API + storefront
+- After changing Vite env, rebuild (`npm run build`) — env is baked at build time
