@@ -55,3 +55,5 @@ Critical:
 - Storefront `VITE_BASE_URL` must end with `/api`
 - Set the same `APP_SECRECT_KEY` / `VITE_SECRECT_KEY` on API + storefront
 - After changing Vite env, rebuild (`npm run build`) — env is baked at build time
+- `cloud/uploads` is **not** in git. On staging, if images 404, run on the API server:
+  `npm run seed:images` (safe — does not wipe DB). Or upload via Admin.
