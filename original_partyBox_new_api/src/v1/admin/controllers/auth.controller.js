@@ -57,6 +57,14 @@ exports.login = async (req, res) => {
       user_type: user.user_type,
     });
 
+    if (!token) {
+      return res.send(
+        fail(
+          "Login failed: JWT secret missing. In original_partyBox_new_api add JWT_SECRECT=local-dev-jwt-secret to .env (see envformat.txt), then restart the API."
+        )
+      );
+    }
+
     return res.send(
       ok(
         {

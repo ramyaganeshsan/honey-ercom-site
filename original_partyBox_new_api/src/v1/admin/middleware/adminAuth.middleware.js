@@ -30,7 +30,17 @@ exports.requireAdmin = async (req, res, next) => {
       });
     }
 
-    const decoded = JWT.verify(token, process.env.JWT_SECRECT);
+    const { resolveJwtSecret } = require("../../utils/index");
+    const secret = resolveJwtSecret();
+    if (!secret) {
+      return res.status(500).send({
+        status: 0,
+        message:
+          "Server JWT secret missing. Set JWT_SECRECT in API .env and restart.",
+        data: null,
+      });
+    }
+    const decoded = JWT.verify(token, secret);
     if (!exports.isAdminUserType(decoded?.user_type)) {
       return res.status(403).send({
         status: -1,

@@ -44,9 +44,15 @@ export default function Login() {
       return
     }
 
-    const token = res.data?.token || res.raw?.token
+    const token =
+      res.data?.token ||
+      res.raw?.data?.token ||
+      res.raw?.token ||
+      null
     if (!token) {
-      const msg = 'Login failed: no token returned from server'
+      const msg =
+        res.message ||
+        'Login failed: no token returned. On the API folder, set JWT_SECRECT in .env (see envformat.txt) and restart npm run start.'
       setFormError(msg)
       toast.error(msg)
       return

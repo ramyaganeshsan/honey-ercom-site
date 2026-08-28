@@ -17,12 +17,29 @@ const TIME_ZONE = "Asia/Dubai";
 exports.CurrentTimeZone = TIME_ZONE;
 const dubaiTime = dayjs().tz(TIME_ZONE);
 
+function resolveJwtSecret() {
+  return (
+    process.env.JWT_SECRECT ||
+    process.env.JWT_SECRET ||
+    process.env.JWT_SECRET_KEY ||
+    ""
+  ).trim();
+}
+
+exports.resolveJwtSecret = resolveJwtSecret;
+
 exports.generateJwtToken = (payload) => {
   try {
-    let token = JWT.sign(payload, process.env.JWT_SECRECT);
-    return token;
+    const secret = resolveJwtSecret();
+    if (!secret) {
+      console.error(
+        "[JWT] Missing JWT_SECRECT in API .env — copy envformat.txt to .env and restart the API"
+      );
+      return null;
+    }
+    return JWT.sign(payload, secret);
   } catch (err) {
-    console.log(err);
+    console.error("[JWT] Failed to sign token:", err.message || err);
     return null;
   }
 };

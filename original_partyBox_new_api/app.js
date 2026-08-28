@@ -2,6 +2,18 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+if (
+  !(
+    process.env.JWT_SECRECT ||
+    process.env.JWT_SECRET ||
+    process.env.JWT_SECRET_KEY
+  )
+) {
+  console.warn(
+    "[boot] JWT_SECRECT is not set. Admin/storefront login will return no token. Copy envformat.txt → .env and restart."
+  );
+}
+
 /* Logger */
 const logger = require("./src/v1/utils/logger");
 

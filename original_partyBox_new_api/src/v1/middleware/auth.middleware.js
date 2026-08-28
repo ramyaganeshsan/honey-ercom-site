@@ -1,6 +1,6 @@
 const JWT = require("jsonwebtoken");
 const JOI = require("joi");
-const { getMessage, getStatusCode } = require("../utils/index");
+const { getMessage, getStatusCode, resolveJwtSecret } = require("../utils/index");
 
 exports.validateJwtToken = (req, res, next) => {
   try {
@@ -70,7 +70,7 @@ exports.validateJwtToken = (req, res, next) => {
           token = token[1] ?? "";
           token = token.trim();
 
-          var decoded = JWT.verify(token, process.env.JWT_SECRECT);
+          var decoded = JWT.verify(token, resolveJwtSecret());
           req.userDetails = decoded;
         }
         return next();
@@ -85,7 +85,7 @@ exports.validateJwtToken = (req, res, next) => {
       token = token[1] ?? "";
       token = token.trim();
 
-      var decoded = JWT.verify(token, process.env.JWT_SECRECT);
+      var decoded = JWT.verify(token, resolveJwtSecret());
       req.userDetails = decoded;
       next();
     } else {
