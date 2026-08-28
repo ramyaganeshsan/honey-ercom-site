@@ -607,22 +607,6 @@ export default function ProductsPage() {
             className="full"
             error={errors.image}
           >
-            <div
-              className="form-alert"
-              style={{
-                marginBottom: 12,
-                background: '#f7efd9',
-                borderColor: '#c9a227',
-                color: '#3d2a14',
-              }}
-            >
-              Multi-image mode is active. Use the 8 slots below — slot 1 is the
-              main catalog photo; slots 2–8 appear on the website product page
-              like Amazon.
-            </div>
-            <p className="field-hint" style={{ marginBottom: 10 }}>
-              Click <strong>Add</strong> on each slot to upload another image.
-            </p>
             <div className="image-slots-grid">
               {imageSlots.map((slot) => (
                 <div className="image-slot" key={slot.index}>
