@@ -31,10 +31,7 @@ const Footer = ({
               <div className="ftr-blocks ftr-blk1">
                 <div className="ftr-logo">
                   <img
-                    src={resolveAssetUrl(
-                      footer_logo,
-                      "/images/gozo/logo-mark-en-white.png"
-                    )}
+                    src="/images/gozo/logo-mark-en-white.png"
                     alt={t("footer_logo_alt_text")}
                     onError={(e) =>
                       handleAssetImageError(
