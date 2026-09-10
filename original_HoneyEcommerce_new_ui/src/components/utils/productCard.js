@@ -31,9 +31,13 @@ import {
 import { env } from "../../env";
 
 const getStars = (totalStars) => {
+  const count = Number(totalStars);
+  if (!Number.isFinite(count) || count <= 0) {
+    return null;
+  }
   let stars = [];
   let i = 0;
-  for (i; i < totalStars; i++) {
+  for (i; i < Math.min(5, Math.round(count)); i++) {
     stars.push(<i key={i} className="star_icon active"></i>);
   }
   if (i < 5) {
@@ -390,7 +394,9 @@ const ProductCard = ({ product }) => {
         </div>
         {/* {!imageLoading && ( */}
         <div className="product_content">
-          <span className="star">{getStars(product?.ratings)}</span>
+          {getStars(product?.ratings) ? (
+            <span className="star">{getStars(product?.ratings)}</span>
+          ) : null}
           <Link
             to={`/product_detail?q=${product?.deal_key}`}
             // title={product.deal_title}

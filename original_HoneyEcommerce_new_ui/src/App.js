@@ -42,6 +42,7 @@ function applyThemeDirection() {
   const dir = getPageDirection() === "rtl" ? "rtl" : "ltr";
   ensureStylesheet("theme-style", "/css/style.css");
   ensureStylesheet("theme-media-style", "/css/media_style.css");
+  ensureStylesheet("theme-gozo-bw", "/css/gozo-bw.css");
   ensureStylesheet(
     "theme-bootstrap",
     dir === "rtl" ? "/css/bootstrap.rtl.min.css" : "/css/bootstrap.min.css"

@@ -1,0 +1,277 @@
+/**
+ * GOZO HOME — black & white polish overrides.
+ * Loaded after style.css / media_style.css.
+ */
+:root {
+  --gozo-black: #000000;
+  --gozo-ink: #111111;
+  --gozo-muted: #737373;
+  --gozo-line: #e5e5e5;
+  --gozo-soft: #f5f5f5;
+  --gozo-white: #ffffff;
+}
+
+/* ——— Header: force white content on black ——— */
+.cyr-main-header,
+.cyr-main-header-wrap,
+.fixed_header .cyr-main-header {
+  background-color: var(--gozo-black) !important;
+}
+
+.cyr-top-hd,
+.cyr-top-hd a,
+.cyr-top-hd-lft a,
+.cyr-top-hd-rgt a,
+.cyr-top-hd li,
+.cyr-top-hd span,
+.cyr-top-hd .dropdown-toggle {
+  color: var(--gozo-white) !important;
+}
+
+.cyr-main-header .navbar-nav .nav-link,
+.cyr-main-header .navbar-nav .nav-link.active,
+.cyr-main-header .navbar-nav .nav-link.show,
+.cyr-main-header .navbar-nav .nav-link:focus,
+.cyr-main-header .navbar-nav .nav-link:hover,
+.cyr-main-header .nav-link,
+.cyr-main-header .navbar-brand,
+.cyr-main-header .cyr-all-cate {
+  color: var(--gozo-white) !important;
+}
+
+.cyr-main-header .navbar-nav .nav-link:hover {
+  color: #e5e5e5 !important;
+  opacity: 0.9;
+}
+
+.cyr-main-header .navbar-nav .nav-link.active::after {
+  background: var(--gozo-white) !important;
+}
+
+.cyr-main-header .navbar-toggler,
+.cyr-main-header .navbar-toggler-icon {
+  filter: invert(1);
+}
+
+/* ——— Uniform product image tiles (admin uploads + seeds) ——— */
+.product_block .prod_img,
+.product-listing-block .prod_img,
+.offer_prod_img,
+.offer-prod_img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto !important;
+  line-height: 0 !important;
+  overflow: hidden;
+  background: var(--gozo-soft);
+  position: relative;
+}
+
+.product_block .prod_img > div:not(.product-overlay),
+.product-listing-block .prod_img > div:not(.product-overlay) {
+  width: 100%;
+  height: 100%;
+}
+
+.product_block .prod_img .product-overlay,
+.product-listing-block .prod_img .product-overlay {
+  height: 70px !important;
+  bottom: -80px !important;
+  left: 0;
+  right: 0;
+  background: transparent !important;
+}
+
+.product_block .prod_img:hover .product-overlay,
+.product-listing-block .prod_img:hover .product-overlay {
+  bottom: 0 !important;
+}
+
+.product-overlay ul li span,
+.product-overlay ul li a {
+  background-color: #000000 !important;
+  filter: none;
+}
+
+/* Keep overlay icons readable (white glyphs on black) */
+.product-overlay ul li span.prod-wishlist,
+.product-overlay ul li span.prod-share,
+.product-overlay ul li span.prod-zoom,
+.product-overlay ul li span.prod-addtocart,
+.product-overlay ul li a.prod-wishlist,
+.product-overlay ul li a.prod-share,
+.product-overlay ul li a.prod-zoom,
+.product-overlay ul li a.prod-addtocart {
+  background-color: #000000 !important;
+}
+
+.cyr-main-header .navbar-nav .nav-link {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.product_block .prod_img img,
+.product_block .prod_img .productImage,
+.product-listing-block .prod_img img,
+.offer_prod_img img,
+.offer-prod_img img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center 40% !important;
+  vertical-align: middle;
+  display: block;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.product_block .prod_img,
+.product-listing-block .prod_img {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.product_content {
+  padding-top: 16px !important;
+  border-top: 0 !important;
+  background: #fff;
+}
+
+.product_block a,
+.product_block .product_card_product_name {
+  text-decoration: none !important;
+  text-decoration-color: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.product_block a:hover {
+  text-decoration: underline !important;
+  text-decoration-color: #111111 !important;
+  text-underline-offset: 3px;
+}
+
+.product_block {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.product_content {
+  padding-top: 14px !important;
+  min-height: 72px;
+}
+
+/* Hide empty rating star strip that looked like a yellow bar */
+.product_block .star:empty {
+  display: none;
+}
+
+.product_block .star {
+  padding: 0 0 8px !important;
+  justify-content: center;
+  gap: 2px;
+}
+
+/* ——— Buttons: black bg, white text ——— */
+.theme_btn,
+.btn.theme_btn,
+.btn-primary,
+.btn.btn-primary,
+button.theme_btn,
+a.theme_btn,
+.cyr-poster-inner a,
+.mega-menu-lft .theme_btn,
+.login-wrapper .theme_btn,
+.contact-form-blk .theme_btn,
+.product-list-lft .theme_btn,
+.review-form-blk .theme_btn,
+.my-orders-actions .btn.theme_btn {
+  background: var(--gozo-black) !important;
+  background-image: none !important;
+  color: var(--gozo-white) !important;
+  border: 1px solid var(--gozo-black) !important;
+  box-shadow: none !important;
+}
+
+.theme_btn:hover,
+.btn.theme_btn:hover,
+.btn-primary:hover,
+.btn.btn-primary:hover,
+a.theme_btn:hover {
+  background: var(--gozo-white) !important;
+  color: var(--gozo-black) !important;
+  border: 1px solid var(--gozo-black) !important;
+}
+
+.theme_btn.without_background,
+.btn.theme_btn.without_background {
+  background: transparent !important;
+  color: var(--gozo-black) !important;
+  border: 1px solid var(--gozo-black) !important;
+}
+
+.theme_btn.without_background:hover {
+  background: var(--gozo-black) !important;
+  color: var(--gozo-white) !important;
+}
+
+/* Kill leftover warm accents */
+.offers,
+.offer_label_product_details,
+.offer_label_cart_product_details,
+.product_block .sale-blk,
+.navbar-right li a span {
+  background: var(--gozo-black) !important;
+  color: var(--gozo-white) !important;
+}
+
+/* Contact / forms polish */
+.contact-info-ctnr p::before {
+  filter: none;
+}
+
+.out-of-stock,
+.cyr-product-not-allowed {
+  border-color: var(--gozo-black) !important;
+  color: var(--gozo-black) !important;
+}
+
+/* Footer stays black with white text */
+footer,
+footer a,
+footer p,
+footer h2,
+footer h3,
+footer h4,
+footer .ftr-blocks,
+.ftr-copy-rgt {
+  color: var(--gozo-white);
+}
+
+footer a:hover {
+  color: #e5e5e5 !important;
+}
+
+/* Product section titles */
+.product_title h2 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Owl carousel equal height items */
+.owl-carousel .owl-stage {
+  display: flex;
+}
+.owl-carousel .owl-item {
+  display: flex;
+}
+.owl-carousel .owl-item .item,
+.owl-carousel .owl-item .product_block {
+  width: 100%;
+}
