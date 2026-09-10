@@ -1,5 +1,6 @@
 let arabic = {
   logo_alt: "غوزو هوم",
+  brand_slogan: "THE JOY OF DECORS CRAFTED",
   email: "البريد الإلكتروني ",
   password: "كلمة المرور",
   forgot_password: "هل نسيت كلمة المرور ؟ ",

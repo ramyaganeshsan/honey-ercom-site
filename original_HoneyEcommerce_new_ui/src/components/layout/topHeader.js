@@ -35,6 +35,9 @@ const TopHeader = ({ isLoggedIn, email, phone }) => {
                 </Link>
               </li>
             </ul>
+            <p className="gozo-slogan-top" aria-hidden="true">
+              {t("brand_slogan")}
+            </p>
             <ul className="cyr-top-hd-rgt">
               <li>
                 <select value={getLanguage()} onChange={handleLanguageChange}>

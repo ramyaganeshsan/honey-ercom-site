@@ -2,6 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import { t } from "i18next";
 import { Link, useNavigate } from "react-router-dom";
 import TopHeader from "./topHeader";
+import BrandLogo from "../common/BrandLogo";
 import {
   encrypteQueryData,
   getWordBasedOnLanguage,
@@ -129,7 +130,7 @@ const Header = ({
         <div className="cyr-main-header">
           <div className="container">
             <nav className="navbar navbar-expand-lg">
-              <p className="navbar-brand"></p>
+              <BrandLogo />
               <div className="menu-bar-blk" style={{ position: "relative" }}>
                 <span id="cyr-all-cate" className="cyr-all-cate">
                   &nbsp;
@@ -183,9 +184,7 @@ const Header = ({
                       </span>
                       <div className="cyr-mega-menu-ctnr">
                         <div className="mobile-logo-blk">
-                          <Link className="navbar-brand" to="/">
-                            Our Logo
-                          </Link>
+                          <BrandLogo />
                           <button
                             className="btn-close close-menu"
                             type="button"
@@ -458,9 +457,7 @@ const Header = ({
             {isSmallScreen && (
               <div className="cyr-mega-menu-ctnr">
                 <div className="mobile-logo-blk">
-                  <Link className="navbar-brand" to="/">
-                    Our Logo
-                  </Link>
+                  <BrandLogo />
                   <button
                     className="btn-close close-menu"
                     type="button"

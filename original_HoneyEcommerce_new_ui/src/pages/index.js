@@ -61,6 +61,16 @@ const Home = () => {
   return (
     <>
       <Banner bannerImages={homePage?.bannerImages} />
+      <section className="gozo-slogan-band" aria-label={t("brand_slogan")}>
+        <img
+          className="gozo-slogan-mark"
+          src="/images/gozo/brand-mark.png"
+          alt=""
+          width={28}
+          height={48}
+        />
+        <p className="gozo-slogan">{t("brand_slogan")}</p>
+      </section>
       {/* <section className="cyr-widget-conatiner site-features">
         <div className="container">
           <div className="cyr-widget-conatiner-inner">

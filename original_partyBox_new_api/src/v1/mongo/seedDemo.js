@@ -62,13 +62,19 @@ function setupImages(products, banners) {
     path.join(logoDir, "logo.svg")
   );
   const logoPngCandidates = [
+    path.join(ASSETS, "images", "gozo", "logo-mark-en-black.png"),
+    path.join(ASSETS, "images", "gozo", "brand-mark.png"),
+    path.join(ASSETS, "images", "gozo", "logo-en-black.png"),
     path.join(ASSETS, "images", "logo.png"),
     path.join(uiPublic, "logo.png"),
-    path.join(ASSETS, "images", "gozo", "logo-en-black.png"),
     path.join(ASSETS, "images", "dummy-product-1.png"),
   ];
   const logoPng = logoPngCandidates.find((p) => fs.existsSync(p) && fs.statSync(p).size > 0);
   if (logoPng) copyIfExists(logoPng, path.join(logoDir, "logo.png"));
+  copyIfExists(
+    path.join(ASSETS, "images", "gozo", "logo-mark-en-white.png"),
+    path.join(logoDir, "footer-logo.png")
+  );
 
   const dummyProducts = [
     path.join(ASSETS, "images", "dummy-product-1.png"),
@@ -202,9 +208,9 @@ async function seed() {
   const banners = [
     {
       banner_id: 1,
-      image_title: "Modern Living",
-      image_title_french: "حياة عصرية",
-      image_info: "Home accessories",
+      image_title: "GOZO HOME Storefront",
+      image_title_french: "واجهة غوزو هوم",
+      image_info: "THE JOY OF DECORS CRAFTED",
       image_info_french: "",
       redirect_url: "/products",
       position: 1,
@@ -214,12 +220,24 @@ async function seed() {
     },
     {
       banner_id: 2,
-      image_title: "Crafted Decor",
-      image_title_french: "ديكور مصنوع بعناية",
-      image_info: "Premium",
+      image_title: "Crafted Packaging",
+      image_title_french: "تغليف مصنوع بعناية",
+      image_info: "Black & white brand packaging",
       image_info_french: "",
       redirect_url: "/products",
       position: 2,
+      product: 0,
+      home: 1,
+      status: 1,
+    },
+    {
+      banner_id: 3,
+      image_title: "Lifestyle Bag",
+      image_title_french: "حقيبة نمط الحياة",
+      image_info: "GOZO HOME",
+      image_info_french: "",
+      redirect_url: "/products",
+      position: 3,
       product: 0,
       home: 1,
       status: 1,
@@ -807,7 +825,7 @@ async function seed() {
 
   await Counter.insertMany([
     { _id: "settings", seq: 1 },
-    { _id: "banner_image", seq: 2 },
+    { _id: "banner_image", seq: 3 },
     { _id: "category", seq: 720 },
     { _id: "product", seq: 104 },
     { _id: "sub_products", seq: subProducts.length },

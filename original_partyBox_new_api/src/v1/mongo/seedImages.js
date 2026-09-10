@@ -11,6 +11,7 @@ const fs = require("fs");
 const path = require("path");
 const { connectMongo, disconnectMongo } = require("./connection");
 const models = require("./models");
+const { Counter } = require("./counters");
 
 const ROOT = path.resolve(__dirname, "../../..");
 const ASSETS = path.join(ROOT, "assets");
@@ -38,6 +39,59 @@ function firstExisting(paths) {
 async function main() {
   await connectMongo();
 
+  // Ensure GOZO brand home banners exist (guideline images 5/6/7)
+  const brandBanners = [
+    {
+      banner_id: 1,
+      image_title: "GOZO HOME Storefront",
+      image_title_french: "واجهة غوزو هوم",
+      image_info: "THE JOY OF DECORS CRAFTED",
+      image_info_french: "",
+      redirect_url: "/products",
+      position: 1,
+      product: 0,
+      home: 1,
+      status: 1,
+    },
+    {
+      banner_id: 2,
+      image_title: "Crafted Packaging",
+      image_title_french: "تغليف مصنوع بعناية",
+      image_info: "Black & white brand packaging",
+      image_info_french: "",
+      redirect_url: "/products",
+      position: 2,
+      product: 0,
+      home: 1,
+      status: 1,
+    },
+    {
+      banner_id: 3,
+      image_title: "Lifestyle Bag",
+      image_title_french: "حقيبة نمط الحياة",
+      image_info: "GOZO HOME",
+      image_info_french: "",
+      redirect_url: "/products",
+      position: 3,
+      product: 0,
+      home: 1,
+      status: 1,
+    },
+  ];
+
+  for (const b of brandBanners) {
+    await models.banner_image.updateOne(
+      { banner_id: b.banner_id },
+      { $set: b },
+      { upsert: true }
+    );
+  }
+  await Counter.findOneAndUpdate(
+    { _id: "banner_image" },
+    { $max: { seq: 3 } },
+    { upsert: true }
+  );
+
   const [products, banners] = await Promise.all([
     models.product.find({}).select("deal_id deal_key deal_title").lean(),
     models.banner_image.find({}).select("banner_id").lean(),
@@ -59,6 +113,7 @@ async function main() {
     const src = firstExisting([
       path.join(ASSETS, "images", `banner-${b.banner_id}.png`),
       path.join(UI_PUBLIC, `banner-${b.banner_id}.png`),
+      path.join(ASSETS, "images", "gozo", "banner-storefront.png"),
       path.join(ASSETS, "images", "banner-1.png"),
       path.join(ASSETS, "images", "poster.png"),
       path.join(ASSETS, "images", "img-500.png"),
@@ -115,9 +170,11 @@ async function main() {
   });
 
   const logoPng = firstExisting([
+    path.join(ASSETS, "images", "gozo", "logo-mark-en-black.png"),
+    path.join(ASSETS, "images", "gozo", "brand-mark.png"),
+    path.join(ASSETS, "images", "gozo", "logo-en-black.png"),
     path.join(ASSETS, "images", "logo.png"),
     path.join(UI_PUBLIC, "logo.png"),
-    path.join(ASSETS, "images", "gozo", "logo-en-black.png"),
     path.join(ASSETS, "images", "dummy-product-1.png"),
     path.join(UI_PUBLIC, "dummy-product-1.png"),
   ]);
@@ -125,6 +182,11 @@ async function main() {
   copyIfExists(
     path.join(ASSETS, "images", "logo.svg"),
     path.join(logoDir, "logo.svg")
+  );
+  // Footer / white mark for cloud
+  copyIfExists(
+    path.join(ASSETS, "images", "gozo", "logo-mark-en-white.png"),
+    path.join(logoDir, "footer-logo.png")
   );
 
   console.log(

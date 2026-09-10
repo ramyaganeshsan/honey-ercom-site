@@ -1,5 +1,6 @@
 let english = {
   logo_alt: "GOZO HOME",
+  brand_slogan: "THE JOY OF DECORS CRAFTED",
   email: "Email",
   password: "Password",
   forgot_password: "Forgot password ?",

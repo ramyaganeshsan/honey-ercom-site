@@ -1,21 +1,118 @@
 /**
- * GOZO HOME — black & white polish overrides.
+ * GOZO HOME — brand system
+ * Black / grey / white · Avenir · pattern · generous spacing
  * Loaded after style.css / media_style.css.
  */
 :root {
   --gozo-black: #000000;
   --gozo-ink: #111111;
+  --gozo-charcoal: #2a2a2a;
   --gozo-muted: #737373;
   --gozo-line: #e5e5e5;
   --gozo-soft: #f5f5f5;
+  --gozo-mist: #fafafa;
   --gozo-white: #ffffff;
+  --gozo-space-xs: 12px;
+  --gozo-space-sm: 20px;
+  --gozo-space-md: 32px;
+  --gozo-space-lg: 56px;
+  --gozo-space-xl: 80px;
+  --gozo-font: "Avenir", "Avenir Next", "Nunito Sans", "Century Gothic",
+    "Cairo", sans-serif;
 }
 
-/* ——— Header: force white content on black ——— */
-.cyr-main-header,
-.cyr-main-header-wrap,
-.fixed_header .cyr-main-header {
+/* ——— Typography: Avenir sitewide ——— */
+html,
+body,
+button,
+input,
+select,
+textarea,
+.nav-link,
+.theme_btn,
+.btn,
+.product_title h2,
+.product_content,
+.ftr-blocks p,
+.ftr-blocks h2,
+.ftr-blocks h3,
+.ftr-blocks h4,
+.cyr-all-cate,
+.mega-menu-lft,
+.contact-form-blk,
+.login-wrapper {
+  font-family: var(--gozo-font) !important;
+}
+
+body {
+  color: var(--gozo-ink);
+  background-color: var(--gozo-mist) !important;
+  background-image: url(/images/gozo/pattern-light.png) !important;
+  background-repeat: repeat !important;
+  background-size: 380px 380px !important;
+  background-attachment: scroll !important;
+  letter-spacing: 0.01em;
+  line-height: 1.55 !important;
+}
+
+/* Clear fixed header + let pattern show through page body */
+main {
+  margin-top: 168px !important;
+  background: transparent !important;
+}
+
+@media (max-width: 600px) {
+  main {
+    margin-top: 140px !important;
+  }
+}
+
+[dir="rtl"] body {
+  font-family: "Cairo", var(--gozo-font) !important;
+}
+
+/* Soft panels so content stays readable on pattern */
+.container,
+.cyr-product-section,
+.product_section_inner,
+.banner,
+.login-wrapper,
+.contact-form-blk,
+.product-list-lft,
+.my-account-ctnr,
+.cart-wrapper,
+.checkout-wrapper {
+  position: relative;
+}
+
+.cyr-product-section,
+.product_section_inner {
+  padding-top: var(--gozo-space-lg) !important;
+  padding-bottom: var(--gozo-space-lg) !important;
+}
+
+.product_content {
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* ——— Header spacing + black bar ——— */
+.cyr-top-hd {
   background-color: var(--gozo-black) !important;
+  padding: 6px 0 !important;
+  filter: none !important;
+  border-bottom: 1px solid #222;
+}
+
+.cyr-top-hd-blk {
+  min-height: 44px !important;
+  height: auto !important;
+  padding: 4px 0 !important;
+  gap: 16px;
+}
+
+.cyr-top-hd-lft li,
+.cyr-top-hd-rgt li {
+  padding: 0 18px !important;
 }
 
 .cyr-top-hd,
@@ -24,8 +121,62 @@
 .cyr-top-hd-rgt a,
 .cyr-top-hd li,
 .cyr-top-hd span,
-.cyr-top-hd .dropdown-toggle {
+.cyr-top-hd .dropdown-toggle,
+.cyr-top-hd select {
   color: var(--gozo-white) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em;
+}
+
+.cyr-top-hd select {
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.cyr-top-hd .gozo-slogan-top {
+  display: none;
+  color: #d0d0d0 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.28em !important;
+  text-transform: uppercase;
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (min-width: 992px) {
+  .cyr-top-hd .gozo-slogan-top {
+    display: block;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .cyr-top-hd .container {
+    position: relative;
+  }
+}
+
+.cyr-main-header,
+.cyr-main-header-wrap,
+.fixed_header .cyr-main-header {
+  background-color: var(--gozo-black) !important;
+}
+
+.cyr-main-header {
+  height: auto !important;
+  min-height: 108px !important;
+  padding: 18px 0 !important;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.cyr-main-header .navbar {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  align-items: center !important;
+  gap: 24px;
 }
 
 .cyr-main-header .navbar-nav .nav-link,
@@ -39,6 +190,15 @@
   color: var(--gozo-white) !important;
 }
 
+.cyr-main-header .navbar-nav .nav-link {
+  opacity: 1 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+  padding: 10px 0 !important;
+}
+
 .cyr-main-header .navbar-nav .nav-link:hover {
   color: #e5e5e5 !important;
   opacity: 0.9;
@@ -46,6 +206,11 @@
 
 .cyr-main-header .navbar-nav .nav-link.active::after {
   background: var(--gozo-white) !important;
+  bottom: -8px !important;
+}
+
+.navbar-expand-lg .navbar-nav .nav-item {
+  margin-right: 36px !important;
 }
 
 .cyr-main-header .navbar-toggler,
@@ -53,7 +218,126 @@
   filter: invert(1);
 }
 
-/* ——— Uniform product image tiles (admin uploads + seeds) ——— */
+/* ——— Brand mark + wordmark logo ——— */
+.navbar-brand,
+a.navbar-brand,
+p.navbar-brand {
+  width: auto !important;
+  min-width: 160px;
+  height: 72px !important;
+  flex-shrink: 0;
+  background: none !important;
+  color: var(--gozo-white) !important;
+  font-size: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none !important;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-brand .gozo-brand-mark,
+a.navbar-brand .gozo-brand-mark {
+  width: 44px;
+  height: 72px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+.navbar-brand .gozo-brand-text,
+a.navbar-brand .gozo-brand-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.05;
+  font-size: 0;
+}
+
+.navbar-brand .gozo-brand-name,
+a.navbar-brand .gozo-brand-name {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.22em !important;
+  color: var(--gozo-white) !important;
+  text-transform: uppercase;
+}
+
+.navbar-brand .gozo-brand-home,
+a.navbar-brand .gozo-brand-home {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.42em !important;
+  color: #cfcfcf !important;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.navbar-brand:hover {
+  color: var(--gozo-white) !important;
+  opacity: 0.95;
+}
+
+/* Fallback when markup is empty (CSS-only logo) */
+p.navbar-brand:empty,
+a.navbar-brand:not(:has(.gozo-brand-mark)) {
+  background: url(/images/gozo/logo-mark-en-white.png) no-repeat left center /
+    contain !important;
+  width: 200px !important;
+  height: 72px !important;
+}
+
+.mobile-logo-blk .navbar-brand {
+  background: url(/images/gozo/logo-mark-en-white.png) no-repeat left center /
+    contain !important;
+}
+
+/* ——— Brand slogan band ——— */
+.gozo-slogan-band {
+  width: 100%;
+  padding: var(--gozo-space-lg) var(--gozo-space-md);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.78);
+  border-top: 1px solid var(--gozo-line);
+  border-bottom: 1px solid var(--gozo-line);
+}
+
+.gozo-slogan-band .gozo-slogan {
+  margin: 0;
+  color: var(--gozo-ink);
+  font-size: clamp(14px, 2.2vw, 20px);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
+.gozo-slogan-band .gozo-slogan-mark {
+  width: 28px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 16px;
+  opacity: 0.85;
+}
+
+/* ——— Banner ——— */
+.banner {
+  margin-top: 0;
+  background: var(--gozo-black);
+}
+
+.banner .main_slider img,
+.banner .item img {
+  width: 100%;
+  max-height: 560px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* ——— Uniform product image tiles ——— */
 .product_block .prod_img,
 .product-listing-block .prod_img,
 .offer_prod_img,
@@ -93,7 +377,6 @@
   filter: none;
 }
 
-/* Keep overlay icons readable (white glyphs on black) */
 .product-overlay ul li span.prod-wishlist,
 .product-overlay ul li span.prod-share,
 .product-overlay ul li span.prod-zoom,
@@ -103,11 +386,6 @@
 .product-overlay ul li a.prod-zoom,
 .product-overlay ul li a.prod-addtocart {
   background-color: #000000 !important;
-}
-
-.cyr-main-header .navbar-nav .nav-link {
-  color: #ffffff !important;
-  opacity: 1 !important;
 }
 
 .product_block .prod_img img,
@@ -135,9 +413,10 @@
 }
 
 .product_content {
-  padding-top: 16px !important;
+  padding-top: 18px !important;
+  padding-bottom: 8px !important;
   border-top: 0 !important;
-  background: #fff;
+  min-height: 80px;
 }
 
 .product_block a,
@@ -158,14 +437,9 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  margin-bottom: var(--gozo-space-md);
 }
 
-.product_content {
-  padding-top: 14px !important;
-  min-height: 72px;
-}
-
-/* Hide empty rating star strip that looked like a yellow bar */
 .product_block .star:empty {
   display: none;
 }
@@ -174,6 +448,19 @@
   padding: 0 0 8px !important;
   justify-content: center;
   gap: 2px;
+}
+
+.product_title {
+  margin-bottom: var(--gozo-space-md) !important;
+  padding-top: var(--gozo-space-sm);
+}
+
+.product_title h2 {
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase;
+  font-weight: 600 !important;
+  font-size: 22px !important;
+  color: var(--gozo-ink) !important;
 }
 
 /* ——— Buttons: black bg, white text ——— */
@@ -195,6 +482,10 @@ a.theme_btn,
   color: var(--gozo-white) !important;
   border: 1px solid var(--gozo-black) !important;
   box-shadow: none !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 28px !important;
+  border-radius: 2px !important;
 }
 
 .theme_btn:hover,
@@ -219,7 +510,6 @@ a.theme_btn:hover {
   color: var(--gozo-white) !important;
 }
 
-/* Kill leftover warm accents */
 .offers,
 .offer_label_product_details,
 .offer_label_cart_product_details,
@@ -229,7 +519,6 @@ a.theme_btn:hover {
   color: var(--gozo-white) !important;
 }
 
-/* Contact / forms polish */
 .contact-info-ctnr p::before {
   filter: none;
 }
@@ -240,7 +529,17 @@ a.theme_btn:hover {
   color: var(--gozo-black) !important;
 }
 
-/* Footer stays black with white text */
+/* ——— Footer: more space + slogan ——— */
+footer {
+  background: var(--gozo-black) !important;
+  border-color: #111 !important;
+  margin-top: var(--gozo-space-xl);
+}
+
+.ftr-main {
+  padding: var(--gozo-space-xl) 0 var(--gozo-space-lg) !important;
+}
+
 footer,
 footer a,
 footer p,
@@ -250,18 +549,59 @@ footer h4,
 footer .ftr-blocks,
 .ftr-copy-rgt {
   color: var(--gozo-white);
+  font-family: var(--gozo-font) !important;
 }
 
 footer a:hover {
   color: #e5e5e5 !important;
 }
 
-/* Product section titles */
-.product_title h2 {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  letter-spacing: 0.04em;
+.ftr-logo {
+  margin-bottom: 28px !important;
+}
+
+.ftr-logo img {
+  height: 64px !important;
+  max-width: 240px !important;
+}
+
+.ftr-blocks p {
+  line-height: 1.8 !important;
+  margin-bottom: 12px;
+}
+
+.ftr-blocks h3,
+.ftr-blocks h4,
+.ftr-blocks .ftr-title {
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  font-weight: 500;
+  margin-bottom: 22px !important;
+  font-weight: 600 !important;
+}
+
+footer .gozo-footer-slogan {
+  margin-top: 20px;
+  color: #bdbdbd !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.28em !important;
+  text-transform: uppercase;
+  line-height: 1.7 !important;
+}
+
+.ftr-copy {
+  padding: 22px 0 !important;
+  border-top: 1px solid #222;
+}
+
+.soc-icons {
+  margin-top: 28px !important;
+  gap: 8px;
+}
+
+/* Search bar breathing room */
+.cyr-search-bar {
+  padding: 14px 0 !important;
 }
 
 /* Owl carousel equal height items */
@@ -274,4 +614,54 @@ footer a:hover {
 .owl-carousel .owl-item .item,
 .owl-carousel .owl-item .product_block {
   width: 100%;
+}
+
+/* Spinner / accents stay B&W */
+.spinner-border,
+.loading-spinner,
+.loader {
+  color: var(--gozo-black) !important;
+  border-color: var(--gozo-black) !important;
+  border-right-color: transparent !important;
+}
+
+@media (max-width: 767px) {
+  .cyr-main-header {
+    min-height: 84px !important;
+    padding: 12px 0 !important;
+  }
+
+  .navbar-brand .gozo-brand-mark,
+  a.navbar-brand .gozo-brand-mark {
+    width: 34px;
+    height: 56px;
+  }
+
+  .navbar-brand,
+  a.navbar-brand,
+  p.navbar-brand {
+    height: 56px !important;
+  }
+
+  .navbar-brand .gozo-brand-name,
+  a.navbar-brand .gozo-brand-name {
+    font-size: 16px !important;
+  }
+
+  .gozo-slogan-band {
+    padding: var(--gozo-space-md) var(--gozo-space-sm);
+  }
+
+  .gozo-slogan-band .gozo-slogan {
+    letter-spacing: 0.18em;
+    font-size: 12px;
+  }
+
+  .ftr-main {
+    padding: var(--gozo-space-lg) 0 var(--gozo-space-md) !important;
+  }
+
+  body {
+    background-size: 280px 280px !important;
+  }
 }

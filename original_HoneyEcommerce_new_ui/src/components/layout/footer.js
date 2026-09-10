@@ -33,14 +33,18 @@ const Footer = ({
                   <img
                     src={resolveAssetUrl(
                       footer_logo,
-                      "/images/footer-logo-white.svg"
+                      "/images/gozo/logo-mark-en-white.png"
                     )}
                     alt={t("footer_logo_alt_text")}
                     onError={(e) =>
-                      handleAssetImageError(e, "/images/gozo/logo-en-white.png")
+                      handleAssetImageError(
+                        e,
+                        "/images/gozo/brand-mark-white.png"
+                      )
                     }
                   />
                 </div>
+                <p className="gozo-footer-slogan">{t("brand_slogan")}</p>
                 <p>
                   {address1}
                   <br />
