@@ -189,6 +189,23 @@ async function main() {
     path.join(logoDir, "footer-logo.png")
   );
 
+  // Fix short demo addresses that block COD checkout (API requires address min 10 chars)
+  const demoAddressFix = await models.users.updateMany(
+    {
+      $or: [
+        { email: "demo@gozohome.com" },
+        { address1: { $exists: true, $type: "string", $regex: /^.{0,9}$/ } },
+        { ship_address1: { $exists: true, $type: "string", $regex: /^.{0,9}$/ } },
+      ],
+    },
+    {
+      $set: {
+        address1: "Kuwait City, Al Asimah",
+        ship_address1: "Kuwait City, Al Asimah",
+      },
+    }
+  );
+
   console.log(
     JSON.stringify(
       {
@@ -200,6 +217,7 @@ async function main() {
           written: productsWritten,
           skipped,
         },
+        demoAddressPatched: demoAddressFix?.modifiedCount ?? 0,
         tip: "Verify: curl -I https://YOUR-API/cloud/uploads/banner_images/1.png",
       },
       null,

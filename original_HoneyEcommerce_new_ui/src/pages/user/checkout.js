@@ -579,6 +579,11 @@ const Checkout = () => {
         if (Number(response.data?.status) === -3) {
           let errorObject = extractErrors(response?.data?.errors ?? []);
           setErrors(errorObject);
+          const firstError =
+            response?.data?.errors?.[0]?.message ||
+            response?.data?.message ||
+            t("something_went_wrong");
+          toast.error(firstError, toastConfig);
         } else if (Number(response.data?.status) === 2) {
           let message = response?.data?.message;
           toast.success(message, toastConfig);
