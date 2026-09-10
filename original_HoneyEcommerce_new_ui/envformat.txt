@@ -7,7 +7,7 @@ VITE_BASE_URL=http://localhost:5000/
 # Used in index.html as %VITE_ASSETS_URL% and in src via env.ASSETS_URL
 VITE_ASSETS_URL=http://localhost:5000/public
 
-VITE_SITE_NAME=Honey Ecommerce
+VITE_SITE_NAME=GOZO HOME
 
 # AES key used by src/utils encrypt/decrypt helpers
 VITE_SECRECT_KEY=

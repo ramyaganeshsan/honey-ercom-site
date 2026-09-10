@@ -15,8 +15,10 @@ const CMS_PAGES = [
     cms_id: 6,
     cms_title: "About Us",
     cms_title_french: "من نحن",
-    cms_desc: "<p>Premium honey from Manahel Althunayyan.</p>",
-    cms_desc_french: "<p>عسل فاخر من مناحل الثنيان.</p>",
+    cms_desc:
+      "<p><strong>GOZO HOME</strong> (جوزو هوم) is a modern Kuwaiti home accessories brand. We design unique, elegant, high-quality pieces with a focus on craftsmanship, simplicity, and timeless style.</p><p><em>THE JOY OF DECORS CRAFTED</em></p>",
+    cms_desc_french:
+      "<p><strong>جوزو هوم</strong> علامة كويتية عصرية لإكسسوارات المنزل. نصمم قطعاً فريدة وأنيقة عالية الجودة تجمع بين الحرفية والبساطة والأناقة الخالدة.</p><p><em>THE JOY OF DECORS CRAFTED</em></p>",
     cms_url: "about-us",
     type: 0,
     cms_status: 1,
@@ -58,7 +60,7 @@ const CMS_PAGES = [
 const TEMPLATES = [
   {
     id: 20,
-    email_from: "noreply@thunayanhoneyuae.com",
+    email_from: "noreply@gozohome.com",
     template_index: "order_success",
     send_email: true,
     subject: "Your order ##ORDER_ID## is confirmed",
@@ -70,7 +72,7 @@ const TEMPLATES = [
   },
   {
     id: 21,
-    email_from: "noreply@thunayanhoneyuae.com",
+    email_from: "noreply@gozohome.com",
     template_index: "order_cancelled",
     send_email: true,
     subject: "Your order ##ORDER_ID## was cancelled",
@@ -82,7 +84,7 @@ const TEMPLATES = [
   },
   {
     id: 22,
-    email_from: "noreply@thunayanhoneyuae.com",
+    email_from: "noreply@gozohome.com",
     template_index: "order_return",
     send_email: true,
     subject: "Return request for order ##ORDER_ID##",
@@ -94,7 +96,7 @@ const TEMPLATES = [
   },
   {
     id: 23,
-    email_from: "noreply@thunayanhoneyuae.com",
+    email_from: "noreply@gozohome.com",
     template_index: "order_placed_admin",
     send_email: true,
     subject: "New order placed ##ORDER_ID##",
@@ -106,7 +108,7 @@ const TEMPLATES = [
   },
   {
     id: 24,
-    email_from: "noreply@thunayanhoneyuae.com",
+    email_from: "noreply@gozohome.com",
     template_index: "contact_us_admin",
     send_email: true,
     subject: "New contact us message from ##NAME##",
@@ -147,8 +149,8 @@ async function seedEssentials() {
     smtp_password: "",
     api_key: "",
     list_id: "",
-    replay_to_mail: "noreply@thunayanhoneyuae.com",
-    from_name: "Thunayyan Honey UAE",
+    replay_to_mail: "noreply@gozohome.com",
+    from_name: "GOZO HOME",
     status: 1,
   };
   await db

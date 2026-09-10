@@ -43,8 +43,8 @@ exports.PAYMENT_FAILED_URL = "https://ecom.indiprotechnologies.com/failed";
 
 exports.LOGO_FOR_INVOICE = `${DASHBOARD_BASE_URL}cloud/uploads/logo/logo.png`;
 exports.QR_CODE_FOR_INVOICE = `${DASHBOARD_BASE_URL}cloud/uploads/logo/qrCode.jpg`;
-exports.SITENAME = "Manahel Althunayyan";
-exports.STORE_ADDRESS = "Muwaileh Commercial";
-exports.STORE_ADDRESS2 = "Industrial Area,Sharjah - United ArabEmirates";
-exports.STORE_PHONE = "+971 555540017";
-exports.STORE_EMAIL = "info@thunayanhoneyuae.com";
+exports.SITENAME = "GOZO HOME";
+exports.STORE_ADDRESS = "Kuwait";
+exports.STORE_ADDRESS2 = "Home Accessories";
+exports.STORE_PHONE = "+965 0000 0000";
+exports.STORE_EMAIL = "info@gozohome.com";

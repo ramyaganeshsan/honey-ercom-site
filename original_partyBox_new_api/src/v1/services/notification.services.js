@@ -196,7 +196,7 @@ exports.sendOrderSuccessEmail = async (transactionId, userDetails, lang) => {
       smtpSettings.smtp_username,
       smtpSettings.smtp_password,
       userDetails,
-      smtpSettings.from_name || "Thunayyan Honey"
+      smtpSettings.from_name || "GOZO HOME"
     );
   } catch (err) {
     console.error("sendOrderSuccessEmail failed:", err?.message || err);
@@ -247,7 +247,7 @@ exports.sendOrderSuccessEmailToAdmin = async (
       smtpSettings.smtp_username,
       smtpSettings.smtp_password,
       userDetails,
-      smtpSettings.from_name || "Thunayyan Honey"
+      smtpSettings.from_name || "GOZO HOME"
     );
   } catch (err) {
     console.error("sendOrderSuccessEmailToAdmin failed:", err?.message || err);
@@ -323,7 +323,7 @@ exports.notifyContactUsToAdminEmail = async (
       smtpSettings.smtp_username,
       smtpSettings.smtp_password,
       userDetails,
-      smtpSettings.from_name || "Thunayyan Honey"
+      smtpSettings.from_name || "GOZO HOME"
     );
   } catch (err) {
     console.error("notifyContactUsToAdminEmail failed:", err?.message || err);
@@ -360,7 +360,7 @@ exports.sendOrderCancelEmail = async (transactionId, userDetails, lang) => {
       smtpSettings.smtp_username,
       smtpSettings.smtp_password,
       userDetails,
-      smtpSettings.from_name || "Thunayyan Honey"
+      smtpSettings.from_name || "GOZO HOME"
     );
   } catch (err) {
     console.error("sendOrderCancelEmail failed:", err?.message || err);
@@ -397,7 +397,7 @@ exports.sendOrderReturnEmail = async (transactionId, userDetails, lang) => {
       smtpSettings.smtp_username,
       smtpSettings.smtp_password,
       userDetails,
-      smtpSettings.from_name || "Thunayyan Honey"
+      smtpSettings.from_name || "GOZO HOME"
     );
   } catch (err) {
     console.error("sendOrderReturnEmail failed:", err?.message || err);
@@ -453,7 +453,7 @@ exports.sendProductOutOfStockEmail = async (
       smtpSettings?.smtp_username,
       smtpSettings?.smtp_password,
       { email: email },
-      smtpSettings.from_name || "Thunayyan Honey"
+      smtpSettings.from_name || "GOZO HOME"
     );
   } catch (err) {
     console.error("sendProductOutOfStockEmail failed:", err?.message || err);

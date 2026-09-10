@@ -78,7 +78,7 @@ function productDefaults(body = {}) {
     having_size_color: Number(body.having_size_color) || 0,
     merchant_id: Number(body.merchant_id) || 1,
     shipping: Number(body.shipping) || 0,
-    brand_names: String(body.brand_names || "Thunayyan"),
+    brand_names: String(body.brand_names || "GOZO HOME"),
     supplier_names: String(body.supplier_names || ""),
     supplier_id: Number(body.supplier_id) || 0,
     ballon_filling_option: String(body.ballon_filling_option || ""),

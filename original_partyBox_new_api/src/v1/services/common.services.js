@@ -39,7 +39,10 @@ const SITE_SETTINGS_ATTRIBUTES = [
   "phone1",
   "contact_email",
   "site_name",
+  "site_name_french",
   "title",
+  "meta_description",
+  "meta_keywords",
   "default_language",
   "address1",
   "address2",
@@ -71,8 +74,11 @@ const OPTIONAL_SITE_SETTINGS_ATTRIBUTES = [
 const DUMMY_SITE_SETTINGS = {
   phone1: "+0000000000",
   contact_email: "admin@example.com",
-  site_name: "Honey Shop",
-  title: "Honey Shop",
+  site_name: "GOZO HOME",
+  site_name_french: "جوزو هوم",
+  title: "GOZO HOME",
+  meta_description: "THE JOY OF DECORS CRAFTED",
+  meta_keywords: "gozo home, home accessories, decor, kuwait",
   default_language: "en",
   address1: "Demo Address",
   address2: "",
@@ -135,17 +141,18 @@ exports.getSiteInfo = async () => {
 
   // let googleMapUrl = `http://maps.google.com/maps?q=${response?.latitude},${response?.longitude}`;
   let googleMapUrl =
-    "https://www.google.com/maps/place/Manahel+althunayyan+%D9%85%D9%86%D8%A7%D8%AD%D9%84+%D8%A7%D9%84%D8%AB%D9%86%D9%8A%D8%A7%D9%86%E2%80%AD/@25.3101091,55.4582879,18z/data=!3m1!4b1!4m6!3m5!1s0x3e5f5fb050d50d2f:0xafbb2a7fe60f16ab!8m2!3d25.3101091!4d55.4595754!16s%2Fg%2F11k7v38dvr?entry=ttu";
+    "https://www.google.com/maps/place/Kuwait";
 
   response["googleMapUrl"] = googleMapUrl;
   response["shopTitle1"] = shopOpensAtTitle;
   response["shopTiming1"] = shopOpensAtTime;
   response["shopTitle2"] = shopOpensAtWeekendTitle;
   response["shopTiming2"] = shopOpensAtWeekendTime;
-  response["footer_logo"] = `${PUBLIC_IMAGE_FOLDER}footer-logo.svg`;
+  response["footer_logo"] = `${PUBLIC_IMAGE_FOLDER}footer-logo-white.png`;
   response["copy_right"] = `Copyright © ${new Date().getFullYear()} ${
     response["site_name"]
   }. All rights reserved.`;
+  response["tagline"] = response.meta_description || "THE JOY OF DECORS CRAFTED";
   response["pinterest"] = "https://www.pinterest.com/";
   response["offer_poster"] = `${PUBLIC_IMAGE_FOLDER}poster.png`;
   response["login_page_image"] = `${PUBLIC_IMAGE_FOLDER}login-image.png`;

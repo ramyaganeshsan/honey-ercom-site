@@ -33,11 +33,11 @@ const Footer = ({
                   <img
                     src={resolveAssetUrl(
                       footer_logo,
-                      "/images/footer-logo.svg"
+                      "/images/footer-logo-white.svg"
                     )}
                     alt={t("footer_logo_alt_text")}
                     onError={(e) =>
-                      handleAssetImageError(e, "/images/footer-logo.svg")
+                      handleAssetImageError(e, "/images/gozo/logo-en-white.png")
                     }
                   />
                 </div>

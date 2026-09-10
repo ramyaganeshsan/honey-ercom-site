@@ -49,7 +49,7 @@ const productSchema = new mongoose.Schema(
     having_size_color: { type: Number, required: true, default: 0 },
     merchant_id: { type: Number, required: true, default: 1 },
     shipping: { type: Number, required: true, default: 0 },
-    brand_names: { type: String, default: "Thunayyan" },
+    brand_names: { type: String, default: "GOZO HOME" },
     supplier_names: optionalString,
     supplier_id: { type: Number, required: true, default: 0 },
     ballon_filling_option: optionalString,

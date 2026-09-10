@@ -422,7 +422,7 @@
     z-index: 1;
   }
   .mobile-logo-blk {
-    background: rgba(244, 188, 33, 1);
+    background: #000000;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -537,10 +537,10 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat center / contain;
-    background-size: 40px 58px;
-    height: 58px;
-    width: 42px;
+    background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
+    background-size: contain;
+    height: 48px;
+    width: 90px;
   }
   .error-page-blk img {
     max-width: 100%;
@@ -571,10 +571,10 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat center / contain;
-    background-size: 40px 58px;
-    height: 58px;
-    width: 42px;
+    background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
+    background-size: contain;
+    height: 48px;
+    width: 90px;
   }
   .error-page-blk img {
     max-width: 100%;
@@ -605,10 +605,10 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat center / contain;
-    background-size: 40px 58px;
-    height: 58px;
-    width: 42px;
+    background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
+    background-size: contain;
+    height: 48px;
+    width: 90px;
   }
   .error-page-blk img {
     max-width: 100%;
@@ -639,10 +639,10 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat center / contain;
-    background-size: 40px 58px;
-    height: 58px;
-    width: 42px;
+    background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
+    background-size: contain;
+    height: 48px;
+    width: 90px;
   }
   .error-page-blk img {
     max-width: 100%;
@@ -673,10 +673,10 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat center / contain;
-    background-size: 40px 58px;
-    height: 58px;
-    width: 42px;
+    background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
+    background-size: contain;
+    height: 48px;
+    width: 90px;
   }
   .error-page-blk img {
     max-width: 100%;
@@ -707,10 +707,10 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat center / contain;
-    background-size: 40px 58px;
-    height: 58px;
-    width: 42px;
+    background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
+    background-size: contain;
+    height: 48px;
+    width: 90px;
   }
   .error-page-blk img {
     max-width: 100%;
@@ -741,10 +741,10 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat center / contain;
-    background-size: 40px 58px;
-    height: 58px;
-    width: 42px;
+    background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
+    background-size: contain;
+    height: 48px;
+    width: 90px;
   }
   .error-page-blk img {
     max-width: 100%;
@@ -938,10 +938,10 @@
   .navbar-brand {
     display: inline-block;
     margin-right: 38px;
-    background: url(/images/logo.svg) no-repeat center / contain;
-    background-size: 40px 58px;
-    height: 58px;
-    width: 42px;
+    background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
+    background-size: contain;
+    height: 48px;
+    width: 90px;
   }
   .cyr-main-header {
     height: 70px;

@@ -21,7 +21,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <h1>Thunayan Honey</h1>
+        <h1>GOZO HOME</h1>
         <p>Admin Panel</p>
       </div>
       <nav className="sidebar-nav">

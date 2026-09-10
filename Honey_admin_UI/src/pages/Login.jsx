@@ -67,7 +67,7 @@ export default function Login() {
     <div className="login-page">
       <div className="login-card">
         <h1 className="login-brand">
-          Thunayan <span>Honey</span>
+          GOZO <span>HOME</span>
         </h1>
         <p className="login-sub">Sign in to the admin panel</p>
 

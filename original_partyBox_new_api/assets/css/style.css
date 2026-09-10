@@ -239,7 +239,12 @@ button:active,
 }
 /* font face ends*/
 body {
-  font-family: "Roboto";
+  font-family: "Montserrat", "Cairo", sans-serif;
+}
+html[dir="rtl"] body,
+body.rtl,
+[dir="rtl"] body {
+  font-family: "Cairo", "Montserrat", sans-serif;
 }
 ::-webkit-input-placeholder {
   color: #888;
@@ -412,7 +417,7 @@ textarea {
   font-weight: bold;
 }
 .popmultiColor {
-  background: linear-gradient(to right, #00b8a9, #ff4081);
+  background: linear-gradient(to right, #111111, #737373);
   font-size: 36px;
   font-weight: bold;
   margin-bottom: 20px;
@@ -472,8 +477,8 @@ textarea {
 }
 
 .form-check-input:checked {
-  background-color: #eb3222;
-  border-color: #eb3222;
+  background-color: #000000;
+  border-color: #000000;
 }
 .form-check-input:focus {
   border-color: #fbe9e7;
@@ -484,20 +489,22 @@ textarea {
 }
 /*buttons*/
 .theme_btn {
-  background: linear-gradient(79deg, #eb3022 0%, #f66e21 100%);
+  background: #000000;
   color: #fff;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
   line-height: normal;
   border-radius: 8px;
+  border: 1px solid #000000;
 }
 .theme_btn:hover {
-  background: linear-gradient(79deg, #eb3022 0%, #f66e21 100%);
-  color: #fff;
+  background: #ffffff;
+  color: #000000;
   text-decoration: none;
-  opacity: 0.8;
+  opacity: 1;
+  border-color: #000000;
 }
 .inverse_btn {
   background: #333;
@@ -514,19 +521,19 @@ textarea {
 }
 .border-btn {
   border-radius: 8px;
-  border: 1px solid rgb(244, 188, 33);
+  border: 1px solid #000000;
   background: #fff;
-  color: rgb(244, 188, 33);
-  font-family: "Quicksand", sans-serif;
+  color: #000000;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
   line-height: 24px;
 }
 .border-btn:hover {
-  border: 1px solid rgb(244, 188, 33);
+  border: 1px solid #000000;
   background: #fff;
-  color: rgb(244, 188, 33);
+  color: #000000;
 }
 
 .btn.disabled,
@@ -545,7 +552,7 @@ textarea {
 }
 .page-title {
   color: #383838;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 24px;
   font-style: normal;
   font-weight: 700;
@@ -554,7 +561,7 @@ textarea {
 }
 .offer-page-title {
   color: #383838;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 24px;
   font-style: normal;
   font-weight: 700;
@@ -711,7 +718,7 @@ header {
   flex-direction: column;
 }
 .cyr-main-header {
-  background-color: rgba(244, 188, 33);
+  background-color: #000000;
   height: 92px;
 }
 .menu-bar-blk {
@@ -723,7 +730,7 @@ header {
   background: url(/images/menu-icon.svg) no-repeat left center;
   margin-right: 50px;
   color: #fff;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
@@ -734,17 +741,17 @@ header {
 }
 .menu-bar-blk .cyr-all-cate.active,
 .menu-bar-blk .cyr-all-cate:hover {
-  color: #b83806;
+  color: #e5e5e5;
 }
 .navbar {
   --bs-navbar-padding-y: 6px 0;
   justify-content: space-between;
 }
 .navbar-brand {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 64px;
   flex-shrink: 0;
-  background: url(/images/logo.svg) no-repeat center / contain;
+  background: url(/images/gozo/logo-en-white.png) no-repeat center / contain;
   color: transparent;
   font-size: 0;
 }
@@ -753,7 +760,7 @@ header {
 }
 .nav-link {
   color: #fff;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
@@ -774,7 +781,7 @@ header {
   left: 0;
 }
 .navbar-nav .nav-link:hover {
-  color: #b83806;
+  color: #e5e5e5;
 }
 .navbar-expand-lg .navbar-nav .nav-item {
   margin-right: 30px;
@@ -798,14 +805,14 @@ header {
   display: none;
 }
 /* .fixed_header .cyr-main-header {
-  background-color: rgba(244, 188, 33, 0.95);
+  background-color: rgba(0, 0, 0, 0.95);
 } */
 .cyr-search-bar input {
   width: 100%;
   height: 60px;
   padding: 0 10px 0 45px;
   color: rgba(51, 51, 51, 0.77);
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -839,7 +846,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #eb3122;
+  background: #000000;
   position: absolute;
   bottom: -2px;
   left: -8px;
@@ -1120,7 +1127,7 @@ main {
 }
 .cyr-widget-conatiner-inner ul li .cyr-widget-cont p {
   color: #232323;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 18px;
   font-style: normal;
   font-weight: 700;
@@ -1130,7 +1137,7 @@ main {
 }
 .cyr-widget-conatiner-inner ul li .cyr-widget-cont span {
   color: #858585;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -1167,7 +1174,7 @@ main {
 .product_title h2 {
   color: #232323;
   text-align: center;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 42px;
   font-style: normal;
   font-weight: 700;
@@ -1238,20 +1245,20 @@ main {
   display: flex;
   width: 50px;
   height: 50px;
-  background-color: #f4bc21;
+  background-color: #000000;
   font-size: 0;
 } */
 .product-overlay ul li a.prod-wishlist {
-  background: #f4bc21 url(/images/icon-wishlist-black.svg) no-repeat center;
+  background: #000000 url(/images/icon-wishlist-black.svg) no-repeat center;
 }
 .product-overlay ul li a.prod-share {
-  background: #f4bc21 url(/images/icon-share.svg) no-repeat center;
+  background: #000000 url(/images/icon-share.svg) no-repeat center;
 }
 .product-overlay ul li a.prod-zoom {
-  background: #f4bc21 url(/images/icon-zoom.svg) no-repeat center;
+  background: #000000 url(/images/icon-zoom.svg) no-repeat center;
 }
 .product-overlay ul li a.prod-addtocart {
-  background: #f4bc21 url(/images/icon-cart-black.svg) no-repeat center;
+  background: #000000 url(/images/icon-cart-black.svg) no-repeat center;
 }
 .product_content {
   width: 100%;
@@ -1261,9 +1268,9 @@ main {
   flex-direction: column;
 }
 .product_block .sale-blk {
-  background: #f43636;
+  background: #000000;
   color: #fff;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
@@ -1278,7 +1285,7 @@ main {
 .product_block a {
   color: #232323;
   text-align: center;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -1310,7 +1317,7 @@ main {
 }
 .product_block .prod_price_blk span {
   color: #626262;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -1318,7 +1325,7 @@ main {
 }
 .product_block strike {
   color: #bbb;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -1403,14 +1410,14 @@ main {
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-  font-family: "Whisper", cursive;
-  color: #603913;
+  font-family: "Cormorant Garamond", serif;
+  color: #111111;
 }
 .cyr-poster-inner p {
   width: 100%;
   float: left;
-  color: #603913;
-  font-family: "Quicksand", sans-serif;
+  color: #111111;
+  font-family: "Montserrat", sans-serif;
   font-size: 75px;
   font-style: normal;
   font-weight: 700;
@@ -1422,8 +1429,8 @@ main {
   width: 100%;
   display: block;
   float: left;
-  color: #eb3222;
-  font-family: "Quicksand", sans-serif;
+  color: #000000;
+  font-family: "Montserrat", sans-serif;
   font-size: 50px;
   font-style: normal;
   font-weight: 700;
@@ -1436,7 +1443,7 @@ main {
   float: left;
   display: block;
   color: #fff;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -1449,9 +1456,10 @@ footer {
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: linear-gradient(180deg, #fffdf8 0%, #f7efd9 100%);
-  border: 1px solid #eaeaea;
+  background: #000000;
+  border: 1px solid #111111;
   background-size: cover;
+  color: #ffffff;
 }
 .ftr-main {
   width: 100%;
@@ -1465,8 +1473,8 @@ footer {
 .ftr-blocks p {
   width: 100%;
   float: left;
-  color: #666;
-  font-family: "Roboto";
+  color: #e5e5e5;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -1485,8 +1493,8 @@ footer {
   object-fit: contain;
 }
 .ftr-blocks .map-ico {
-  color: #666;
-  font-family: "Roboto";
+  color: #e5e5e5;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -1551,15 +1559,15 @@ footer {
   content: "";
   width: 1px;
   height: 90%;
-  background: rgba(0, 0, 0, 0.143);
+  background: rgba(255, 255, 255, 0.15);
   top: 5%;
   right: 10px;
 }
 .ftr-title {
   width: 100%;
   float: left;
-  color: #000;
-  font-family: "Quicksand", sans-serif;
+  color: #ffffff;
+  font-family: "Montserrat", sans-serif;
   font-size: 18px;
   font-style: normal;
   font-weight: 700;
@@ -1613,8 +1621,8 @@ footer {
   line-height: 26px;
 }
 .ftr-links li a {
-  color: #666;
-  font-family: "Roboto";
+  color: #e5e5e5;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -1630,7 +1638,7 @@ footer {
   width: 100%;
   float: left;
   padding: 20px 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 .ftr-btm .ftr-btm-inner {
   width: 100%;
@@ -1640,8 +1648,8 @@ footer {
 .ftr-btm .copyright-txt {
   display: flex;
   align-items: center;
-  color: #666;
-  font-family: "Roboto";
+  color: #e5e5e5;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -1684,7 +1692,7 @@ footer {
   flex: 0 0 42%;
   max-width: 340px;
   overflow: hidden;
-  background: #3d2a14;
+  background: #000000;
 }
 .login-lft img {
   display: block;
@@ -1702,7 +1710,7 @@ footer {
 }
 .login-rgt h2 {
   color: #000;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 34px;
   font-style: normal;
   font-weight: 600;
@@ -1724,13 +1732,13 @@ footer {
   margin-top: 0;
 }
 .form-check a {
-  color: #b83806;
+  color: #000000;
 }
 .login-wrapper .theme_btn {
   width: 100%;
   padding: 15px 15px;
   border: none;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -1770,7 +1778,7 @@ footer {
   justify-content: center;
   margin: 0 0 20px 0;
   color: #707070;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -1800,7 +1808,7 @@ p.exist-acc {
 }
 p.exist-acc a {
   margin-left: 5px;
-  color: #b83806;
+  color: #000000;
 }
 
 .page-options-ctnr {
@@ -1961,7 +1969,7 @@ p.exist-acc a {
 }
 .product-list-lft h4 {
   color: #383838;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 20px;
   font-style: normal;
   font-weight: 700;
@@ -2067,7 +2075,7 @@ input[type="range"] {
   width: 12.5em;
 }
 input[type="range"] {
-  color: #eb3222;
+  color: #000000;
   --thumb-height: 1.125em;
   --track-height: 6px;
   --track-color: #d0d0d2;
@@ -2223,12 +2231,12 @@ input[type="range"]:disabled::-moz-range-thumb {
   opacity: 1;
 }
 .mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar {
-  background-color: #eb3222;
+  background-color: #000000;
   opacity: 1 !important;
 }
 .mCSB_scrollTools .mCSB_dragger.mCSB_dragger_onDrag .mCSB_dragger_bar,
 .mCSB_scrollTools .mCSB_dragger:active .mCSB_dragger_bar {
-  background-color: #eb3222;
+  background-color: #000000;
   opacity: 1;
 }
 .mCSB_scrollTools .mCSB_draggerRail {
@@ -2240,7 +2248,7 @@ input[type="range"]:disabled::-moz-range-thumb {
   border-radius: 0;
 }
 .mCSB_scrollTools .mCSB_dragger:hover .mCSB_dragger_bar {
-  background-color: #eb3222;
+  background-color: #000000;
   opacity: 1;
 }
 
@@ -2325,9 +2333,9 @@ input[type="range"]:disabled::-moz-range-thumb {
   flex-direction: column;
 }
 .product-listing-block .sale-blk {
-  background: #f43636;
+  background: #000000;
   color: #fff;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
@@ -2344,7 +2352,7 @@ input[type="range"]:disabled::-moz-range-thumb {
 .product-listing-block a {
   color: #232323;
   text-align: center;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -2376,7 +2384,7 @@ input[type="range"]:disabled::-moz-range-thumb {
 }
 .product-listing-block .prod_price_blk span {
   color: #626262;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -2384,7 +2392,7 @@ input[type="range"]:disabled::-moz-range-thumb {
 }
 .product-listing-block strike {
   color: #bbb;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -2533,7 +2541,7 @@ form .form-grp {
   margin-bottom: 150px;
 }
 .contact-form-blk .theme_btn {
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -2550,7 +2558,7 @@ form .form-grp {
 }
 .contact-info-ctnr h3 {
   color: #555;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 48px;
   font-style: normal;
   font-weight: 700;
@@ -2739,7 +2747,7 @@ ul.thumbnails li img {
 }
 .product_details_right_inner h2.prod_details_title {
   color: #000;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 36px;
   font-style: normal;
   font-weight: 700;
@@ -2806,7 +2814,7 @@ ul.thumbnails li img {
   align-items: center;
 }
 .product_details_right .price_block span {
-  color: #b83806;
+  color: #000000;
   font-family: "Inter", sans-serif;
   font-size: 36px;
   font-style: normal;
@@ -2879,18 +2887,18 @@ span.review_count {
 .prod-wght-blk .btn {
   width: 60px;
   padding: 9px 0px;
-  border: 1px solid #ef4922;
-  color: #ef4922;
+  border: 1px solid #000000;
+  color: #000000;
   margin-right: 15px;
   text-align: center;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
   line-height: normal;
 }
 .prod-wght-blk .btn.active {
-  background-color: #ef4922;
+  background-color: #000000;
   color: #fff;
 }
 .prod-cate-list {
@@ -3304,7 +3312,7 @@ span.review_count {
   resize: none;
 }
 .review-form-blk .theme_btn {
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -3413,7 +3421,7 @@ span.review_count {
   padding: 0 15px 0 0;
   white-space: nowrap;
   color: #000;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
@@ -3628,7 +3636,7 @@ span.review_count {
   width: 100%;
   justify-content: center;
   margin-bottom: 20px;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -3670,7 +3678,7 @@ span.review_count {
   width: 100%;
   justify-content: center;
   margin-bottom: 20px;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -3825,7 +3833,7 @@ span.review_count {
   margin-top: 5px;
 }
 .form-grp .text-muted a {
-  color: #f43636;
+  color: #000000;
 }
 .form-70-30 {
   display: flex;
@@ -3855,7 +3863,7 @@ span.review_count {
 
 .error-page-blk .error-cont-blk h3 {
   color: #000;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 32px;
   font-style: normal;
   font-weight: 600;
@@ -4319,24 +4327,24 @@ span.review_count {
   display: flex;
   width: 50px;
   height: 50px;
-  background-color: #f4bc21;
+  background-color: #000000;
   font-size: 0;
   cursor: pointer;
 }
 .product-overlay ul li span.prod-wishlist {
-  background: #f4bc21 url(/images/icon-wishlist-black.svg) no-repeat center;
+  background: #000000 url(/images/icon-wishlist-black.svg) no-repeat center;
 }
 .product-overlay ul li span.prod-wishlisted {
-  background: #f4bc21 url(/images/wishlisted.svg) no-repeat center;
+  background: #000000 url(/images/wishlisted.svg) no-repeat center;
 }
 .product-overlay ul li span.prod-share {
-  background: #f4bc21 url(/images/icon-share.svg) no-repeat center;
+  background: #000000 url(/images/icon-share.svg) no-repeat center;
 }
 .product-overlay ul li span.prod-zoom {
-  background: #f4bc21 url(/images/icon-zoom.svg) no-repeat center;
+  background: #000000 url(/images/icon-zoom.svg) no-repeat center;
 }
 .product-overlay ul li span.prod-addtocart {
-  background: #f4bc21 url(/images/icon-cart-black.svg) no-repeat center;
+  background: #000000 url(/images/icon-cart-black.svg) no-repeat center;
 }
 .product_block .star i.star_icon.active {
   display: inline-block;
@@ -4485,7 +4493,7 @@ ul.thumbnails li span {
 .product_block .product_card_product_name {
   color: #232323;
   text-align: center;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 14px;
   font-style: normal;
   font-weight: 700;
@@ -4496,25 +4504,21 @@ ul.thumbnails li span {
   border: none !important;
 }
 .theme_btn {
-  background: linear-gradient(
-    79deg,
-    rgb(244, 188, 33) 0%,
-    rgb(244, 188, 33) 100%
-  );
+  background: #000000;
+  color: #ffffff;
 }
 .theme_btn:hover {
-  background: linear-gradient(
-    79deg,
-    rgb(244, 188, 33) 0%,
-    rgb(244, 188, 33) 100%
-  );
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #000000;
 }
 .prod-wght-blk .btn {
-  border: 1px solid rgb(244, 188, 33);
-  color: rgb(244, 188, 33);
+  border: 1px solid #000000;
+  color: #000000;
 }
 .prod-wght-blk .btn.active {
-  background-color: rgb(244, 188, 33);
+  background-color: #000000;
+  color: #ffffff;
 }
 .payment_success_page {
   justify-content: center;
@@ -4569,8 +4573,8 @@ ul.thumbnails li span {
   width: 100%;
 }
 .my_profile_link.active {
-  color: rgb(244, 188, 33);
-  border-left: 3px solid rgb(244, 188, 33);
+  color: #000000;
+  border-left: 3px solid #000000;
 }
 .my_profile_link a {
   color: inherit;
@@ -4602,14 +4606,14 @@ ul.thumbnails li span {
   background: url(/images/star_active.png) no-repeat;
 }
 .without_background {
-  border: 1px solid rgb(244, 188, 33);
+  border: 1px solid #000000;
   background: #fff;
-  color: rgb(244, 188, 33);
+  color: #000000;
 }
 .without_background:hover {
-  border: 1px solid rgb(244, 188, 33);
+  border: 1px solid #000000;
   background: #fff;
-  color: rgb(244, 188, 33);
+  color: #000000;
 }
 .wishlist-products-container {
   width: 100%;
@@ -4703,7 +4707,7 @@ ul.thumbnails li span {
 }
 .my-orders-order-number h3 {
   color: #383838;
-  font-family: "Quicksand", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 16px;
   font-style: normal;
   font-weight: 700;
@@ -4768,7 +4772,7 @@ ul.thumbnails li span {
   display: inline-block;
   padding: 6px 8px;
   /* background: #F4BC21; */
-  background: #eb3122;
+  background: #000000;
   border-radius: 4px;
   position: absolute;
   z-index: 1;
@@ -4784,7 +4788,7 @@ ul.thumbnails li span {
   display: inline-block;
   padding: 8px 8px;
   /* background: #F4BC21; */
-  background: #eb3122;
+  background: #000000;
   border-radius: 4px;
   margin: 0px 8px;
   color: white;
@@ -4795,7 +4799,7 @@ ul.thumbnails li span {
   display: inline-block;
   padding: 0px 6px;
   /* background: #F4BC21; */
-  background: #eb3122;
+  background: #000000;
   border-radius: 4px;
   color: white;
   font-size: 12px;
@@ -4951,7 +4955,7 @@ div.prod-det-sm .prod-det-sm-cont {
   display: flex;
   width: 50px;
   height: 50px;
-  background-color: #f4bc21;
+  background-color: #000000;
   font-size: 0;
 }
 

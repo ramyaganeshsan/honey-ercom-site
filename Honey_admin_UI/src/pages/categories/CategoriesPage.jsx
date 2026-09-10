@@ -356,7 +356,7 @@ export default function CategoriesPage() {
               required
               className="full"
               error={errors.main_category_id}
-              hint="Sub category must belong to one Category. Example: Honey → Natural Honey"
+              hint="Sub category must belong to one Category. Example: Home Accessories → Decor"
             >
               <select
                 name="main_category_id"

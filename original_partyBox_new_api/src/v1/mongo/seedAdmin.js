@@ -1,8 +1,8 @@
 /**
- * Seed / upsert the Honey admin user.
+ * Seed / upsert the GOZO HOME admin user.
  * Usage: npm run seed:admin
  *
- * email: admin@thunayanhoney.com
+ * email: admin@gozohome.com
  * password: Admin@123
  * user_type: 1
  */

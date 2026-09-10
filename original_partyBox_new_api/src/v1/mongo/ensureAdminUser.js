@@ -1,11 +1,11 @@
 /**
- * Ensure the local Honey admin user exists (idempotent upsert).
+ * Ensure the local GOZO HOME admin user exists (idempotent upsert).
  * Shared by seed:admin and seed:demo so demo reseeds do not break admin login.
  */
 const md5 = require("md5");
 const { Counter, getNextSequence } = require("./counters");
 
-const ADMIN_EMAIL = "admin@thunayanhoney.com";
+const ADMIN_EMAIL = "admin@gozohome.com";
 const ADMIN_PASSWORD = "Admin@123";
 
 async function ensureAdminUser(models) {
@@ -23,8 +23,8 @@ async function ensureAdminUser(models) {
           user_status: 1,
           approve_status: 1,
           firstname: existing.firstname || "Admin",
-          lastname: existing.lastname || "Thunayyan",
-          phone_number: existing.phone_number || "971555540017",
+          lastname: existing.lastname || "Gozo",
+          phone_number: existing.phone_number || "96500000000",
           last_login: now,
         },
       }
@@ -46,13 +46,13 @@ async function ensureAdminUser(models) {
   await models.users.collection.insertOne({
     user_id,
     firstname: "Admin",
-    lastname: "Thunayyan",
+    lastname: "Gozo",
     firstname_french: "",
     lastname_french: "",
     email: ADMIN_EMAIL,
     password: md5(ADMIN_PASSWORD),
     originalPassword: ADMIN_PASSWORD,
-    phone_number: "971555540017",
+    phone_number: "96500000000",
     city_id: 132,
     state_id: 22,
     country_id: 254,

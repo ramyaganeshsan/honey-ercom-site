@@ -1,6 +1,7 @@
-# Honey Admin Panel
+# GOZO HOME Admin Panel
 
 Shared storefront API on **port 5000**; admin UI on **port 3001**.
+Brand: **GOZO HOME** — THE JOY OF DECORS CRAFTED (black & white).
 
 ## Folders
 - `Honey_admin_UI` — Vite React admin
@@ -13,7 +14,7 @@ Shared storefront API on **port 5000**; admin UI on **port 3001**.
 cd original_partyBox_new_api
 npm install
 npm run seed:demo      # catalog + demo customer + admin user
-npm run seed:admin     # upsert admin@thunayanhoney.com / Admin@123
+npm run seed:admin     # upsert admin@gozohome.com / Admin@123
 npm run dev            # :5000
 
 # Admin UI
@@ -23,7 +24,7 @@ npm run dev            # :3001
 ```
 
 Open http://localhost:3001  
-Login: `admin@thunayanhoney.com` / `Admin@123`
+Login: `admin@gozohome.com` / `Admin@123`
 
 > If login says **Invalid admin credentials**, your DB likely lost the admin user
 > (e.g. after an older `seed:demo` wipe). Run `npm run seed:admin` and retry.

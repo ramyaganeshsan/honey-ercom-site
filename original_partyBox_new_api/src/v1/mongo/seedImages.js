@@ -115,6 +115,9 @@ async function main() {
   });
 
   const logoPng = firstExisting([
+    path.join(ASSETS, "images", "logo.png"),
+    path.join(UI_PUBLIC, "logo.png"),
+    path.join(ASSETS, "images", "gozo", "logo-en-black.png"),
     path.join(ASSETS, "images", "dummy-product-1.png"),
     path.join(UI_PUBLIC, "dummy-product-1.png"),
   ]);

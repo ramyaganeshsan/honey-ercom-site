@@ -39,7 +39,8 @@ NODE_ENV=development
 
 `API_URL` must **not** end with `/public`.
 
-Demo user after seed: `demo@thunayanhoney.com` / `Demo@123`
+Demo user after seed: `demo@gozohome.com` / `Demo@123`
+Admin after seed: `admin@gozohome.com` / `Admin@123`
 
 ### UI (`original_HoneyEcommerce_new_ui`)
 

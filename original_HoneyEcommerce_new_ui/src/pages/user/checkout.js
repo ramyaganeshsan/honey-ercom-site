@@ -1024,7 +1024,7 @@ const Checkout = () => {
                                 <h6 className="prod-name">
                                   <Link
                                     to={`/product_detail?q=${product?.deal_key}`}
-                                    title="Clover Honey"
+                                    title="GOZO HOME"
                                   >
                                     {/* {product?.deal_title} */}
                                     {getWordBasedOnLanguage(
