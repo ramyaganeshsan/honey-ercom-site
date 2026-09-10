@@ -90,12 +90,13 @@ async function syncSubProduct(dealId, product, body = {}) {
     body.quantity !== undefined
       ? Number(body.quantity)
       : Number(product.user_limit_quantity) || 0;
+  // sub_products.price = MRP (deal_value); sub_products.discount = sale (deal_price)
   const price =
-    body.price !== undefined ? Number(body.price) : Number(product.deal_price) || 0;
+    body.price !== undefined ? Number(body.price) : Number(product.deal_value) || 0;
   const discount =
     body.discount !== undefined
       ? Number(body.discount)
-      : Number(product.deal_value) || price;
+      : Number(product.deal_price) || price;
 
   const existing = await findOne("sub_products", { product_id: dealId });
   if (existing) {
@@ -307,8 +308,8 @@ exports.uploadProductImage = async (req, res) => {
       await syncSubProduct(dealId, product, {
         product_image,
         quantity: product.user_limit_quantity,
-        price: product.deal_price,
-        discount: product.deal_value,
+        price: product.deal_value,
+        discount: product.deal_price,
       });
     }
 

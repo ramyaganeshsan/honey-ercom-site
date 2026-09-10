@@ -421,8 +421,8 @@ const ProductCard = ({ product }) => {
           </div> */}
           <Price
             currentSymbol={siteInfo?.siteSettings?.currency_symbol}
-            originalPrice={product.deal_price}
-            discountPrice={product.deal_value}
+            originalPrice={product.deal_value}
+            discountPrice={product.deal_price}
           />
         </div>
         {/* )} */}

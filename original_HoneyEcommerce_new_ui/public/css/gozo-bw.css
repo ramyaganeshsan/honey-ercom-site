@@ -723,3 +723,98 @@ footer .gozo-footer-slogan {
     padding: var(--gozo-space-lg) 0 var(--gozo-space-md) !important;
   }
 }
+
+/* ——— PDP: price strike, stars, qty, action buttons ——— */
+.product_details_right .price_block strike,
+.product_block strike,
+.prod_price_blk strike {
+  text-decoration: line-through !important;
+  text-decoration-line: line-through !important;
+}
+
+.product_details_right .star i.star_icon,
+.product_details_right .star i.star_icon.active {
+  width: 20px !important;
+  height: 19px !important;
+  background-size: contain !important;
+  margin-right: 5px !important;
+}
+
+.product_details_right .qty_value .qtyup,
+.product_details_right .qty_value .qtydown,
+.prod-operations .qty_value .qtyup,
+.prod-operations .qty_value .qtydown {
+  color: #111111 !important;
+  opacity: 1 !important;
+  font-size: 16px !important;
+  width: 44px !important;
+  height: 44px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0 !important;
+  cursor: pointer;
+}
+
+.prod-operations .qty_value {
+  align-items: center;
+}
+
+.prod-operations .qty_value span,
+.prod-operations .qty_value span input[type="text"] {
+  color: #111111 !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+/* Keep cart / wishlist icons clear of label text */
+.prod-operations .prod-optop > .btn.theme_btn.btn-add-to-cart {
+  background-image: url(/images/icon-cart-white.svg) !important;
+  background-repeat: no-repeat !important;
+  background-position: 16px center !important;
+  background-size: 16px 16px !important;
+  padding-left: 44px !important;
+  padding-right: 22px !important;
+}
+
+.prod-operations .prod-optop > .btn.theme_btn.btn-add-to-cart:hover {
+  background-image: url(/images/icon-cart-black.svg) !important;
+  background-repeat: no-repeat !important;
+  background-position: 16px center !important;
+  background-size: 16px 16px !important;
+}
+
+.prod-operations .prod-optop > .btn.btn-wishlist,
+.prod-operations .prod-optop > .btn.btn-wishlisted {
+  background-color: transparent !important;
+  background-image: url(/images/prod-wishlist.svg) !important;
+  background-repeat: no-repeat !important;
+  background-position: left center !important;
+  background-size: 18px 18px !important;
+  padding: 10px 12px 10px 28px !important;
+  margin: 0 0 0 8px !important;
+  color: #111111 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.prod-operations .prod-optop > .btn.btn-wishlisted {
+  background-image: url(/images/wishlisted.svg) !important;
+}
+
+[dir="rtl"] .prod-operations .prod-optop > .btn.theme_btn.btn-add-to-cart {
+  background-position: calc(100% - 16px) center !important;
+  padding-left: 22px !important;
+  padding-right: 44px !important;
+}
+
+[dir="rtl"] .prod-operations .prod-optop > .btn.btn-wishlist,
+[dir="rtl"] .prod-operations .prod-optop > .btn.btn-wishlisted {
+  background-position: right center !important;
+  padding: 10px 28px 10px 12px !important;
+  margin: 0 8px 0 0 !important;
+}

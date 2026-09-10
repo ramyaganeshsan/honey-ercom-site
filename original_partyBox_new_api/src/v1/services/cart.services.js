@@ -372,11 +372,16 @@ exports.addToCart = async (
       };
     }
 
-    if (productDetails[0] && productDetails[0]["deal_value"] && !sizeId) {
-      totalPrice = currencyFormatter(
-        quantity * productDetails[0]["deal_value"]
-      );
-      if (isNaN(totalPrice)) totalPrice = 0;
+    // deal_price = sale/current; deal_value = MRP/original
+    if (productDetails[0] && !sizeId) {
+      const sellPrice =
+        Number(productDetails[0]["deal_price"]) ||
+        Number(productDetails[0]["deal_value"]) ||
+        0;
+      if (sellPrice) {
+        totalPrice = currencyFormatter(quantity * sellPrice);
+        if (isNaN(totalPrice)) totalPrice = 0;
+      }
     }
 
     let userCartDetails = await getUserCartDetails(userDetails);
@@ -442,6 +447,18 @@ exports.addToCart = async (
         );
         if (isNaN(totalPrice)) totalPrice = 0;
       }
+    } else if (subProductDetails[0]) {
+      // No size variant: sell price lives on sub_products.discount (sale)
+      const sell =
+        Number(subProductDetails[0]["discount"]) ||
+        Number(subProductDetails[0]["price"]) ||
+        Number(productDetails[0]["deal_price"]) ||
+        0;
+      if (sell) {
+        totalPrice = currencyFormatter(quantity * sell);
+        if (isNaN(totalPrice)) totalPrice = 0;
+      }
+      subProductId = subProductDetails[0]["id"];
     }
     if (!cartId) {
       totalCartProducts = 1;
@@ -566,14 +583,19 @@ const insertProductIntoCartItems = async (
       productDetails[0]["deal_description_french"] || ""
     ).replace(/[']+/g, " "),
     shop_id: 1,
+    // Cart item deal_value = sell price; deal_price = MRP
     deal_value: Number(
       subProductDetails[0]["discount"] ||
+        productDetails[0]["deal_price"] ||
         productDetails[0]["deal_value"] ||
         subProductDetails[0]["price"] ||
         0
     ),
     deal_price: Number(
-      subProductDetails[0]["price"] || productDetails[0]["deal_price"] || 0
+      subProductDetails[0]["price"] ||
+        productDetails[0]["deal_value"] ||
+        productDetails[0]["deal_price"] ||
+        0
     ),
     deal_savings: Number(productDetails[0]["deal_savings"] || 0),
     deal_percentage: Number(productDetails[0]["deal_percentage"] || 0),

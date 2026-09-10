@@ -46,7 +46,7 @@ const ProductWishListCard = ({
             )}
           </div>
           <div className="tot-value">{`${currencySymbol} ${currencyFormatter(
-            product.deal_value
+            product.deal_price ?? product.deal_value
           )}`}</div>
           <div className="wishlist-product-ratings">
             <span className="star">

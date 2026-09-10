@@ -1340,7 +1340,7 @@ main {
   font-style: normal;
   font-weight: 500;
   line-height: normal;
-  text-decoration-line: strikethrough;
+  text-decoration-line: line-through;
 }
 .product_block i {
   font: 14px "roboto_regular";
@@ -2848,17 +2848,19 @@ ul.thumbnails li img {
   display: none;
 }
 .product_details_right .star i.star_icon {
-  width: 12px;
-  height: 11px;
+  width: 18px;
+  height: 17px;
   background: url(/images/star.png) no-repeat;
+  background-size: contain;
   float: left;
-  margin-right: 3px;
+  margin-right: 4px;
 }
 .product_details_right .star i.star_icon.active {
-  width: 12px;
-  height: 11px;
+  width: 18px;
+  height: 17px;
   display: block;
   background: url(/images/star_active.png) no-repeat;
+  background-size: contain;
 }
 .product_details_right .price_block {
   position: relative;
@@ -2880,7 +2882,7 @@ ul.thumbnails li img {
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-  text-decoration-line: strikethrough;
+  text-decoration-line: line-through;
   margin: 0 0 0 28px;
 }
 span.rating_count {

@@ -633,12 +633,12 @@ const ProductDetails = () => {
                     originalPrice={
                       data?.data?.having_size_color
                         ? state?.subProductPrice ?? 0
-                        : data?.data?.deal_price
+                        : data?.data?.deal_value
                     }
                     discountPrice={
                       data?.data?.having_size_color
                         ? state?.subProductDiscount ?? 0
-                        : data?.data?.deal_value
+                        : data?.data?.deal_price
                     }
                   />
 
@@ -706,7 +706,7 @@ const ProductDetails = () => {
                                 : false
                               : false
                           }
-                          className="btn theme_btn"
+                          className="btn theme_btn btn-add-to-cart"
                         >
                           {t("add_to_cart")}
                         </button>
