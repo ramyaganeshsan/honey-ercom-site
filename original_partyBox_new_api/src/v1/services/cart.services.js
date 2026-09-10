@@ -448,11 +448,11 @@ exports.addToCart = async (
         if (isNaN(totalPrice)) totalPrice = 0;
       }
     } else if (subProductDetails[0]) {
-      // No size variant: sell price lives on sub_products.discount (sale)
+      // Prefer product sale price; fall back to sub_products.discount
       const sell =
+        Number(productDetails[0]["deal_price"]) ||
         Number(subProductDetails[0]["discount"]) ||
         Number(subProductDetails[0]["price"]) ||
-        Number(productDetails[0]["deal_price"]) ||
         0;
       if (sell) {
         totalPrice = currencyFormatter(quantity * sell);

@@ -732,68 +732,77 @@ footer .gozo-footer-slogan {
   text-decoration-line: line-through !important;
 }
 
-.product_details_right .star i.star_icon,
-.product_details_right .star i.star_icon.active {
-  width: 20px !important;
-  height: 19px !important;
-  background-size: contain !important;
-  margin-right: 5px !important;
-}
-
-.product_details_right .qty_value .qtyup,
-.product_details_right .qty_value .qtydown,
-.prod-operations .qty_value .qtyup,
-.prod-operations .qty_value .qtydown {
-  color: #111111 !important;
-  opacity: 1 !important;
-  font-size: 16px !important;
-  width: 44px !important;
-  height: 44px !important;
+.product_details_right .star {
   display: inline-flex !important;
   align-items: center;
-  justify-content: center;
-  border: 0;
-  background: transparent;
-  padding: 0 !important;
-  cursor: pointer;
+  gap: 4px;
+}
+
+.product_details_right .star i.star_icon,
+.product_details_right .star i.star_icon.active {
+  width: 26px !important;
+  height: 25px !important;
+  background-size: contain !important;
+  background-position: center !important;
+  margin-right: 0 !important;
+  float: none !important;
+  display: inline-block !important;
 }
 
 .prod-operations .qty_value {
   align-items: center;
+  overflow: hidden;
+  border: 1px solid #111111 !important;
 }
 
-.prod-operations .qty_value span,
-.prod-operations .qty_value span input[type="text"] {
+.prod-operations .qty_value .qtyup,
+.prod-operations .qty_value .qtydown {
   color: #111111 !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
+  opacity: 1 !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border: 0 !important;
+  background: #eeeeee !important;
+  padding: 0 !important;
+  cursor: pointer;
+  float: none !important;
 }
 
-/* Keep cart / wishlist icons clear of label text */
 .prod-operations .prod-optop > .btn.theme_btn.btn-add-to-cart {
-  background-image: url(/images/icon-cart-white.svg) !important;
-  background-repeat: no-repeat !important;
-  background-position: 16px center !important;
-  background-size: 16px 16px !important;
-  padding-left: 44px !important;
-  padding-right: 22px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-image: none !important;
+  padding: 12px 22px !important;
 }
 
-.prod-operations .prod-optop > .btn.theme_btn.btn-add-to-cart:hover {
-  background-image: url(/images/icon-cart-black.svg) !important;
-  background-repeat: no-repeat !important;
-  background-position: 16px center !important;
-  background-size: 16px 16px !important;
+.prod-operations .prod-optop > .btn.theme_btn.btn-add-to-cart .btn-add-to-cart-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.prod-operations .prod-optop > .btn.theme_btn.btn-add-to-cart:hover .btn-add-to-cart-icon {
+  filter: invert(1);
 }
 
 .prod-operations .prod-optop > .btn.btn-wishlist,
 .prod-operations .prod-optop > .btn.btn-wishlisted {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
   background-color: transparent !important;
-  background-image: url(/images/prod-wishlist.svg) !important;
-  background-repeat: no-repeat !important;
-  background-position: left center !important;
-  background-size: 18px 18px !important;
-  padding: 10px 12px 10px 28px !important;
+  background-image: none !important;
+  padding: 10px 12px !important;
   margin: 0 0 0 8px !important;
   color: #111111 !important;
   border: 0 !important;
@@ -802,19 +811,15 @@ footer .gozo-footer-slogan {
   text-transform: none;
 }
 
-.prod-operations .prod-optop > .btn.btn-wishlisted {
-  background-image: url(/images/wishlisted.svg) !important;
-}
-
-[dir="rtl"] .prod-operations .prod-optop > .btn.theme_btn.btn-add-to-cart {
-  background-position: calc(100% - 16px) center !important;
-  padding-left: 22px !important;
-  padding-right: 44px !important;
+.prod-operations .prod-optop > .btn.btn-wishlist .btn-wishlist-icon,
+.prod-operations .prod-optop > .btn.btn-wishlisted .btn-wishlist-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: block;
 }
 
 [dir="rtl"] .prod-operations .prod-optop > .btn.btn-wishlist,
 [dir="rtl"] .prod-operations .prod-optop > .btn.btn-wishlisted {
-  background-position: right center !important;
-  padding: 10px 28px 10px 12px !important;
   margin: 0 8px 0 0 !important;
 }

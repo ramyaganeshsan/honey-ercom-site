@@ -352,7 +352,7 @@ const ProductDetails = () => {
             wishlistCountElement.innerHTML = 0;
           }
         }
-        e?.target?.classList?.add("btn-wishlisted");
+        e?.currentTarget?.classList?.add("btn-wishlisted");
         userCartDetails?.addProductToUserWishList(id);
         // navigate("/wishlist");
       } else {
@@ -457,7 +457,7 @@ const ProductDetails = () => {
         let totalWishlistCount = response?.data?.data?.totalWishListItems ?? 0;
         toast.success(message, toastConfig);
         updateWishlistItemsBatch(totalWishlistCount);
-        e?.target?.classList?.remove("btn-wishlisted");
+        e?.currentTarget?.classList?.remove("btn-wishlisted");
         userCartDetails?.removeProductFromUserWishlist(id);
       } else {
         handleResponse(response?.data, toast, navigate, siteInfo?.refetch);
@@ -672,9 +672,13 @@ const ProductDetails = () => {
                         <div className="qty_value">
                           <button
                             onClick={() => handleProductQuantityChange()}
-                            className="qtyup fa fa-minus"
+                            className="qtyup"
+                            type="button"
                             title={t("reduce")}
-                          ></button>
+                            aria-label={t("reduce")}
+                          >
+                            −
+                          </button>
                           <span>
                             <input
                               name="qty"
@@ -687,9 +691,13 @@ const ProductDetails = () => {
                           </span>
                           <button
                             onClick={() => handleProductQuantityChange("add")}
-                            className="qtydown fa fa-plus"
+                            className="qtydown"
+                            type="button"
                             title={t("increase")}
-                          ></button>
+                            aria-label={t("increase")}
+                          >
+                            +
+                          </button>
                         </div>
                         <button
                           onClick={() => addToCartJust(data?.data?.deal_id)}
@@ -708,7 +716,13 @@ const ProductDetails = () => {
                           }
                           className="btn theme_btn btn-add-to-cart"
                         >
-                          {t("add_to_cart")}
+                          <img
+                            src="/images/icon-cart-white.svg"
+                            alt=""
+                            className="btn-add-to-cart-icon"
+                            aria-hidden="true"
+                          />
+                          <span>{t("add_to_cart")}</span>
                         </button>
                         <button
                           onClick={() => addToCart(data?.data?.deal_id)}
@@ -757,12 +771,27 @@ const ProductDetails = () => {
                               : "btn btn-wishlist"
                           }
                         >
-                          {checkProductIsAlreadyWishlisted(
-                            userCartDetails?.wishList,
-                            data?.data?.deal_id
-                          )
-                            ? t("remove_from_wishlist")
-                            : t("add_to_wishlist")}
+                          <img
+                            src={
+                              checkProductIsAlreadyWishlisted(
+                                userCartDetails?.wishList,
+                                data?.data?.deal_id
+                              )
+                                ? "/images/wishlisted.svg"
+                                : "/images/prod-wishlist.svg"
+                            }
+                            alt=""
+                            className="btn-wishlist-icon"
+                            aria-hidden="true"
+                          />
+                          <span>
+                            {checkProductIsAlreadyWishlisted(
+                              userCartDetails?.wishList,
+                              data?.data?.deal_id
+                            )
+                              ? t("remove_from_wishlist")
+                              : t("add_to_wishlist")}
+                          </span>
                         </button>
                         {/* <button type="button" className="btn btn-compare">
                         {t("compare")}

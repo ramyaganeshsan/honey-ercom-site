@@ -167,6 +167,21 @@ async function seedEssentials() {
     [{ $set: { discount: "$price" } }]
   );
 
+  // Align sub_products with admin convention: price=MRP (deal_value), discount=sale (deal_price)
+  const products = await db
+    .collection("product")
+    .find({}, { projection: { deal_id: 1, deal_value: 1, deal_price: 1 } })
+    .toArray();
+  for (const p of products) {
+    const mrp = Number(p.deal_value) || 0;
+    const sale = Number(p.deal_price) || mrp;
+    if (!p.deal_id) continue;
+    await db.collection("sub_products").updateMany(
+      { product_id: p.deal_id },
+      { $set: { price: mrp, discount: sale } }
+    );
+  }
+
   console.log("Essentials upserted:");
   console.log("  cms:", await db.collection("cms").countDocuments({ cms_id: { $in: [6, 8, 33, 56] } }));
   console.log(
