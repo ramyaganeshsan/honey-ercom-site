@@ -657,8 +657,4 @@ footer .gozo-footer-slogan {
   .ftr-main {
     padding: var(--gozo-space-lg) 0 var(--gozo-space-md) !important;
   }
-
-  body {
-    background-size: 280px 280px !important;
-  }
 }
