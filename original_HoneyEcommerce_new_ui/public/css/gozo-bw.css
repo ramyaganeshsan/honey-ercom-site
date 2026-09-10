@@ -46,19 +46,16 @@ textarea,
 
 body {
   color: var(--gozo-ink);
-  background-color: var(--gozo-mist) !important;
-  background-image: url(/images/gozo/pattern-light.png) !important;
-  background-repeat: repeat !important;
-  background-size: 380px 380px !important;
-  background-attachment: scroll !important;
+  background-color: var(--gozo-white) !important;
+  background-image: none !important;
   letter-spacing: 0.01em;
   line-height: 1.55 !important;
 }
 
-/* Clear fixed header + let pattern show through page body */
+/* Clear fixed header */
 main {
   margin-top: 168px !important;
-  background: transparent !important;
+  background: var(--gozo-white) !important;
 }
 
 @media (max-width: 600px) {
