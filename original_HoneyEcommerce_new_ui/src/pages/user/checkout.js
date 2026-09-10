@@ -20,6 +20,7 @@ import {
   getWordBasedOnLanguage,
   handleResponse,
   toastConfig,
+  updateCartItemsBatch,
 } from "../../utils";
 import { toast } from "react-toastify";
 import { siteSettingsContext } from "../../contexts";
@@ -587,7 +588,13 @@ const Checkout = () => {
         } else if (Number(response.data?.status) === 2) {
           let message = response?.data?.message;
           toast.success(message, toastConfig);
-          siteInfo?.refetch();
+          // Clear header badge immediately — refetch alone can leave stale count
+          updateCartItemsBatch(0);
+          try {
+            await siteInfo?.refetch?.();
+          } catch (_) {
+            /* ignore refetch errors; badge already cleared */
+          }
           navigate("/");
         } else if (Number(response.data?.status) === 1) {
           let payementDetails = response.data.data;

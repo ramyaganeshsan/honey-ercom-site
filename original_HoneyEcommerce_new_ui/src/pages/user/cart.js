@@ -94,6 +94,9 @@ const Cart = () => {
           setMyCartProducts(products);
           if (products.length <= 0) {
             setEmptycart(true);
+            updateCartItemsBatch(0);
+          } else {
+            updateCartItemsBatch(products.length);
           }
         } else if (response.data?.status === -10) {
           setIsAccountBlocked(true);
