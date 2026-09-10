@@ -105,7 +105,7 @@ const Home = () => {
             <ProductCarouselContainer title={t("offers")}>
               <Corousel
                 nav={true}
-                margin={10}
+                margin={24}
                 xs={1}
                 sm={1}
                 md={2}
@@ -129,7 +129,7 @@ const Home = () => {
             <ProductCarouselContainer title={t("new_arrival_home")}>
               <Corousel
                 nav={true}
-                margin={10}
+                margin={24}
                 xs={1}
                 sm={1}
                 md={2}
@@ -153,7 +153,7 @@ const Home = () => {
               <ProductCarouselContainer title={t("best_seller")}>
                 <Corousel
                   nav={true}
-                  margin={10}
+                  margin={24}
                   xs={1}
                   sm={1}
                   md={2}

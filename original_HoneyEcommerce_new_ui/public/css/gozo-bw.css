@@ -601,16 +601,81 @@ footer .gozo-footer-slogan {
   padding: 14px 0 !important;
 }
 
-/* Owl carousel equal height items */
-.owl-carousel .owl-stage {
+/* Owl product carousels — equal height + visible gaps between cards */
+.cyr-product-section .owl-carousel .owl-stage {
   display: flex;
 }
-.owl-carousel .owl-item {
+.cyr-product-section .owl-carousel .owl-item {
   display: flex;
 }
-.owl-carousel .owl-item .item,
-.owl-carousel .owl-item .product_block {
+.cyr-product-section .owl-carousel .owl-item .item,
+.cyr-product-section .owl-carousel .owl-item .product_block {
   width: 100%;
+}
+
+/* Product listing / home grids — restore spacing between cards.
+   Bootstrap 5 gutters are on `.row > *` only; InfiniteScroll wraps
+   columns so they lose side padding unless we add gap/padding here. */
+.infinite-scroll-container,
+.infinite-scroll-component.infinite-scroll-container {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 24px 20px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+.infinite-scroll-container > [class*="col-"],
+.infinite-scroll-component.infinite-scroll-container > [class*="col-"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-bottom: 0 !important;
+  /* 3-up on md+, with 20px horizontal gap accounted for */
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 576px) {
+  .infinite-scroll-container > [class*="col-sm-6"],
+  .infinite-scroll-component.infinite-scroll-container > [class*="col-sm-6"] {
+    flex: 0 0 calc(50% - 10px);
+    max-width: calc(50% - 10px);
+  }
+}
+
+@media (min-width: 768px) {
+  .infinite-scroll-container > [class*="col-md-4"],
+  .infinite-scroll-component.infinite-scroll-container > [class*="col-md-4"] {
+    flex: 0 0 calc(33.333% - 14px);
+    max-width: calc(33.333% - 14px);
+  }
+}
+
+@media (min-width: 1200px) {
+  .infinite-scroll-container > [class*="col-xl-3"],
+  .infinite-scroll-component.infinite-scroll-container > [class*="col-xl-3"] {
+    flex: 0 0 calc(25% - 15px);
+    max-width: calc(25% - 15px);
+  }
+
+  .infinite-scroll-container > [class*="col-xl-4"],
+  .infinite-scroll-component.infinite-scroll-container > [class*="col-xl-4"] {
+    flex: 0 0 calc(33.333% - 14px);
+    max-width: calc(33.333% - 14px);
+  }
+}
+
+.product_block,
+.product-listing-block {
+  margin-bottom: 8px;
+}
+
+.product_slider_container {
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 /* Spinner / accents stay B&W */
