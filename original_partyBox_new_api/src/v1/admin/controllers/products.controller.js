@@ -584,14 +584,14 @@ exports.downloadBulkTemplate = async (_req, res) => {
     const guide = XLSX.utils.aoa_to_sheet([
       ["GOZO HOME — Product bulk upload format"],
       [""],
-      ["1. Select a Category in Admin → Products → Bulk upload before uploading."],
-      ["2. Fill one product per row. Max ~100 products per file."],
-      ["3. Required columns: Item No#, Product Name (EN), Original Price, Discount Price, Stock."],
-      ["4. Product Name (AR) and Description (AR) are for the Arabic storefront."],
-      ["5. Gallery images: put 1–8 image URLs in Image_1 … Image_8, AND/OR upload a ZIP."],
-      ["6. ZIP image naming: {ItemNo}_1.jpg … {ItemNo}_8.png (e.g. GOZO-001_1.jpg)."],
-      ["7. Item No# is your SKU — different from database ID. Duplicate Item No# rows are skipped."],
-      ["8. Only new Item No# values are saved; existing ones are reported as already exist."],
+      ["1. In Admin → Products → Bulk upload, select a Category first, then upload."],
+      ["2. One product per row. About 100 products max per file."],
+      ["3. Required: Item No#, Product Name (EN), Original Price, Discount Price, Stock."],
+      ["4. Fill Product Name (AR) and Description (AR) so Arabic customers see the correct text."],
+      ["5. Product images: add 1–8 image links in Image_1 … Image_8, and/or upload a ZIP of images."],
+      ["6. In the ZIP, name files like GOZO-001_1.jpg … GOZO-001_8.png (Item No# + image number)."],
+      ["7. Item No# is the product code you assign. Keep each one unique."],
+      ["8. If an Item No# is already in Products, that row is skipped. Only new products are added."],
     ]);
     XLSX.utils.book_append_sheet(wb, guide, "Instructions");
 
@@ -735,7 +735,7 @@ exports.bulkUploadProducts = async (req, res) => {
         skipped.push({
           row: excelRow,
           item_no: itemNo,
-          reason: "Duplicate Item No# in this file",
+          reason: "Same Item No# appears twice in this file",
         });
         continue;
       }
@@ -746,7 +746,7 @@ exports.bulkUploadProducts = async (req, res) => {
         skipped.push({
           row: excelRow,
           item_no: itemNo,
-          reason: "already exists",
+          reason: "Already in Products — skipped",
           deal_id: existing.deal_id,
         });
         continue;
@@ -828,7 +828,11 @@ exports.bulkUploadProducts = async (req, res) => {
             ? "already exists"
             : createErr.message || "Failed to create product";
         if (/already exists|duplicate/i.test(msg)) {
-          skipped.push({ row: excelRow, item_no: itemNo, reason: "already exists" });
+          skipped.push({
+            row: excelRow,
+            item_no: itemNo,
+            reason: "Already in Products — skipped",
+          });
         } else {
           errors.push({ row: excelRow, item_no: itemNo, message: msg });
         }
@@ -849,8 +853,8 @@ exports.bulkUploadProducts = async (req, res) => {
           errors,
         },
         created.length
-          ? `Imported ${created.length} product(s); skipped ${skipped.length}; errors ${errors.length}`
-          : `No products imported; skipped ${skipped.length}; errors ${errors.length}`
+          ? `Added ${created.length} product(s). Already in Products: ${skipped.length}. Need fix: ${errors.length}`
+          : `No new products added. Already in Products: ${skipped.length}. Need fix: ${errors.length}`
       )
     );
   } catch (err) {

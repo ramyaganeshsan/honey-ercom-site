@@ -466,8 +466,8 @@ export default function ProductsPage() {
     const skipped = res.data?.skipped_count || 0
     toast.success(
       created
-        ? `Imported ${created} product(s)${skipped ? ` · ${skipped} already exist (skipped)` : ''}`
-        : res.message || 'No new products imported'
+        ? `Added ${created} product(s)${skipped ? ` · ${skipped} already in Products (skipped)` : ''}`
+        : res.message || 'No new products added'
     )
     load()
   }
@@ -619,7 +619,7 @@ export default function ProductsPage() {
 
           <Field
             label="Item No#"
-            hint="Your SKU — different from database ID. Must be unique."
+            hint="Product code you assign. Each Item No# must be unique."
             error={errors.item_no}
           >
             <input
@@ -886,9 +886,11 @@ export default function ProductsPage() {
         <div className={`bulk-format-box ${bulkReady ? '' : 'is-disabled'}`}>
           <h3>Excel format (EN + AR)</h3>
           <p>
-            Site supports English and Arabic — include Arabic product name and description
-            in the sheet. Max ~100 products per upload. Item No# is your SKU (not the DB id);
-            if Item No# already exists it is skipped and only new rows are saved.
+            The website shows products in English and Arabic, so fill both languages in the
+            sheet (product name and description). You can upload up to about 100 products at
+            a time. Item No# is the product code you give each item — keep it unique. If an
+            Item No# is already in Products, that row is skipped and only new products are
+            added.
           </p>
           <ul className="bulk-columns">
             {BULK_COLUMNS.map((col) => (
@@ -896,8 +898,8 @@ export default function ProductsPage() {
             ))}
           </ul>
           <p className="field-hint">
-            Gallery images (min 1, max 8): put URLs in Image_1…Image_8 and/or upload a ZIP
-            named {'{ItemNo}_1.jpg'} … {'{ItemNo}_8.png'}.
+            Product images (at least 1, up to 8): add image links in Image_1…Image_8, and/or
+            upload a ZIP with files named like {'{ItemNo}_1.jpg'} … {'{ItemNo}_8.png'}.
           </p>
           <div className="bulk-actions">
             <button
@@ -954,15 +956,16 @@ export default function ProductsPage() {
           <div className="bulk-result">
             <h3>Import result</h3>
             <p>
-              Created <strong>{bulkResult.created_count || 0}</strong>
+              Added <strong>{bulkResult.created_count || 0}</strong>
               {' · '}
-              Skipped (already exist) <strong>{bulkResult.skipped_count || 0}</strong>
+              Already in Products (skipped){' '}
+              <strong>{bulkResult.skipped_count || 0}</strong>
               {' · '}
-              Errors <strong>{bulkResult.error_count || 0}</strong>
+              Need fix <strong>{bulkResult.error_count || 0}</strong>
             </p>
             {(bulkResult.skipped || []).length > 0 ? (
               <div className="bulk-result-list">
-                <h4>Already exist (skipped)</h4>
+                <h4>Already in Products (skipped)</h4>
                 <ul>
                   {bulkResult.skipped.slice(0, 30).map((s) => (
                     <li key={`${s.row}-${s.item_no}`}>
@@ -974,7 +977,7 @@ export default function ProductsPage() {
             ) : null}
             {(bulkResult.errors || []).length > 0 ? (
               <div className="bulk-result-list">
-                <h4>Errors</h4>
+                <h4>Need fix</h4>
                 <ul>
                   {bulkResult.errors.slice(0, 30).map((s) => (
                     <li key={`${s.row}-${s.item_no}-${s.message}`}>
@@ -987,11 +990,11 @@ export default function ProductsPage() {
             ) : null}
             {(bulkResult.created || []).length > 0 ? (
               <div className="bulk-result-list">
-                <h4>Created</h4>
+                <h4>Added</h4>
                 <ul>
                   {bulkResult.created.slice(0, 30).map((s) => (
                     <li key={`${s.row}-${s.deal_id}`}>
-                      Row {s.row}: {s.item_no} → ID {s.deal_id} ({s.deal_title})
+                      Row {s.row}: Item No# {s.item_no} — {s.deal_title}
                     </li>
                   ))}
                 </ul>
