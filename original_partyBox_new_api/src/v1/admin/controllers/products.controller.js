@@ -330,7 +330,11 @@ function productImagePayload(dealKey) {
 
 exports.getProduct = async (req, res) => {
   try {
-    const dealId = Number(req.params.dealId);
+    const rawId = String(req.params.dealId || "").trim();
+    if (!/^\d+$/.test(rawId)) {
+      return res.send(fail("Invalid product id"));
+    }
+    const dealId = parseInt(rawId, 10);
     if (!Number.isFinite(dealId) || dealId <= 0) {
       return res.send(fail("Invalid product id"));
     }

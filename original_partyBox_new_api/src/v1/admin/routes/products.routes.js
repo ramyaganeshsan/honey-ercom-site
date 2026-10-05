@@ -3,12 +3,21 @@ const router = express.Router();
 const { requireAdmin } = require("../middleware/adminAuth.middleware");
 const { uploadImage, bulkUpload } = require("../middleware/upload.middleware");
 const products = require("../controllers/products.controller");
+const { fail } = require("../services/admin.helpers");
 
 router.use(requireAdmin);
 
+function requireNumericDealId(req, res, next) {
+  const id = String(req.params.dealId || "");
+  if (!/^\d+$/.test(id)) {
+    return res.status(404).send(fail("Not found"));
+  }
+  return next();
+}
+
 router.get("/", products.listProducts);
 
-/** Bulk upload helpers — must stay above /:dealId */
+/** Kept for compatibility — prefer /api/admin/product-bulk/* */
 router.get("/bulk-template", products.downloadBulkTemplate);
 router.get("/bulk/template", products.downloadBulkTemplate);
 router.post(
@@ -20,16 +29,16 @@ router.post(
   products.bulkUploadProducts
 );
 
-/** Numeric deal_id only — prevents /bulk-template matching getProduct */
-router.get("/:dealId(\\d+)", products.getProduct);
+router.get("/:dealId", requireNumericDealId, products.getProduct);
 router.post("/", products.createProduct);
-router.put("/:dealId(\\d+)", products.updateProduct);
-router.put("/:dealId(\\d+)/status", products.updateProductStatus);
+router.put("/:dealId", requireNumericDealId, products.updateProduct);
+router.put("/:dealId/status", requireNumericDealId, products.updateProductStatus);
 router.post(
-  "/:dealId(\\d+)/image",
+  "/:dealId/image",
+  requireNumericDealId,
   uploadImage.single("image"),
   products.uploadProductImage
 );
-router.delete("/:dealId(\\d+)", products.deleteProduct);
+router.delete("/:dealId", requireNumericDealId, products.deleteProduct);
 
 module.exports = router;

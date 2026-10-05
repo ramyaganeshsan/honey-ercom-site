@@ -6,6 +6,7 @@ router.use("/dashboard", require("./dashboard.routes"));
 router.use("/users", require("./users.routes"));
 router.use("/categories", require("./categories.routes"));
 router.use("/products", require("./products.routes"));
+router.use("/product-bulk", require("./product-bulk.routes"));
 router.use("/orders", require("./orders.routes"));
 router.use("/transactions", require("./transactions.routes"));
 router.use("/promocodes", require("./promocodes.routes"));

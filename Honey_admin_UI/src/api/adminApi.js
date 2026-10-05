@@ -54,7 +54,8 @@ export const productsApi = {
   },
   downloadBulkTemplate: async () => {
     try {
-      const res = await client.get('/products/bulk-template', {
+      // Dedicated mount — never collides with /products/:dealId
+      const res = await client.get('/product-bulk/template', {
         responseType: 'blob',
         timeout: 60000,
       })
@@ -115,7 +116,7 @@ export const productsApi = {
     if (zipFile) fd.append('images_zip', zipFile)
     return apiRequest(
       () =>
-        client.post('/products/bulk', fd, {
+        client.post('/product-bulk/upload', fd, {
           headers: { 'Content-Type': undefined },
           timeout: 180000,
         }),
