@@ -52,6 +52,35 @@ export const productsApi = {
       })
     )
   },
+  downloadBulkTemplate: async () => {
+    try {
+      const res = await client.get('/products/bulk-template', {
+        responseType: 'blob',
+        timeout: 60000,
+      })
+      return { ok: true, data: res.data, message: '' }
+    } catch (err) {
+      return {
+        ok: false,
+        data: null,
+        message: err?.response?.data?.message || err.message || 'Download failed',
+      }
+    }
+  },
+  bulkUpload: (categoryId, excelFile, zipFile) => {
+    const fd = new FormData()
+    fd.append('category_id', String(categoryId))
+    fd.append('excel', excelFile)
+    if (zipFile) fd.append('images_zip', zipFile)
+    return apiRequest(
+      () =>
+        client.post('/products/bulk', fd, {
+          headers: { 'Content-Type': undefined },
+          timeout: 180000,
+        }),
+      { silent: true }
+    )
+  },
 }
 
 export const ordersApi = {

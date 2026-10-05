@@ -582,6 +582,15 @@ const ProductDetails = () => {
                         {t("incredient")}: {data?.data?.incredient}
                       </span>
                     )}
+                    {data?.data?.material ? (
+                      <span>Material: {data.data.material}</span>
+                    ) : null}
+                    {data?.data?.dimension ? (
+                      <span>Dimension: {data.data.dimension}</span>
+                    ) : null}
+                    {data?.data?.item_no ? (
+                      <span>Item No#: {data.data.item_no}</span>
+                    ) : null}
                   </p>
                   <div className="prod-count-ctnr">
                     <span className="star">

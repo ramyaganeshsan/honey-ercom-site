@@ -17,6 +17,20 @@ import { formatMoney, isActiveStatus, pickList } from '../../utils/format'
 
 const MAX_PRODUCT_IMAGES = 8
 
+const BULK_COLUMNS = [
+  'Item No#',
+  'Product Name (EN)',
+  'Product Name (AR)',
+  'Description (EN)',
+  'Description (AR)',
+  'Material',
+  'Dimension',
+  'Original Price',
+  'Discount Price',
+  'Stock',
+  'Image_1 … Image_8',
+]
+
 function emptyImageSlots() {
   return Array.from({ length: MAX_PRODUCT_IMAGES }, (_, i) => ({
     index: i + 1,
@@ -26,12 +40,15 @@ function emptyImageSlots() {
 }
 
 const emptyForm = {
+  item_no: '',
   deal_title: '',
   deal_title_french: '',
   url_title: '',
   deal_key: '',
   deal_description: '',
   deal_description_french: '',
+  material: '',
+  dimension: '',
   category_id: '',
   deal_value: '',
   deal_price: '',
@@ -53,12 +70,15 @@ const emptyForm = {
 
 function mapRowToForm(row) {
   return {
+    item_no: row.item_no || '',
     deal_title: row.deal_title || '',
     deal_title_french: row.deal_title_french || '',
     url_title: row.url_title || '',
     deal_key: row.deal_key || '',
     deal_description: row.deal_description || '',
     deal_description_french: row.deal_description_french || '',
+    material: row.material || '',
+    dimension: row.dimension || '',
     category_id: row.category_id ?? '',
     deal_value: row.deal_value ?? '',
     deal_price: row.deal_price ?? '',
@@ -83,6 +103,17 @@ function isRootCategory(c) {
   return !Number(c.main_category_id)
 }
 
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 export default function ProductsPage() {
   const [rows, setRows] = useState([])
   const [categories, setCategories] = useState([])
@@ -98,6 +129,14 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false)
   const [imageSlots, setImageSlots] = useState(emptyImageSlots)
   const [imgBust, setImgBust] = useState(0)
+
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkCategoryId, setBulkCategoryId] = useState('')
+  const [bulkExcel, setBulkExcel] = useState(null)
+  const [bulkZip, setBulkZip] = useState(null)
+  const [bulkUploading, setBulkUploading] = useState(false)
+  const [bulkResult, setBulkResult] = useState(null)
+  const [bulkError, setBulkError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -171,6 +210,20 @@ export default function ProductsPage() {
     setOpen(true)
   }
 
+  const openBulk = () => {
+    setBulkCategoryId('')
+    setBulkExcel(null)
+    setBulkZip(null)
+    setBulkResult(null)
+    setBulkError('')
+    setBulkOpen(true)
+  }
+
+  const closeBulk = () => {
+    if (bulkUploading) return
+    setBulkOpen(false)
+  }
+
   const openEdit = async (row) => {
     setEditing(row)
     setForm(mapRowToForm(row))
@@ -229,7 +282,6 @@ export default function ProductsPage() {
       })
     )
     setErrors((prev) => ({ ...prev, image: '' }))
-    // allow re-selecting the same file
     e.target.value = ''
   }
 
@@ -254,12 +306,15 @@ export default function ProductsPage() {
     const category_id = Number(form.category_id) || 0
 
     return {
+      item_no: form.item_no.trim(),
       deal_title: form.deal_title.trim(),
       deal_title_french: form.deal_title_french.trim() || form.deal_title.trim(),
       url_title: form.url_title.trim(),
       deal_key: form.deal_key.trim(),
       deal_description: form.deal_description,
       deal_description_french: form.deal_description_french,
+      material: form.material.trim(),
+      dimension: form.dimension.trim(),
       category_id,
       category_ids: category_id ? String(category_id) : '',
       sub_category_id: 0,
@@ -377,6 +432,46 @@ export default function ProductsPage() {
     }
   }
 
+  const downloadTemplate = async () => {
+    const res = await productsApi.downloadBulkTemplate()
+    if (!res.ok) {
+      toast.error(res.message || 'Failed to download template')
+      return
+    }
+    downloadBlob(res.data, 'gozo-product-bulk-template.xlsx')
+    toast.success('Template downloaded')
+  }
+
+  const runBulkUpload = async () => {
+    if (!bulkCategoryId) {
+      setBulkError('Select a Category first — bulk upload unlocks after that')
+      return
+    }
+    if (!bulkExcel) {
+      setBulkError('Choose an Excel (.xlsx) file')
+      return
+    }
+    setBulkUploading(true)
+    setBulkError('')
+    setBulkResult(null)
+    const res = await productsApi.bulkUpload(bulkCategoryId, bulkExcel, bulkZip)
+    setBulkUploading(false)
+    if (!res.ok) {
+      setBulkError(res.message || 'Bulk upload failed')
+      toast.error(res.message || 'Bulk upload failed')
+      return
+    }
+    setBulkResult(res.data)
+    const created = res.data?.created_count || 0
+    const skipped = res.data?.skipped_count || 0
+    toast.success(
+      created
+        ? `Imported ${created} product(s)${skipped ? ` · ${skipped} already exist (skipped)` : ''}`
+        : res.message || 'No new products imported'
+    )
+    load()
+  }
+
   const catName = (id) => {
     const c = categories.find((x) => (x.category_id ?? x.id) === Number(id))
     return c?.category_name || id || '—'
@@ -401,6 +496,11 @@ export default function ProductsPage() {
         ) : (
           '—'
         ),
+    },
+    {
+      key: 'item_no',
+      header: 'Item No#',
+      render: (r) => r.item_no || '—',
     },
     {
       key: 'deal_id',
@@ -518,6 +618,19 @@ export default function ProductsPage() {
           </Field>
 
           <Field
+            label="Item No#"
+            hint="Your SKU — different from database ID. Must be unique."
+            error={errors.item_no}
+          >
+            <input
+              name="item_no"
+              value={form.item_no}
+              onChange={onChange}
+              placeholder="e.g. GOZO-001"
+            />
+          </Field>
+
+          <Field
             label="3. Product gallery images (max 8)"
             className="full"
             error={errors.image}
@@ -601,6 +714,13 @@ export default function ProductsPage() {
               value={form.deal_description_french}
               onChange={onChange}
             />
+          </Field>
+
+          <Field label="Material">
+            <input name="material" value={form.material} onChange={onChange} />
+          </Field>
+          <Field label="Dimension">
+            <input name="dimension" value={form.dimension} onChange={onChange} />
           </Field>
 
           <Field label="Original price (MRP)" required error={errors.deal_value}>
@@ -702,6 +822,187 @@ export default function ProductsPage() {
     )
   }
 
+  if (bulkOpen) {
+    const bulkReady = Boolean(bulkCategoryId)
+    return (
+      <Modal
+        open
+        title="Bulk product upload"
+        onClose={closeBulk}
+        wide
+        busy={bulkUploading}
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={closeBulk}
+              disabled={bulkUploading}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={runBulkUpload}
+              disabled={bulkUploading || !bulkReady || !bulkExcel}
+            >
+              {bulkUploading ? 'Uploading…' : 'Upload & import'}
+            </button>
+          </>
+        }
+      >
+        <div className="flow-steps compact">
+          <span className={bulkCategoryId ? 'done' : 'active'}>1. Category</span>
+          <span className={bulkCategoryId ? 'active' : ''}>2. Excel upload</span>
+        </div>
+
+        {bulkError ? <div className="form-alert">{bulkError}</div> : null}
+
+        <div className="form-grid">
+          <Field
+            label="1. Category"
+            required
+            className="full"
+            hint="Select a category first — bulk upload unlocks after that. All imported products are assigned to this category."
+          >
+            <select
+              value={bulkCategoryId}
+              onChange={(e) => {
+                setBulkCategoryId(e.target.value)
+                setBulkError('')
+              }}
+            >
+              <option value="">Select category</option>
+              {parentCategories.map((c) => (
+                <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
+                  {c.category_name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <div className={`bulk-format-box ${bulkReady ? '' : 'is-disabled'}`}>
+          <h3>Excel format (EN + AR)</h3>
+          <p>
+            Site supports English and Arabic — include Arabic product name and description
+            in the sheet. Max ~100 products per upload. Item No# is your SKU (not the DB id);
+            if Item No# already exists it is skipped and only new rows are saved.
+          </p>
+          <ul className="bulk-columns">
+            {BULK_COLUMNS.map((col) => (
+              <li key={col}>{col}</li>
+            ))}
+          </ul>
+          <p className="field-hint">
+            Gallery images (min 1, max 8): put URLs in Image_1…Image_8 and/or upload a ZIP
+            named {'{ItemNo}_1.jpg'} … {'{ItemNo}_8.png'}.
+          </p>
+          <div className="bulk-actions">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={downloadTemplate}
+              disabled={!bulkReady || bulkUploading}
+            >
+              Download Excel template
+            </button>
+          </div>
+        </div>
+
+        <div className="form-grid" style={{ marginTop: 16 }}>
+          <Field
+            label="Excel file (.xlsx)"
+            required
+            className="full"
+            hint={
+              bulkReady
+                ? 'Required — use the template columns above'
+                : 'Select a Category first to enable upload'
+            }
+          >
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              disabled={!bulkReady || bulkUploading}
+              onChange={(e) => {
+                setBulkExcel(e.target.files?.[0] || null)
+                setBulkError('')
+              }}
+            />
+            {bulkExcel ? (
+              <p className="field-hint">Selected: {bulkExcel.name}</p>
+            ) : null}
+          </Field>
+          <Field
+            label="Images ZIP (optional)"
+            className="full"
+            hint="Files named like GOZO-001_1.jpg, GOZO-001_2.png inside the ZIP"
+          >
+            <input
+              type="file"
+              accept=".zip,application/zip"
+              disabled={!bulkReady || bulkUploading}
+              onChange={(e) => setBulkZip(e.target.files?.[0] || null)}
+            />
+            {bulkZip ? <p className="field-hint">Selected: {bulkZip.name}</p> : null}
+          </Field>
+        </div>
+
+        {bulkResult ? (
+          <div className="bulk-result">
+            <h3>Import result</h3>
+            <p>
+              Created <strong>{bulkResult.created_count || 0}</strong>
+              {' · '}
+              Skipped (already exist) <strong>{bulkResult.skipped_count || 0}</strong>
+              {' · '}
+              Errors <strong>{bulkResult.error_count || 0}</strong>
+            </p>
+            {(bulkResult.skipped || []).length > 0 ? (
+              <div className="bulk-result-list">
+                <h4>Already exist (skipped)</h4>
+                <ul>
+                  {bulkResult.skipped.slice(0, 30).map((s) => (
+                    <li key={`${s.row}-${s.item_no}`}>
+                      Row {s.row}: Item No# {s.item_no} — {s.reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {(bulkResult.errors || []).length > 0 ? (
+              <div className="bulk-result-list">
+                <h4>Errors</h4>
+                <ul>
+                  {bulkResult.errors.slice(0, 30).map((s) => (
+                    <li key={`${s.row}-${s.item_no}-${s.message}`}>
+                      Row {s.row}
+                      {s.item_no ? `: Item No# ${s.item_no}` : ''}: {s.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {(bulkResult.created || []).length > 0 ? (
+              <div className="bulk-result-list">
+                <h4>Created</h4>
+                <ul>
+                  {bulkResult.created.slice(0, 30).map((s) => (
+                    <li key={`${s.row}-${s.deal_id}`}>
+                      Row {s.row}: {s.item_no} → ID {s.deal_id} ({s.deal_title})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </Modal>
+    )
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -709,9 +1010,14 @@ export default function ProductsPage() {
           <h2>Products</h2>
           <p>Step 2 — after Category is ready</p>
         </div>
-        <button type="button" className="btn btn-primary" onClick={openCreate}>
-          Add product
-        </button>
+        <div className="page-header-actions">
+          <button type="button" className="btn btn-ghost" onClick={openBulk}>
+            Bulk upload
+          </button>
+          <button type="button" className="btn btn-primary" onClick={openCreate}>
+            Add product
+          </button>
+        </div>
       </div>
 
       <div className="flow-steps">

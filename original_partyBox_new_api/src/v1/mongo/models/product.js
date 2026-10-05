@@ -7,12 +7,16 @@ const optionalString = { type: String, default: "" };
 const productSchema = new mongoose.Schema(
   {
     deal_id: { type: Number, required: false },
+    /** Merchant SKU / Item No# — unique when set; distinct from Mongo _id / deal_id */
+    item_no: { type: String, default: "", trim: true },
     deal_title: { type: String, required: true },
     deal_title_french: optionalString,
     url_title: { type: String, required: true },
     deal_key: { type: String, required: true },
     deal_description: optionalString,
     deal_description_french: optionalString,
+    material: optionalString,
+    dimension: optionalString,
     brand_id: { type: Number, required: true, default: 1 },
     terms_conditions: optionalString,
     meta_description: optionalString,
@@ -64,6 +68,9 @@ productSchema.pre("validate", function (next) {
   if (!this.deal_title_french) {
     this.deal_title_french = this.deal_title || "";
   }
+  if (this.item_no != null) {
+    this.item_no = String(this.item_no).trim();
+  }
   next();
 });
 
@@ -73,5 +80,14 @@ productSchema.pre("save", async function (next) {
   }
   next();
 });
+
+/** Sparse unique: empty item_no allowed many times; non-empty values must be unique */
+productSchema.index(
+  { item_no: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { item_no: { $type: "string", $gt: "" } },
+  }
+);
 
 module.exports = mongoose.models.product || mongoose.model("product", productSchema);

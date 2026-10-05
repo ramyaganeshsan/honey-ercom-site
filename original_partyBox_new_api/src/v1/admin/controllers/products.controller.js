@@ -1,8 +1,147 @@
+const axios = require("axios");
+const XLSX = require("xlsx");
+const AdmZip = require("adm-zip");
 const { findOne, create, updateOne, findAll } = require("../../mongo/repo");
 const { getCurrentTime, generateRandomString } = require("../../utils/index");
 const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
-const { saveProductImage, listProductImageIndexes } = require("../services/upload.service");
+const {
+  saveProductImage,
+  listProductImageIndexes,
+  MAX_PRODUCT_IMAGES,
+} = require("../services/upload.service");
 const { PRODUCT_DISPLAY_IMAGE } = require("../../utils/constants");
+
+/** Excel column headers for bulk product import (EN + AR). */
+const BULK_COLUMNS = [
+  "Item No#",
+  "Product Name (EN)",
+  "Product Name (AR)",
+  "Description (EN)",
+  "Description (AR)",
+  "Material",
+  "Dimension",
+  "Original Price",
+  "Discount Price",
+  "Stock",
+  "Image_1",
+  "Image_2",
+  "Image_3",
+  "Image_4",
+  "Image_5",
+  "Image_6",
+  "Image_7",
+  "Image_8",
+];
+
+const BULK_HEADER_ALIASES = {
+  "item no#": "Item No#",
+  "item no": "Item No#",
+  "item_no": "Item No#",
+  "item number": "Item No#",
+  "sku": "Item No#",
+  "product name (en)": "Product Name (EN)",
+  "product name en": "Product Name (EN)",
+  "name (en)": "Product Name (EN)",
+  "name en": "Product Name (EN)",
+  "deal_title": "Product Name (EN)",
+  "product name (ar)": "Product Name (AR)",
+  "product name ar": "Product Name (AR)",
+  "name (ar)": "Product Name (AR)",
+  "name ar": "Product Name (AR)",
+  "deal_title_french": "Product Name (AR)",
+  "description (en)": "Description (EN)",
+  "description en": "Description (EN)",
+  "deal_description": "Description (EN)",
+  "description (ar)": "Description (AR)",
+  "description ar": "Description (AR)",
+  "deal_description_french": "Description (AR)",
+  "material": "Material",
+  "dimension": "Dimension",
+  "dimensions": "Dimension",
+  "original price": "Original Price",
+  "original_price": "Original Price",
+  "mrp": "Original Price",
+  "deal_value": "Original Price",
+  "discount price": "Discount Price",
+  "discount_price": "Discount Price",
+  "sale price": "Discount Price",
+  "deal_price": "Discount Price",
+  "stock": "Stock",
+  "quantity": "Stock",
+  "user_limit_quantity": "Stock",
+  "image_1": "Image_1",
+  "image1": "Image_1",
+  "image_2": "Image_2",
+  "image2": "Image_2",
+  "image_3": "Image_3",
+  "image3": "Image_3",
+  "image_4": "Image_4",
+  "image4": "Image_4",
+  "image_5": "Image_5",
+  "image5": "Image_5",
+  "image_6": "Image_6",
+  "image6": "Image_6",
+  "image_7": "Image_7",
+  "image7": "Image_7",
+  "image_8": "Image_8",
+  "image8": "Image_8",
+};
+
+function normalizeBulkHeader(raw) {
+  const key = String(raw || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+  if (BULK_HEADER_ALIASES[key]) return BULK_HEADER_ALIASES[key];
+  const compact = key.replace(/[\s_-]+/g, "");
+  if (/^image[1-8]$/.test(compact)) {
+    return `Image_${compact.replace("image", "")}`;
+  }
+  return String(raw || "").trim();
+}
+
+function cellStr(row, header) {
+  const v = row[header];
+  if (v == null) return "";
+  return String(v).trim();
+}
+
+function cellNum(row, header) {
+  const raw = row[header];
+  if (raw === "" || raw == null) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function fetchImageBuffer(url) {
+  const u = String(url || "").trim();
+  if (!u || !/^https?:\/\//i.test(u)) return null;
+  const res = await axios.get(u, {
+    responseType: "arraybuffer",
+    timeout: 20000,
+    maxContentLength: 8 * 1024 * 1024,
+    validateStatus: (s) => s >= 200 && s < 300,
+  });
+  return Buffer.from(res.data);
+}
+
+function buildZipImageIndex(zipBuffer) {
+  /** Map: lowercase "itemno_slot" → Buffer */
+  const map = new Map();
+  if (!zipBuffer || !zipBuffer.length) return map;
+  const zip = new AdmZip(zipBuffer);
+  for (const entry of zip.getEntries()) {
+    if (entry.isDirectory) continue;
+    const base = entry.entryName.split(/[/\\]/).pop() || "";
+    const m = base.match(/^(.+?)[_-](\d)\.(jpe?g|png|webp|gif)$/i);
+    if (!m) continue;
+    const itemNo = String(m[1]).trim().toLowerCase();
+    const slot = Number(m[2]);
+    if (!itemNo || slot < 1 || slot > MAX_PRODUCT_IMAGES) continue;
+    map.set(`${itemNo}_${slot}`, entry.getData());
+  }
+  return map;
+}
 
 function slugify(text) {
   return String(text || "")
@@ -37,12 +176,15 @@ function productDefaults(body = {}) {
           : 0;
 
   return {
+    item_no: String(body.item_no || "").trim(),
     deal_title: title,
     deal_title_french: String(body.deal_title_french || title),
     url_title: String(body.url_title || slugify(title)),
     deal_key,
     deal_description: String(body.deal_description || ""),
     deal_description_french: String(body.deal_description_french || ""),
+    material: String(body.material || ""),
+    dimension: String(body.dimension || ""),
     brand_id: Number(body.brand_id) || 1,
     terms_conditions: String(body.terms_conditions || ""),
     meta_description: String(body.meta_description || ""),
@@ -155,6 +297,7 @@ exports.listProducts = async (req, res) => {
             { deal_title: rx },
             { deal_title_french: rx },
             { deal_key: rx },
+            { item_no: rx },
             { tags: rx },
           ],
         },
@@ -212,6 +355,13 @@ exports.createProduct = async (req, res) => {
     if (!String(body.deal_title || "").trim()) {
       return res.send(fail("deal_title is required"));
     }
+    const itemNo = String(body.item_no || "").trim();
+    if (itemNo) {
+      const existingItem = await findOne("product", { item_no: itemNo });
+      if (existingItem) {
+        return res.send(fail(`Item No# "${itemNo}" already exists`));
+      }
+    }
     const payload = productDefaults(body);
     if (!payload.url_title) {
       payload.url_title = slugify(payload.deal_title);
@@ -235,6 +385,25 @@ exports.updateProduct = async (req, res) => {
     delete body.deal_id;
     delete body._id;
     delete body.created_date;
+
+    if (body.item_no !== undefined) {
+      body.item_no = String(body.item_no || "").trim();
+      if (body.item_no) {
+        const dup = await findOne("product", {
+          item_no: body.item_no,
+          deal_id: { $ne: dealId },
+        });
+        if (dup) {
+          return res.send(fail(`Item No# "${body.item_no}" already exists`));
+        }
+      }
+    }
+    if (body.material !== undefined) {
+      body.material = String(body.material || "");
+    }
+    if (body.dimension !== undefined) {
+      body.dimension = String(body.dimension || "");
+    }
 
     if (body.stock !== undefined && body.user_limit_quantity === undefined) {
       body.user_limit_quantity = Number(body.stock) || 0;
@@ -375,5 +544,317 @@ exports.updateProductStatus = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.send(fail("Failed to update product status"));
+  }
+};
+
+/**
+ * Download Excel template with required bulk-import columns (EN + AR).
+ */
+exports.downloadBulkTemplate = async (_req, res) => {
+  try {
+    const wb = XLSX.utils.book_new();
+    const sample = [
+      {
+        "Item No#": "GOZO-001",
+        "Product Name (EN)": "Ceramic Storage Jar",
+        "Product Name (AR)": "برطمان تخزين سيراميك",
+        "Description (EN)": "Handcrafted ceramic jar for kitchen storage",
+        "Description (AR)": "برطمان سيراميك مصنوع يدوياً للتخزين",
+        Material: "Ceramic",
+        Dimension: "15 x 10 cm",
+        "Original Price": 12.5,
+        "Discount Price": 9.9,
+        Stock: 25,
+        Image_1: "https://example.com/gozo-001_1.jpg",
+        Image_2: "",
+        Image_3: "",
+        Image_4: "",
+        Image_5: "",
+        Image_6: "",
+        Image_7: "",
+        Image_8: "",
+      },
+    ];
+    const ws = XLSX.utils.json_to_sheet(sample, { header: BULK_COLUMNS });
+    ws["!cols"] = BULK_COLUMNS.map((h) => ({
+      wch: Math.max(14, String(h).length + 2),
+    }));
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+
+    const guide = XLSX.utils.aoa_to_sheet([
+      ["GOZO HOME — Product bulk upload format"],
+      [""],
+      ["1. Select a Category in Admin → Products → Bulk upload before uploading."],
+      ["2. Fill one product per row. Max ~100 products per file."],
+      ["3. Required columns: Item No#, Product Name (EN), Original Price, Discount Price, Stock."],
+      ["4. Product Name (AR) and Description (AR) are for the Arabic storefront."],
+      ["5. Gallery images: put 1–8 image URLs in Image_1 … Image_8, AND/OR upload a ZIP."],
+      ["6. ZIP image naming: {ItemNo}_1.jpg … {ItemNo}_8.png (e.g. GOZO-001_1.jpg)."],
+      ["7. Item No# is your SKU — different from database ID. Duplicate Item No# rows are skipped."],
+      ["8. Only new Item No# values are saved; existing ones are reported as already exist."],
+    ]);
+    XLSX.utils.book_append_sheet(wb, guide, "Instructions");
+
+    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="gozo-product-bulk-template.xlsx"'
+    );
+    return res.send(buffer);
+  } catch (err) {
+    console.error(err);
+    return res.send(fail("Failed to generate template"));
+  }
+};
+
+/**
+ * Bulk import products from Excel (+ optional images ZIP).
+ * Requires category_id. Skips rows whose Item No# already exists.
+ */
+exports.bulkUploadProducts = async (req, res) => {
+  try {
+    const category_id = Number(req.body?.category_id || req.query?.category_id);
+    if (!category_id) {
+      return res.send(fail("category_id is required — select a Category first"));
+    }
+
+    const category = await findOne("category", { category_id });
+    if (!category) {
+      return res.send(fail("Category not found"));
+    }
+
+    const excelFile =
+      (req.files?.excel && req.files.excel[0]) ||
+      (req.file?.fieldname === "excel" ? req.file : null);
+    if (!excelFile?.buffer) {
+      return res.send(fail("Excel file is required (field name: excel)"));
+    }
+
+    const zipFile = req.files?.images_zip && req.files.images_zip[0];
+    const zipIndex = buildZipImageIndex(zipFile?.buffer);
+
+    let workbook;
+    try {
+      workbook = XLSX.read(excelFile.buffer, { type: "buffer", cellDates: false });
+    } catch (e) {
+      return res.send(fail("Invalid Excel file"));
+    }
+
+    const sheetName =
+      workbook.SheetNames.find((n) => /product/i.test(n)) || workbook.SheetNames[0];
+    if (!sheetName) {
+      return res.send(fail("Excel file has no sheets"));
+    }
+
+    const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+      defval: "",
+      raw: false,
+    });
+    if (!rawRows.length) {
+      return res.send(fail("Excel sheet is empty"));
+    }
+    if (rawRows.length > 120) {
+      return res.send(fail("Too many rows — upload max 100 products per file"));
+    }
+
+    const rows = rawRows.map((row) => {
+      const normalized = {};
+      for (const [k, v] of Object.entries(row)) {
+        const header = normalizeBulkHeader(k);
+        if (header) normalized[header] = v;
+      }
+      return normalized;
+    });
+
+    const created = [];
+    const skipped = [];
+    const errors = [];
+    const seenInFile = new Set();
+
+    for (let i = 0; i < rows.length; i += 1) {
+      const row = rows[i];
+      const excelRow = i + 2; // header is row 1
+      const itemNo = cellStr(row, "Item No#");
+      const titleEn = cellStr(row, "Product Name (EN)");
+      const titleAr = cellStr(row, "Product Name (AR)");
+      const descEn = cellStr(row, "Description (EN)");
+      const descAr = cellStr(row, "Description (AR)");
+      const material = cellStr(row, "Material");
+      const dimension = cellStr(row, "Dimension");
+      const originalPrice = cellNum(row, "Original Price");
+      const discountPrice = cellNum(row, "Discount Price");
+      const stock = cellNum(row, "Stock");
+
+      if (!itemNo && !titleEn) {
+        continue; // blank row
+      }
+
+      if (!itemNo) {
+        errors.push({ row: excelRow, item_no: "", message: "Item No# is required" });
+        continue;
+      }
+      if (!titleEn) {
+        errors.push({
+          row: excelRow,
+          item_no: itemNo,
+          message: "Product Name (EN) is required",
+        });
+        continue;
+      }
+      if (originalPrice == null || originalPrice < 0) {
+        errors.push({
+          row: excelRow,
+          item_no: itemNo,
+          message: "Original Price is required",
+        });
+        continue;
+      }
+      if (discountPrice == null || discountPrice < 0) {
+        errors.push({
+          row: excelRow,
+          item_no: itemNo,
+          message: "Discount Price is required",
+        });
+        continue;
+      }
+      if (stock == null || stock < 0) {
+        errors.push({
+          row: excelRow,
+          item_no: itemNo,
+          message: "Stock is required",
+        });
+        continue;
+      }
+
+      const itemKey = itemNo.toLowerCase();
+      if (seenInFile.has(itemKey)) {
+        skipped.push({
+          row: excelRow,
+          item_no: itemNo,
+          reason: "Duplicate Item No# in this file",
+        });
+        continue;
+      }
+      seenInFile.add(itemKey);
+
+      const existing = await findOne("product", { item_no: itemNo });
+      if (existing) {
+        skipped.push({
+          row: excelRow,
+          item_no: itemNo,
+          reason: "already exists",
+          deal_id: existing.deal_id,
+        });
+        continue;
+      }
+
+      // Collect image buffers: ZIP first, then URL columns
+      const imageBuffers = [];
+      for (let slot = 1; slot <= MAX_PRODUCT_IMAGES; slot += 1) {
+        let buf = zipIndex.get(`${itemKey}_${slot}`) || null;
+        if (!buf) {
+          const url = cellStr(row, `Image_${slot}`);
+          if (url) {
+            try {
+              buf = await fetchImageBuffer(url);
+            } catch (imgErr) {
+              errors.push({
+                row: excelRow,
+                item_no: itemNo,
+                message: `Image_${slot} download failed: ${imgErr.message || "error"}`,
+              });
+            }
+          }
+        }
+        if (buf && buf.length) {
+          imageBuffers.push({ slot, buffer: buf });
+        }
+      }
+
+      if (imageBuffers.length < 1) {
+        errors.push({
+          row: excelRow,
+          item_no: itemNo,
+          message:
+            "At least 1 gallery image required (Image_1 URL or ZIP file named {ItemNo}_1.ext)",
+        });
+        continue;
+      }
+
+      try {
+        const payload = productDefaults({
+          item_no: itemNo,
+          deal_title: titleEn,
+          deal_title_french: titleAr || titleEn,
+          deal_description: descEn,
+          deal_description_french: descAr,
+          material,
+          dimension,
+          deal_value: originalPrice,
+          deal_price: discountPrice,
+          user_limit_quantity: stock,
+          category_id,
+          category_ids: String(category_id),
+          deal_status: 1,
+        });
+
+        const product = await create("product", payload);
+        for (const img of imageBuffers.slice(0, MAX_PRODUCT_IMAGES)) {
+          await saveProductImage(product.deal_key, img.buffer, img.slot);
+        }
+        await syncSubProduct(product.deal_id, product, {
+          quantity: stock,
+          price: originalPrice,
+          discount: discountPrice,
+          product_image: `${product.deal_key}_1.png`,
+          sku: itemNo,
+        });
+
+        created.push({
+          row: excelRow,
+          item_no: itemNo,
+          deal_id: product.deal_id,
+          deal_title: product.deal_title,
+          images: imageBuffers.length,
+        });
+      } catch (createErr) {
+        console.error("bulk row error", createErr);
+        const msg =
+          createErr?.code === 11000
+            ? "already exists"
+            : createErr.message || "Failed to create product";
+        if (/already exists|duplicate/i.test(msg)) {
+          skipped.push({ row: excelRow, item_no: itemNo, reason: "already exists" });
+        } else {
+          errors.push({ row: excelRow, item_no: itemNo, message: msg });
+        }
+      }
+    }
+
+    return res.send(
+      ok(
+        {
+          category_id,
+          category_name: category.category_name || category.category_name_french || "",
+          total_rows: rows.length,
+          created_count: created.length,
+          skipped_count: skipped.length,
+          error_count: errors.length,
+          created,
+          skipped,
+          errors,
+        },
+        created.length
+          ? `Imported ${created.length} product(s); skipped ${skipped.length}; errors ${errors.length}`
+          : `No products imported; skipped ${skipped.length}; errors ${errors.length}`
+      )
+    );
+  } catch (err) {
+    console.error(err);
+    return res.send(failFromError(err, "Bulk upload failed"));
   }
 };
