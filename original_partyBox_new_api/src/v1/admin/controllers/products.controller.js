@@ -331,6 +331,9 @@ function productImagePayload(dealKey) {
 exports.getProduct = async (req, res) => {
   try {
     const dealId = Number(req.params.dealId);
+    if (!Number.isFinite(dealId) || dealId <= 0) {
+      return res.send(fail("Invalid product id"));
+    }
     const product = await findOne("product", { deal_id: dealId });
     if (!product) {
       return res.send(fail("Product not found"));

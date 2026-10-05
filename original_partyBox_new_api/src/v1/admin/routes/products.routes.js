@@ -7,8 +7,10 @@ const products = require("../controllers/products.controller");
 router.use(requireAdmin);
 
 router.get("/", products.listProducts);
-/** Static paths before /:dealId */
+
+/** Bulk upload helpers — must stay above /:dealId */
 router.get("/bulk-template", products.downloadBulkTemplate);
+router.get("/bulk/template", products.downloadBulkTemplate);
 router.post(
   "/bulk",
   bulkUpload.fields([
@@ -17,15 +19,17 @@ router.post(
   ]),
   products.bulkUploadProducts
 );
-router.get("/:dealId", products.getProduct);
+
+/** Numeric deal_id only — prevents /bulk-template matching getProduct */
+router.get("/:dealId(\\d+)", products.getProduct);
 router.post("/", products.createProduct);
-router.put("/:dealId", products.updateProduct);
-router.put("/:dealId/status", products.updateProductStatus);
+router.put("/:dealId(\\d+)", products.updateProduct);
+router.put("/:dealId(\\d+)/status", products.updateProductStatus);
 router.post(
-  "/:dealId/image",
+  "/:dealId(\\d+)/image",
   uploadImage.single("image"),
   products.uploadProductImage
 );
-router.delete("/:dealId", products.deleteProduct);
+router.delete("/:dealId(\\d+)", products.deleteProduct);
 
 module.exports = router;

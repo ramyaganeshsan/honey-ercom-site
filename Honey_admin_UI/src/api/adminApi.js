@@ -58,13 +58,54 @@ export const productsApi = {
         responseType: 'blob',
         timeout: 60000,
       })
-      return { ok: true, data: res.data, message: '' }
-    } catch (err) {
-      return {
-        ok: false,
-        data: null,
-        message: err?.response?.data?.message || err.message || 'Download failed',
+      const blob = res.data
+      const contentType = String(res.headers?.['content-type'] || '')
+      // API may return JSON error with HTTP 200; detect and surface message
+      if (
+        contentType.includes('application/json') ||
+        (blob && blob.type && blob.type.includes('application/json'))
+      ) {
+        const text = await blob.text()
+        let message = 'Failed to download template'
+        try {
+          const parsed = JSON.parse(text)
+          message = parsed.message || message
+        } catch {
+          /* ignore */
+        }
+        return { ok: false, data: null, message }
       }
+      // Valid xlsx starts with PK (zip). Reject tiny/error blobs.
+      const head = await blob.slice(0, 4).arrayBuffer()
+      const bytes = new Uint8Array(head)
+      const isZip =
+        bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4b
+      if (!isZip) {
+        const text = await blob.text()
+        let message = 'Failed to download template'
+        try {
+          const parsed = JSON.parse(text)
+          message = parsed.message || message
+        } catch {
+          /* ignore */
+        }
+        return { ok: false, data: null, message }
+      }
+      return { ok: true, data: blob, message: '' }
+    } catch (err) {
+      let message = err?.message || 'Download failed'
+      const data = err?.response?.data
+      if (data instanceof Blob) {
+        try {
+          const parsed = JSON.parse(await data.text())
+          message = parsed.message || message
+        } catch {
+          /* ignore */
+        }
+      } else if (data?.message) {
+        message = data.message
+      }
+      return { ok: false, data: null, message }
     }
   },
   bulkUpload: (categoryId, excelFile, zipFile) => {
