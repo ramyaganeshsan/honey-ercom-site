@@ -1,6 +1,4 @@
 const axios = require("axios");
-const XLSX = require("xlsx");
-const AdmZip = require("adm-zip");
 const { findOne, create, updateOne, findAll } = require("../../mongo/repo");
 const { getCurrentTime, generateRandomString } = require("../../utils/index");
 const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
@@ -10,6 +8,23 @@ const {
   MAX_PRODUCT_IMAGES,
 } = require("../services/upload.service");
 const { PRODUCT_DISPLAY_IMAGE } = require("../../utils/constants");
+
+/** Lazy-load so API can boot; clear error if npm install was skipped */
+function requireBulkLibs() {
+  try {
+    return {
+      XLSX: require("xlsx"),
+      AdmZip: require("adm-zip"),
+    };
+  } catch (err) {
+    const missing = err?.message || "xlsx / adm-zip";
+    const e = new Error(
+      `Bulk upload packages missing (${missing}). In original_partyBox_new_api run: npm install`
+    );
+    e.code = "BULK_DEPS_MISSING";
+    throw e;
+  }
+}
 
 /** Excel column headers for bulk product import (EN + AR). */
 const BULK_COLUMNS = [
@@ -125,7 +140,7 @@ async function fetchImageBuffer(url) {
   return Buffer.from(res.data);
 }
 
-function buildZipImageIndex(zipBuffer) {
+function buildZipImageIndex(zipBuffer, AdmZip) {
   /** Map: lowercase "itemno_slot" → Buffer */
   const map = new Map();
   if (!zipBuffer || !zipBuffer.length) return map;
@@ -559,6 +574,7 @@ exports.updateProductStatus = async (req, res) => {
  */
 exports.downloadBulkTemplate = async (_req, res) => {
   try {
+    const { XLSX } = requireBulkLibs();
     const wb = XLSX.utils.book_new();
     const sample = [
       {
@@ -614,7 +630,13 @@ exports.downloadBulkTemplate = async (_req, res) => {
     return res.send(buffer);
   } catch (err) {
     console.error(err);
-    return res.send(fail("Failed to generate template"));
+    return res.send(
+      fail(
+        err?.code === "BULK_DEPS_MISSING"
+          ? err.message
+          : err.message || "Failed to generate template"
+      )
+    );
   }
 };
 
@@ -624,6 +646,7 @@ exports.downloadBulkTemplate = async (_req, res) => {
  */
 exports.bulkUploadProducts = async (req, res) => {
   try {
+    const { XLSX, AdmZip } = requireBulkLibs();
     const category_id = Number(req.body?.category_id || req.query?.category_id);
     if (!category_id) {
       return res.send(fail("category_id is required — select a Category first"));
@@ -642,7 +665,7 @@ exports.bulkUploadProducts = async (req, res) => {
     }
 
     const zipFile = req.files?.images_zip && req.files.images_zip[0];
-    const zipIndex = buildZipImageIndex(zipFile?.buffer);
+    const zipIndex = buildZipImageIndex(zipFile?.buffer, AdmZip);
 
     let workbook;
     try {
