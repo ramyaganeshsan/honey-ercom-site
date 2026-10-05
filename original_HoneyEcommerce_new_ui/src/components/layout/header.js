@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { t } from "i18next";
 import { Link, useNavigate } from "react-router-dom";
 import TopHeader from "./topHeader";
@@ -22,24 +22,8 @@ const Header = ({
   let pathName = new URL(window.location).pathname ?? "";
   let navigate = useNavigate();
 
-  const getInitialSubCategories = (cats) => {
-    const firstLevel =
-      Array.isArray(cats) && cats.length > 0 ? cats[0]?.category : [];
-    return Array.isArray(firstLevel) ? firstLevel : [];
-  };
-
-  const [initialsubCategory, setInitialSubCategory] = useState(() =>
-    getInitialSubCategories(categories)
-  );
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 768);
 
-  useEffect(() => {
-    setInitialSubCategory(getInitialSubCategories(categories));
-  }, [categories]);
-
-  const handleCategoryChange = (nextCategories) => {
-    setInitialSubCategory(Array.isArray(nextCategories) ? nextCategories : []);
-  };
   const handleResize = () => {
     setIsSmallScreen(window.innerWidth <= 768);
   };
@@ -198,30 +182,21 @@ const Header = ({
                                 <li key={mainCategory.category_id}>
                                   <Link
                                     className="category_link"
-                                    onMouseOver={() =>
-                                      handleCategoryChange(
-                                        mainCategory?.category
-                                      )
-                                    }
                                     id={encrypteQueryData(
                                       JSON.stringify({
-                                        // ...productFilters,
                                         m_c: mainCategory.category_id,
                                       })
                                     )}
                                     to={`/products?q=${encrypteQueryData(
                                       JSON.stringify({
-                                        // ...productFilters,
                                         m_c: mainCategory.category_id,
                                       })
                                     )}`}
-                                    // title={mainCategory?.category_name}
                                     title={getWordBasedOnLanguage(
                                       mainCategory?.category_name,
                                       mainCategory?.category_name_french
                                     )}
                                   >
-                                    {/* {mainCategory?.category_name} */}
                                     {getWordBasedOnLanguage(
                                       mainCategory?.category_name,
                                       mainCategory?.category_name_french
@@ -231,89 +206,6 @@ const Header = ({
                               );
                             })}
                           </ul>
-                        </div>
-                        <div className="mega-menu-rgt">
-                          <div className="mega-menu-rgt-blks">
-                            {initialsubCategory?.map((subCategory) => {
-                              return (
-                                <Fragment key={subCategory.category_id}>
-                                  <h3>
-                                    <Link
-                                      className="category_link"
-                                      id={encrypteQueryData(
-                                        JSON.stringify({
-                                          // ...productFilters,
-                                          m_c: subCategory.main_category_id,
-                                          s_c: subCategory?.category_id,
-                                        })
-                                      )}
-                                      to={`/products?q=${encrypteQueryData(
-                                        JSON.stringify({
-                                          // ...productFilters,
-                                          m_c: subCategory.main_category_id,
-                                          s_c: subCategory?.category_id,
-                                        })
-                                      )}`}
-                                      title={getWordBasedOnLanguage(
-                                        subCategory.category_name,
-                                        subCategory.category_name_french
-                                      )}
-                                    >
-                                      {/* {subCategory.category_name} */}
-                                      {getWordBasedOnLanguage(
-                                        subCategory.category_name,
-                                        subCategory.category_name_french
-                                      )}
-                                    </Link>
-                                  </h3>
-                                  <ul>
-                                    {subCategory?.category?.map(
-                                      (secondLevelCategory) => {
-                                        return (
-                                          <li
-                                            key={
-                                              secondLevelCategory.category_id
-                                            }
-                                          >
-                                            <Link
-                                              className="category_link"
-                                              id={encrypteQueryData(
-                                                JSON.stringify({
-                                                  // ...productFilters,
-                                                  m_c: subCategory.main_category_id,
-                                                  s_c: subCategory?.category_id,
-                                                  sl_c: secondLevelCategory.category_id,
-                                                })
-                                              )}
-                                              to={`/products?q=${encrypteQueryData(
-                                                JSON.stringify({
-                                                  // ...productFilters,
-                                                  m_c: subCategory.main_category_id,
-                                                  s_c: subCategory?.category_id,
-                                                  sl_c: secondLevelCategory.category_id,
-                                                })
-                                              )}`}
-                                              // title={secondLevelCategory?.category_name}
-                                              title={getWordBasedOnLanguage(
-                                                secondLevelCategory.category_name,
-                                                secondLevelCategory.category_name_french
-                                              )}
-                                            >
-                                              {/* {secondLevelCategory?.category_name} */}
-                                              {getWordBasedOnLanguage(
-                                                secondLevelCategory.category_name,
-                                                secondLevelCategory.category_name_french
-                                              )}
-                                            </Link>
-                                          </li>
-                                        );
-                                      }
-                                    )}
-                                  </ul>
-                                </Fragment>
-                              );
-                            })}
-                          </div>
                         </div>
                       </div>
                     </li>
@@ -471,28 +363,21 @@ const Header = ({
                         <li key={mainCategory.category_id}>
                           <Link
                             className="category_link"
-                            onMouseOver={() =>
-                              handleCategoryChange(mainCategory?.category)
-                            }
                             id={encrypteQueryData(
                               JSON.stringify({
-                                // ...productFilters,
                                 m_c: mainCategory.category_id,
                               })
                             )}
                             to={`/products?q=${encrypteQueryData(
                               JSON.stringify({
-                                // ...productFilters,
                                 m_c: mainCategory.category_id,
                               })
                             )}`}
-                            // title={mainCategory?.category_name}
                             title={getWordBasedOnLanguage(
                               mainCategory?.category_name,
                               mainCategory?.category_name_french
                             )}
                           >
-                            {/* {mainCategory?.category_name} */}
                             {getWordBasedOnLanguage(
                               mainCategory?.category_name,
                               mainCategory?.category_name_french
@@ -502,85 +387,6 @@ const Header = ({
                       );
                     })}
                   </ul>
-                </div>
-                <div className="mega-menu-rgt">
-                  <div className="mega-menu-rgt-blks">
-                    {initialsubCategory?.map((subCategory) => {
-                      return (
-                        <Fragment key={subCategory.category_id}>
-                          <h3>
-                            <Link
-                              className="category_link"
-                              id={encrypteQueryData(
-                                JSON.stringify({
-                                  // ...productFilters,
-                                  m_c: subCategory.main_category_id,
-                                  s_c: subCategory?.category_id,
-                                })
-                              )}
-                              to={`/products?q=${encrypteQueryData(
-                                JSON.stringify({
-                                  // ...productFilters,
-                                  m_c: subCategory.main_category_id,
-                                  s_c: subCategory?.category_id,
-                                })
-                              )}`}
-                              title={getWordBasedOnLanguage(
-                                subCategory.category_name,
-                                subCategory.category_name_french
-                              )}
-                            >
-                              {/* {subCategory.category_name} */}
-                              {getWordBasedOnLanguage(
-                                subCategory.category_name,
-                                subCategory.category_name_french
-                              )}
-                            </Link>
-                          </h3>
-                          <ul>
-                            {subCategory?.category?.map(
-                              (secondLevelCategory) => {
-                                return (
-                                  <li key={secondLevelCategory.category_id}>
-                                    <Link
-                                      className="category_link"
-                                      id={encrypteQueryData(
-                                        JSON.stringify({
-                                          // ...productFilters,
-                                          m_c: subCategory.main_category_id,
-                                          s_c: subCategory?.category_id,
-                                          sl_c: secondLevelCategory.category_id,
-                                        })
-                                      )}
-                                      to={`/products?q=${encrypteQueryData(
-                                        JSON.stringify({
-                                          // ...productFilters,
-                                          m_c: subCategory.main_category_id,
-                                          s_c: subCategory?.category_id,
-                                          sl_c: secondLevelCategory.category_id,
-                                        })
-                                      )}`}
-                                      // title={secondLevelCategory?.category_name}
-                                      title={getWordBasedOnLanguage(
-                                        secondLevelCategory.category_name,
-                                        secondLevelCategory.category_name_french
-                                      )}
-                                    >
-                                      {/* {secondLevelCategory?.category_name} */}
-                                      {getWordBasedOnLanguage(
-                                        secondLevelCategory.category_name,
-                                        secondLevelCategory.category_name_french
-                                      )}
-                                    </Link>
-                                  </li>
-                                );
-                              }
-                            )}
-                          </ul>
-                        </Fragment>
-                      );
-                    })}
-                  </div>
                 </div>
               </div>
             )}

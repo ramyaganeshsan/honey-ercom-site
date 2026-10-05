@@ -837,68 +837,16 @@ const ProductDetails = () => {
                               m_c: data?.data?.category_id,
                             })
                           )}`}
-                          // title={data?.data?.main_category_name}
                           title={getWordBasedOnLanguage(
                             data?.data?.main_category_name,
                             data?.data?.main_category_name_french
                           )}
                         >
-                          {/* {data?.data?.main_category_name} */}
                           {getWordBasedOnLanguage(
                             data?.data?.main_category_name,
                             data?.data?.main_category_name_french
                           )}
                         </Link>
-                      )}
-                    {data?.data?.sub_category_name &&
-                      data?.data?.sub_category_name !== "" && (
-                        <>
-                          ,{" "}
-                          <Link
-                            to={`/products?q=${encrypteQueryData(
-                              JSON.stringify({
-                                ...productFilters,
-                                s_c: data?.data?.sub_category_id,
-                              })
-                            )}`}
-                            // title={data?.data?.sub_category_name}
-                            title={getWordBasedOnLanguage(
-                              data?.data?.sub_category_name,
-                              data?.data?.sub_category_name_french
-                            )}
-                          >
-                            {/* {data?.data?.sub_category_name} */}
-                            {getWordBasedOnLanguage(
-                              data?.data?.sub_category_name,
-                              data?.data?.sub_category_name_french
-                            )}
-                          </Link>
-                        </>
-                      )}
-                    {data?.data?.second_level_category_name &&
-                      data?.data?.second_level_category_name !== "" && (
-                        <>
-                          ,{" "}
-                          <Link
-                            to={`/products?q=${encrypteQueryData(
-                              JSON.stringify({
-                                ...productFilters,
-                                sl_c: data?.data?.sec_category_id,
-                              })
-                            )}`}
-                            // title={data?.data?.second_level_category_name}
-                            title={getWordBasedOnLanguage(
-                              data?.data?.second_level_category_name,
-                              data?.data?.second_level_category_name_french
-                            )}
-                          >
-                            {/* {data?.data?.second_level_category_name} */}
-                            {getWordBasedOnLanguage(
-                              data?.data?.second_level_category_name,
-                              data?.data?.second_level_category_name_french
-                            )}
-                          </Link>
-                        </>
                       )}
                   </div>
                   {state.subProductCode && (

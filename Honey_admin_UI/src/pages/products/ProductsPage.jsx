@@ -33,7 +33,6 @@ const emptyForm = {
   deal_description: '',
   deal_description_french: '',
   category_id: '',
-  sub_category_id: '',
   deal_value: '',
   deal_price: '',
   user_limit_quantity: '',
@@ -61,7 +60,6 @@ function mapRowToForm(row) {
     deal_description: row.deal_description || '',
     deal_description_french: row.deal_description_french || '',
     category_id: row.category_id ?? '',
-    sub_category_id: row.sub_category_id ?? '',
     deal_value: row.deal_value ?? '',
     deal_price: row.deal_price ?? '',
     user_limit_quantity: row.user_limit_quantity ?? row.stock ?? '',
@@ -146,12 +144,6 @@ export default function ProductsPage() {
     [categories]
   )
 
-  const subCategories = useMemo(() => {
-    const parentId = Number(form.category_id) || 0
-    if (!parentId) return []
-    return categories.filter((c) => Number(c.main_category_id) === parentId)
-  }, [categories, form.category_id])
-
   const resetImage = () => {
     setImageSlots((prev) => {
       prev.forEach((slot) => {
@@ -215,22 +207,7 @@ export default function ProductsPage() {
 
   const onChange = (e) => {
     const { name, value } = e.target
-    setForm((f) => {
-      if (name === 'category_id') {
-        const parentId = Number(value) || 0
-        const stillValid = categories.some(
-          (c) =>
-            Number(c.category_id ?? c.id) === Number(f.sub_category_id) &&
-            Number(c.main_category_id) === parentId
-        )
-        return {
-          ...f,
-          category_id: value,
-          sub_category_id: stillValid ? f.sub_category_id : '',
-        }
-      }
-      return { ...f, [name]: value }
-    })
+    setForm((f) => ({ ...f, [name]: value }))
     setErrors((prev) => ({ ...prev, [name]: '' }))
     setFormError('')
   }
@@ -275,8 +252,6 @@ export default function ProductsPage() {
         ? deal_value
         : Number(form.deal_price) || 0
     const category_id = Number(form.category_id) || 0
-    const sub_category_id = Number(form.sub_category_id) || 0
-    const linkedIds = [category_id, sub_category_id].filter(Boolean)
 
     return {
       deal_title: form.deal_title.trim(),
@@ -286,8 +261,8 @@ export default function ProductsPage() {
       deal_description: form.deal_description,
       deal_description_french: form.deal_description_french,
       category_id,
-      category_ids: linkedIds.join(','),
-      sub_category_id,
+      category_ids: category_id ? String(category_id) : '',
+      sub_category_id: 0,
       sec_category_id: 0,
       third_category_id: 0,
       deal_value,
@@ -313,10 +288,6 @@ export default function ProductsPage() {
   const validate = () => {
     const next = collectErrors({
       category_id: requiredSelect(form.category_id, 'Category'),
-      sub_category_id:
-        subCategories.length > 0
-          ? requiredSelect(form.sub_category_id, 'Sub category')
-          : '',
       deal_title: requiredText(form.deal_title, 'Title (EN)'),
       deal_value: requiredNumber(form.deal_value, 'Original price', { min: 0 }),
       deal_price: requiredNumber(form.deal_price, 'Sale price', { min: 0 }),
@@ -411,16 +382,7 @@ export default function ProductsPage() {
     return c?.category_name || id || '—'
   }
 
-  const categoryLabel = (r) => {
-    const parent = catName(r.category_id)
-    const subId = Number(r.sub_category_id)
-    if (!subId) return parent
-    return `${parent} / ${catName(subId)}`
-  }
-
-  const step3Active =
-    Boolean(form.category_id) &&
-    (subCategories.length === 0 || Boolean(form.sub_category_id))
+  const categoryLabel = (r) => catName(r.category_id)
 
   const columns = [
     {
@@ -527,18 +489,7 @@ export default function ProductsPage() {
 
         <div className="flow-steps compact">
           <span className={form.category_id ? 'done' : 'active'}>1. Category</span>
-          <span
-            className={
-              form.sub_category_id || (form.category_id && !subCategories.length)
-                ? 'done'
-                : form.category_id
-                  ? 'active'
-                  : ''
-            }
-          >
-            2. Sub category
-          </span>
-          <span className={step3Active ? 'active' : ''}>3. Product</span>
+          <span className={form.category_id ? 'active' : ''}>2. Product</span>
         </div>
 
         <div className="form-grid">
@@ -559,42 +510,6 @@ export default function ProductsPage() {
             <select name="category_id" value={form.category_id} onChange={onChange}>
               <option value="">Select category</option>
               {parentCategories.map((c) => (
-                <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
-                  {c.category_name}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field
-            label="2. Sub category"
-            required={subCategories.length > 0}
-            error={errors.sub_category_id}
-            hint={
-              form.category_id && subCategories.length === 0 ? (
-                <>
-                  <Link to="/categories">Add a Sub category</Link> under this Category, then
-                  return here.
-                </>
-              ) : (
-                'Shows only children of the selected Category.'
-              )
-            }
-          >
-            <select
-              name="sub_category_id"
-              value={form.sub_category_id}
-              onChange={onChange}
-              disabled={!form.category_id}
-            >
-              <option value="">
-                {!form.category_id
-                  ? 'Select category first'
-                  : subCategories.length
-                    ? 'Select sub category'
-                    : 'No sub categories for this category'}
-              </option>
-              {subCategories.map((c) => (
                 <option key={c.category_id ?? c.id} value={c.category_id ?? c.id}>
                   {c.category_name}
                 </option>
@@ -792,7 +707,7 @@ export default function ProductsPage() {
       <div className="page-header">
         <div>
           <h2>Products</h2>
-          <p>Step 3 — after Category and Sub category are ready</p>
+          <p>Step 2 — after Category is ready</p>
         </div>
         <button type="button" className="btn btn-primary" onClick={openCreate}>
           Add product
@@ -804,12 +719,8 @@ export default function ProductsPage() {
           <strong>1</strong>
           <span>Category</span>
         </Link>
-        <Link to="/categories" className="flow-step">
-          <strong>2</strong>
-          <span>Sub category</span>
-        </Link>
         <span className="flow-step active">
-          <strong>3</strong>
+          <strong>2</strong>
           <span>Product</span>
         </span>
       </div>
@@ -837,7 +748,7 @@ export default function ProductsPage() {
           loading={loading}
           error={listError}
           onRetry={load}
-          emptyMessage="No products yet. Add a product after Category and Sub category are set."
+          emptyMessage="No products yet. Add a Category first, then add products."
         />
       </div>
     </div>

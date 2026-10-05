@@ -87,9 +87,17 @@ exports.getCategories = async () => {
     if (parsedResponse?.status) return parsedResponse?.data;
   }
 
-  let response = await findAll(
+  // Flat catalog: only top-level categories (no subcategory tree)
+  const response = await findAll(
     "category",
-    { category_status: 1 },
+    {
+      category_status: 1,
+      $or: [
+        { main_category_id: 0 },
+        { main_category_id: null },
+        { main_category_id: { $exists: false } },
+      ],
+    },
     {
       attributes: [
         "category_id",
@@ -98,109 +106,23 @@ exports.getCategories = async () => {
         "main_category_id",
         "sub_category_id",
       ],
-      order: [["main_category_id", "ASC"]],
+      order: [["sort_order", "ASC"], ["category_id", "ASC"]],
     }
   );
 
-  let categories = {};
-  let subSubCategories = [];
-  (Array.isArray(response) ? response : []).forEach((element) => {
-    if (
-      Number(element?.main_category_id) === 0 &&
-      Number(element?.sub_category_id) === 0
-    ) {
-      element["category"] = {};
-      categories[element?.category_id] = element;
-    } else if (
-      Number(element?.main_category_id) === Number(element?.sub_category_id) &&
-      categories[element?.main_category_id] !== undefined
-    ) {
-      element["category"] = [];
-      if (!categories[element?.main_category_id]["category"]) {
-        categories[element?.main_category_id]["category"] = {};
-      }
-      categories[element?.main_category_id]["category"][element?.category_id] =
-        element;
-    } else if (
-      Number(element?.main_category_id) !== Number(element?.sub_category_id) &&
-      categories[element?.main_category_id] !== undefined &&
-      categories[element?.main_category_id]["category"] !== undefined &&
-      categories[element?.main_category_id]["category"][
-        element?.sub_category_id
-      ] !== undefined
-    ) {
-      const parentSub =
-        categories[element?.main_category_id]["category"][
-          element?.sub_category_id
-        ];
-      if (!Array.isArray(parentSub["category"])) {
-        parentSub["category"] = [];
-      }
-      element["category"] = [];
-      parentSub["category"].push(element);
-    } else {
-      subSubCategories.push(element);
-    }
-  });
+  const categories = (Array.isArray(response) ? response : [])
+    .filter((c) => !Number(c?.main_category_id))
+    .map((c) => ({
+      ...c,
+      category: [],
+    }));
 
-  let categoryWithSubCategories = Object.values(categories);
-
-  for (let index = 0; index < categoryWithSubCategories.length; index++) {
-    const element = categoryWithSubCategories[index];
-    if (element?.category) {
-      categoryWithSubCategories[index]["category"] = Object.values(
-        element["category"]
-      );
-    }
-  }
-
-  for (
-    let subSubCategoryIndex = 0;
-    subSubCategoryIndex < subSubCategories.length;
-    subSubCategoryIndex++
-  ) {
-    let thirdLevelSubCategory = subSubCategories[subSubCategoryIndex];
-
-    for (
-      let mainCategoryIndex = 0;
-      mainCategoryIndex < categoryWithSubCategories.length;
-      mainCategoryIndex++
-    ) {
-      let firstLevelSubCategory =
-        categoryWithSubCategories[mainCategoryIndex]["category"];
-      for (
-        let firstSubCategoryIndex = 0;
-        firstSubCategoryIndex < firstLevelSubCategory.length;
-        firstSubCategoryIndex++
-      ) {
-        let secondSubCategory =
-          firstLevelSubCategory[firstSubCategoryIndex]["category"];
-        for (
-          let secondSubCategoryIndex = 0;
-          secondSubCategoryIndex < secondSubCategory.length;
-          secondSubCategoryIndex++
-        ) {
-          if (
-            Number(secondSubCategory[secondSubCategoryIndex]["category_id"]) ===
-            thirdLevelSubCategory.sub_category_id
-          ) {
-            categoryWithSubCategories[mainCategoryIndex]["category"][
-              firstSubCategoryIndex
-            ]["category"][secondSubCategoryIndex]["category"].push(
-              thirdLevelSubCategory
-            );
-          }
-        }
-      }
-    }
-  }
-
-  let stringifyResponse = stringifyData(response);
+  let stringifyResponse = stringifyData(categories);
   if (stringifyResponse?.status) {
     await setValueRedis("homeCategories", stringifyResponse.data, 300);
   }
 
-  return categoryWithSubCategories;
+  return categories;
 };
 
 exports.getProducts = async () => {

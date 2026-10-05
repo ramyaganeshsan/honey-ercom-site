@@ -41,8 +41,9 @@ exports.createCategory = async (req, res) => {
     }
 
     const category = await create("category", {
-      main_category_id: Number(body.main_category_id) || 0,
-      sub_category_id: Number(body.sub_category_id) || 0,
+      // Flat catalog only — no subcategory hierarchy
+      main_category_id: 0,
+      sub_category_id: 0,
       category_name,
       category_name_french: String(body.category_name_french || category_name),
       category_description: String(body.category_description || ""),
@@ -80,6 +81,9 @@ exports.updateCategory = async (req, res) => {
     const body = { ...(req.body || {}) };
     delete body.category_id;
     delete body._id;
+    // Keep catalog flat — never nest under another category
+    body.main_category_id = 0;
+    body.sub_category_id = 0;
 
     const updated = await updateOne("category", { category_id: categoryId }, body);
     if (!updated) {
