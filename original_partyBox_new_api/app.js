@@ -28,8 +28,51 @@ const {
 } = require("./src/v1/controller/checkout.controller");
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+/** Browser admin/storefront hosts allowed to call this API (CORS). */
+const DEFAULT_CORS_ORIGINS = [
+  "https://ecadmin.indiprotechnologies.com",
+  "https://ecdemo.indiprotechnologies.com",
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:5173",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:3001",
+  "http://127.0.0.1:5173",
+];
+
+const corsOrigins = String(process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const allowList = corsOrigins.length ? corsOrigins : DEFAULT_CORS_ORIGINS;
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow non-browser tools (no Origin) and listed frontends
+    if (!origin || allowList.includes("*") || allowList.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "token",
+    "lang",
+    "sessionID",
+    "Accept",
+    "Origin",
+    "X-Requested-With",
+  ],
+  exposedHeaders: ["Content-Disposition"],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+app.use(express.json({ limit: "15mb" }));
 
 /* Compress all the repsonse */
 const compression = require("compression");

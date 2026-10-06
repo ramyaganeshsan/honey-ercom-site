@@ -4,6 +4,11 @@ const { getMessage, getStatusCode, resolveJwtSecret } = require("../utils/index"
 
 exports.validateJwtToken = (req, res, next) => {
   try {
+    // Browser CORS preflight must not require a JWT
+    if (req.method === "OPTIONS") {
+      return next();
+    }
+
     /* Language */
     let lang = req.get("lang") ?? "en";
     if (lang != "ar" && lang != "en") {
