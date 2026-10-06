@@ -1,4 +1,3 @@
-const axios = require("axios");
 const { findOne, create, updateOne, findAll } = require("../../mongo/repo");
 const { getCurrentTime, generateRandomString } = require("../../utils/index");
 const { ok, fail, failFromError, listCollection } = require("../services/admin.helpers");
@@ -26,7 +25,7 @@ function requireBulkLibs() {
   }
 }
 
-/** Excel column headers for bulk product import (EN + AR). */
+/** Excel column headers for bulk product import (EN + AR). Images come from ZIP only. */
 const BULK_COLUMNS = [
   "Item No#",
   "Product Name (EN)",
@@ -38,14 +37,6 @@ const BULK_COLUMNS = [
   "Original Price",
   "Discount Price",
   "Stock",
-  "Image_1",
-  "Image_2",
-  "Image_3",
-  "Image_4",
-  "Image_5",
-  "Image_6",
-  "Image_7",
-  "Image_8",
 ];
 
 const BULK_HEADER_ALIASES = {
@@ -84,22 +75,6 @@ const BULK_HEADER_ALIASES = {
   "stock": "Stock",
   "quantity": "Stock",
   "user_limit_quantity": "Stock",
-  "image_1": "Image_1",
-  "image1": "Image_1",
-  "image_2": "Image_2",
-  "image2": "Image_2",
-  "image_3": "Image_3",
-  "image3": "Image_3",
-  "image_4": "Image_4",
-  "image4": "Image_4",
-  "image_5": "Image_5",
-  "image5": "Image_5",
-  "image_6": "Image_6",
-  "image6": "Image_6",
-  "image_7": "Image_7",
-  "image7": "Image_7",
-  "image_8": "Image_8",
-  "image8": "Image_8",
 };
 
 function normalizeBulkHeader(raw) {
@@ -108,10 +83,6 @@ function normalizeBulkHeader(raw) {
     .toLowerCase()
     .replace(/\s+/g, " ");
   if (BULK_HEADER_ALIASES[key]) return BULK_HEADER_ALIASES[key];
-  const compact = key.replace(/[\s_-]+/g, "");
-  if (/^image[1-8]$/.test(compact)) {
-    return `Image_${compact.replace("image", "")}`;
-  }
   return String(raw || "").trim();
 }
 
@@ -126,18 +97,6 @@ function cellNum(row, header) {
   if (raw === "" || raw == null) return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
-}
-
-async function fetchImageBuffer(url) {
-  const u = String(url || "").trim();
-  if (!u || !/^https?:\/\//i.test(u)) return null;
-  const res = await axios.get(u, {
-    responseType: "arraybuffer",
-    timeout: 20000,
-    maxContentLength: 8 * 1024 * 1024,
-    validateStatus: (s) => s >= 200 && s < 300,
-  });
-  return Buffer.from(res.data);
 }
 
 function buildZipImageIndex(zipBuffer, AdmZip) {
@@ -588,14 +547,6 @@ exports.downloadBulkTemplate = async (_req, res) => {
         "Original Price": 12.5,
         "Discount Price": 9.9,
         Stock: 25,
-        Image_1: "https://example.com/gozo-001_1.jpg",
-        Image_2: "",
-        Image_3: "",
-        Image_4: "",
-        Image_5: "",
-        Image_6: "",
-        Image_7: "",
-        Image_8: "",
       },
     ];
     const ws = XLSX.utils.json_to_sheet(sample, { header: BULK_COLUMNS });
@@ -609,12 +560,13 @@ exports.downloadBulkTemplate = async (_req, res) => {
       [""],
       ["1. In Admin → Products → Bulk upload, select a Category first, then upload."],
       ["2. One product per row. About 100 products max per file."],
-      ["3. Required: Item No#, Product Name (EN), Original Price, Discount Price, Stock."],
+      ["3. Required in Excel: Item No#, Product Name (EN), Original Price, Discount Price, Stock."],
       ["4. Fill Product Name (AR) and Description (AR) so Arabic customers see the correct text."],
-      ["5. Product images: add 1–8 image links in Image_1 … Image_8, and/or upload a ZIP of images."],
-      ["6. In the ZIP, name files like GOZO-001_1.jpg … GOZO-001_8.png (Item No# + image number)."],
-      ["7. Item No# is the product code you assign. Keep each one unique."],
-      ["8. If an Item No# is already in Products, that row is skipped. Only new products are added."],
+      ["5. Product images are NOT in the Excel sheet. Upload a ZIP of images (required)."],
+      ["6. Name ZIP files like GOZO-001_1.jpg … GOZO-001_8.png (Item No# + image number 1–8)."],
+      ["7. Each product needs at least 1 image and at most 8 images in the ZIP."],
+      ["8. Item No# is the product code you assign. Keep each one unique."],
+      ["9. If an Item No# is already in Products, that row is skipped. Only new products are added."],
     ]);
     XLSX.utils.book_append_sheet(wb, guide, "Instructions");
 
@@ -641,8 +593,9 @@ exports.downloadBulkTemplate = async (_req, res) => {
 };
 
 /**
- * Bulk import products from Excel (+ optional images ZIP).
+ * Bulk import products from Excel + required images ZIP.
  * Requires category_id. Skips rows whose Item No# already exists.
+ * Images: ZIP only (min 1, max 8 per product). No image links in the sheet.
  */
 exports.bulkUploadProducts = async (req, res) => {
   try {
@@ -665,7 +618,21 @@ exports.bulkUploadProducts = async (req, res) => {
     }
 
     const zipFile = req.files?.images_zip && req.files.images_zip[0];
-    const zipIndex = buildZipImageIndex(zipFile?.buffer, AdmZip);
+    if (!zipFile?.buffer) {
+      return res.send(
+        fail(
+          "Images ZIP is required — name files like GOZO-001_1.jpg … GOZO-001_8.png (min 1, max 8 per product)"
+        )
+      );
+    }
+    const zipIndex = buildZipImageIndex(zipFile.buffer, AdmZip);
+    if (!zipIndex.size) {
+      return res.send(
+        fail(
+          "No valid images in ZIP. Use names like GOZO-001_1.jpg … GOZO-001_8.png (jpg/png/webp/gif)"
+        )
+      );
+    }
 
     let workbook;
     try {
@@ -782,24 +749,10 @@ exports.bulkUploadProducts = async (req, res) => {
         continue;
       }
 
-      // Collect image buffers: ZIP first, then URL columns
+      // Images from ZIP only (min 1, max 8) — no sheet links
       const imageBuffers = [];
       for (let slot = 1; slot <= MAX_PRODUCT_IMAGES; slot += 1) {
-        let buf = zipIndex.get(`${itemKey}_${slot}`) || null;
-        if (!buf) {
-          const url = cellStr(row, `Image_${slot}`);
-          if (url) {
-            try {
-              buf = await fetchImageBuffer(url);
-            } catch (imgErr) {
-              errors.push({
-                row: excelRow,
-                item_no: itemNo,
-                message: `Image_${slot} download failed: ${imgErr.message || "error"}`,
-              });
-            }
-          }
-        }
+        const buf = zipIndex.get(`${itemKey}_${slot}`) || null;
         if (buf && buf.length) {
           imageBuffers.push({ slot, buffer: buf });
         }
@@ -809,8 +762,7 @@ exports.bulkUploadProducts = async (req, res) => {
         errors.push({
           row: excelRow,
           item_no: itemNo,
-          message:
-            "At least 1 gallery image required (Image_1 URL or ZIP file named {ItemNo}_1.ext)",
+          message: `No image in ZIP for this Item No#. Add ${itemNo}_1.jpg (up to ${itemNo}_8.png)`,
         });
         continue;
       }

@@ -28,7 +28,6 @@ const BULK_COLUMNS = [
   'Original Price',
   'Discount Price',
   'Stock',
-  'Image_1 … Image_8',
 ]
 
 function emptyImageSlots() {
@@ -451,6 +450,12 @@ export default function ProductsPage() {
       setBulkError('Choose an Excel (.xlsx) file')
       return
     }
+    if (!bulkZip) {
+      setBulkError(
+        'Images ZIP is required — name files like GOZO-001_1.jpg … GOZO-001_8.png (min 1, max 8 per product)'
+      )
+      return
+    }
     setBulkUploading(true)
     setBulkError('')
     setBulkResult(null)
@@ -845,7 +850,7 @@ export default function ProductsPage() {
               type="button"
               className="btn btn-primary"
               onClick={runBulkUpload}
-              disabled={bulkUploading || !bulkReady || !bulkExcel}
+              disabled={bulkUploading || !bulkReady || !bulkExcel || !bulkZip}
             >
               {bulkUploading ? 'Uploading…' : 'Upload & import'}
             </button>
@@ -854,7 +859,9 @@ export default function ProductsPage() {
       >
         <div className="flow-steps compact">
           <span className={bulkCategoryId ? 'done' : 'active'}>1. Category</span>
-          <span className={bulkCategoryId ? 'active' : ''}>2. Excel upload</span>
+          <span className={bulkCategoryId ? (bulkExcel && bulkZip ? 'done' : 'active') : ''}>
+            2. Excel + images ZIP
+          </span>
         </div>
 
         {bulkError ? <div className="form-alert">{bulkError}</div> : null}
@@ -898,8 +905,9 @@ export default function ProductsPage() {
             ))}
           </ul>
           <p className="field-hint">
-            Product images (at least 1, up to 8): add image links in Image_1…Image_8, and/or
-            upload a ZIP with files named like {'{ItemNo}_1.jpg'} … {'{ItemNo}_8.png'}.
+            Images are not in the Excel sheet. Upload a ZIP (required) with files named like{' '}
+            {'{ItemNo}_1.jpg'} … {'{ItemNo}_8.png'} — at least 1 and at most 8 images per
+            product.
           </p>
           <div className="bulk-actions">
             <button
@@ -920,7 +928,7 @@ export default function ProductsPage() {
             className="full"
             hint={
               bulkReady
-                ? 'Required — use the template columns above'
+                ? 'Required — use the template columns above (no image columns)'
                 : 'Select a Category first to enable upload'
             }
           >
@@ -938,15 +946,19 @@ export default function ProductsPage() {
             ) : null}
           </Field>
           <Field
-            label="Images ZIP (optional)"
+            label="Images ZIP"
+            required
             className="full"
-            hint="Files named like GOZO-001_1.jpg, GOZO-001_2.png inside the ZIP"
+            hint="Required. Inside the ZIP: GOZO-001_1.jpg, GOZO-001_2.png … up to _8 (min 1 image per product)"
           >
             <input
               type="file"
               accept=".zip,application/zip"
               disabled={!bulkReady || bulkUploading}
-              onChange={(e) => setBulkZip(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                setBulkZip(e.target.files?.[0] || null)
+                setBulkError('')
+              }}
             />
             {bulkZip ? <p className="field-hint">Selected: {bulkZip.name}</p> : null}
           </Field>
