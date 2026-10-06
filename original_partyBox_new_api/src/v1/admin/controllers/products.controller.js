@@ -773,18 +773,14 @@ exports.downloadBulkTemplate = async (_req, res) => {
 
     const guide = workbook.addWorksheet("Instructions");
     const lines = [
-      ["GOZO HOME — Product bulk upload format"],
+      ["GOZO HOME — Product bulk upload"],
       [""],
-      ["1. Select a Category in Admin → Products → Bulk upload, then upload this file."],
-      ["2. One product per row (about 100 products max)."],
-      ["3. Required text: Item No#, Product Name (EN), Original Price, Discount Price, Stock."],
-      ["4. Fill Product Name (AR) and Description (AR) for Arabic customers."],
-      ["5. IMAGES: do NOT paste links. Insert pictures into Image_1 … Image_8 on that product’s row."],
-      ["6. How: click the Image_1 cell → Insert → Image (or Picture) → place it in that column."],
-      ["7. Image_1 = main photo, Image_2 … Image_8 = gallery (same as Add product). Min 1, max 8."],
-      ["8. That is how each photo is linked to the correct product — same row as the Item No#."],
-      ["9. Item No# must be unique. If it is already in Products, that row is skipped."],
-      ["10. Optional: you may also add a ZIP with GOZO-001_1.jpg naming as a backup."],
+      ["1. Select Category in Admin → Products → Bulk upload, then upload this file."],
+      ["2. One product per row."],
+      ["3. Required: Item No#, Product Name (EN), Original Price, Discount Price, Stock."],
+      ["4. Fill Arabic name/description for AR customers."],
+      ["5. Insert pictures into Image_1…Image_8 on the same row (Image_1 = main). Min 1, max 8."],
+      ["6. Item No# must be unique — existing Item No# rows are skipped."],
     ];
     lines.forEach((line) => guide.addRow(line));
     guide.getColumn(1).width = 100;

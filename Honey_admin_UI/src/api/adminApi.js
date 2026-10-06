@@ -109,11 +109,10 @@ export const productsApi = {
       return { ok: false, data: null, message }
     }
   },
-  bulkUpload: (categoryId, excelFile, zipFile) => {
+  bulkUpload: (categoryId, excelFile) => {
     const fd = new FormData()
     fd.append('category_id', String(categoryId))
     fd.append('excel', excelFile)
-    if (zipFile) fd.append('images_zip', zipFile)
     return apiRequest(
       () =>
         client.post('/product-bulk/upload', fd, {

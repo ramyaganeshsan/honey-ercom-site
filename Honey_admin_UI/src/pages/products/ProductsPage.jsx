@@ -134,7 +134,6 @@ export default function ProductsPage() {
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkCategoryId, setBulkCategoryId] = useState('')
   const [bulkExcel, setBulkExcel] = useState(null)
-  const [bulkZip, setBulkZip] = useState(null)
   const [bulkUploading, setBulkUploading] = useState(false)
   const [bulkResult, setBulkResult] = useState(null)
   const [bulkError, setBulkError] = useState('')
@@ -214,7 +213,6 @@ export default function ProductsPage() {
   const openBulk = () => {
     setBulkCategoryId('')
     setBulkExcel(null)
-    setBulkZip(null)
     setBulkResult(null)
     setBulkError('')
     setBulkOpen(true)
@@ -455,7 +453,7 @@ export default function ProductsPage() {
     setBulkUploading(true)
     setBulkError('')
     setBulkResult(null)
-    const res = await productsApi.bulkUpload(bulkCategoryId, bulkExcel, bulkZip)
+    const res = await productsApi.bulkUpload(bulkCategoryId, bulkExcel)
     setBulkUploading(false)
     if (!res.ok) {
       setBulkError(res.message || 'Bulk upload failed')
@@ -887,22 +885,16 @@ export default function ProductsPage() {
         </div>
 
         <div className={`bulk-format-box ${bulkReady ? '' : 'is-disabled'}`}>
-          <h3>Excel format (EN + AR + photos)</h3>
+          <h3>Excel template</h3>
           <p>
-            Each row is one product. Fill English and Arabic name/description. Photos go in
-            the same row under Image_1 … Image_8 — same idea as Add product gallery (Image 1 =
-            main). That is how we know which photos belong to which product.
+            One product per row. Put EN + AR text, then insert photos in Image_1…Image_8 on
+            that same row (Image_1 = main, min 1 / max 8).
           </p>
           <ul className="bulk-columns">
             {BULK_COLUMNS.map((col) => (
               <li key={col}>{col}</li>
             ))}
           </ul>
-          <p className="field-hint">
-            In Excel/LibreOffice: click Image_1 cell → Insert → Image / Picture, place the
-            photo in that column on the product’s row. Min 1, max 8 photos per product. Do not
-            paste links.
-          </p>
           <div className="bulk-actions">
             <button
               type="button"
@@ -922,7 +914,7 @@ export default function ProductsPage() {
             className="full"
             hint={
               bulkReady
-                ? 'Required — product text + pictures inserted in Image_1…Image_8'
+                ? 'Upload the filled template (with pictures in Image_1…Image_8)'
                 : 'Select a Category first to enable upload'
             }
           >
@@ -938,22 +930,6 @@ export default function ProductsPage() {
             {bulkExcel ? (
               <p className="field-hint">Selected: {bulkExcel.name}</p>
             ) : null}
-          </Field>
-          <Field
-            label="Images ZIP (optional backup)"
-            className="full"
-            hint="Only if needed: GOZO-001_1.jpg … GOZO-001_8.png. Prefer pictures inside the Excel sheet."
-          >
-            <input
-              type="file"
-              accept=".zip,application/zip"
-              disabled={!bulkReady || bulkUploading}
-              onChange={(e) => {
-                setBulkZip(e.target.files?.[0] || null)
-                setBulkError('')
-              }}
-            />
-            {bulkZip ? <p className="field-hint">Selected: {bulkZip.name}</p> : null}
           </Field>
         </div>
 
