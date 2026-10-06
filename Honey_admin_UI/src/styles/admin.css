@@ -1007,6 +1007,20 @@ textarea {
   overflow: auto;
 }
 
+.bulk-error-detail {
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.bulk-result-errors h4 {
+  color: var(--danger);
+}
+
+.bulk-result-errors ul {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 @media (max-width: 900px) {
   .admin-shell {
     flex-direction: column;

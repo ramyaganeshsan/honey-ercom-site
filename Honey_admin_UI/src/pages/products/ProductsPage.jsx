@@ -463,11 +463,40 @@ export default function ProductsPage() {
     setBulkResult(res.data)
     const created = res.data?.created_count || 0
     const skipped = res.data?.skipped_count || 0
-    toast.success(
-      created
-        ? `Added ${created} product(s)${skipped ? ` · ${skipped} already in Products (skipped)` : ''}`
-        : res.message || 'No new products added'
-    )
+    const errList = Array.isArray(res.data?.errors) ? res.data.errors : []
+
+    const formatRowIssue = (e) => {
+      const rowPart = e.row != null ? `Row ${e.row}` : 'Row ?'
+      const itemPart = e.item_no ? ` · Item No# ${e.item_no}` : ''
+      const msg = e.message || e.reason || 'Unknown issue'
+      return `${rowPart}${itemPart}: ${msg}`
+    }
+
+    if (errList.length) {
+      const detail = errList.map(formatRowIssue).join('\n')
+      setBulkError(detail)
+      // Toast shows first exact issue (full list stays in red alert)
+      toast.error(formatRowIssue(errList[0]))
+      if (created) {
+        toast.success(
+          `Added ${created} product(s)${skipped ? ` · ${skipped} already in Products (skipped)` : ''}`
+        )
+      }
+    } else if (created) {
+      toast.success(
+        `Added ${created} product(s)${skipped ? ` · ${skipped} already in Products (skipped)` : ''}`
+      )
+    } else {
+      const skipList = Array.isArray(res.data?.skipped) ? res.data.skipped : []
+      if (skipList.length) {
+        const detail = skipList.map(formatRowIssue).join('\n')
+        setBulkError(detail)
+        toast.error(formatRowIssue(skipList[0]))
+      } else {
+        setBulkError(res.message || 'No new products added')
+        toast.error(res.message || 'No new products added')
+      }
+    }
     load()
   }
 
@@ -858,7 +887,13 @@ export default function ProductsPage() {
           </span>
         </div>
 
-        {bulkError ? <div className="form-alert">{bulkError}</div> : null}
+        {bulkError ? (
+          <div className="form-alert bulk-error-detail" role="alert">
+            {bulkError.split('\n').map((line) => (
+              <div key={line}>{line}</div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="form-grid">
           <Field
@@ -957,7 +992,7 @@ export default function ProductsPage() {
               </div>
             ) : null}
             {(bulkResult.errors || []).length > 0 ? (
-              <div className="bulk-result-list">
+              <div className="bulk-result-list bulk-result-errors">
                 <h4>Need fix</h4>
                 <ul>
                   {bulkResult.errors.slice(0, 30).map((s) => (
