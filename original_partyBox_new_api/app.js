@@ -186,15 +186,16 @@ async function startServer() {
       logger.info("Redis skipped (development/local) — continuing without cache");
     }
   } catch (err) {
-    // Redis is optional for local/demo — cache helpers already tolerate failures
+    // Redis is optional — never block HTTP listen on Redis hang/down
     global.REDIS_CLIENT = null;
-    logger.warn("Redis unavailable — continuing without cache");
+    logger.warn(
+      `Redis unavailable — continuing without cache (${err?.message || err})`
+    );
   }
 
-  app.listen(PORT, () => {
-    logger.info(`Server is listening on port ${PORT}`);
-    // registerWebhook();
-    // registerTamaraWebhook();
+  const host = process.env.HOST || "0.0.0.0";
+  app.listen(PORT, host, () => {
+    logger.info(`Server is listening on ${host}:${PORT}`);
   });
 }
 
