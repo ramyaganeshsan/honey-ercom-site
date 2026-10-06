@@ -46,32 +46,54 @@ const corsOrigins = String(process.env.CORS_ORIGINS || "")
   .filter(Boolean);
 const allowList = corsOrigins.length ? corsOrigins : DEFAULT_CORS_ORIGINS;
 
-const corsOptions = {
-  origin(origin, callback) {
-    // Allow non-browser tools (no Origin) and listed frontends
-    if (!origin || allowList.includes("*") || allowList.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(null, false);
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "token",
-    "lang",
-    "sessionID",
-    "Accept",
-    "Origin",
-    "X-Requested-With",
-  ],
-  exposedHeaders: ["Content-Disposition"],
-  optionsSuccessStatus: 204,
-};
+/**
+ * Explicit CORS — set headers on every response (including errors) and end
+ * OPTIONS immediately. Relies on nginx proxying to this Node process.
+ */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowed =
+    !origin || allowList.includes("*") || allowList.includes(origin);
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+  if (origin && allowed) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Vary", "Origin");
+  } else if (!origin) {
+    // non-browser / same-origin tools
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, token, lang, sessionID, Accept, Origin, X-Requested-With"
+  );
+  res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+  res.setHeader("Access-Control-Max-Age", "86400");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  return next();
+});
+
+// Keep cors package as backup for normal requests
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowList.includes("*") || allowList.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: "15mb" }));
 
 /* Compress all the repsonse */
