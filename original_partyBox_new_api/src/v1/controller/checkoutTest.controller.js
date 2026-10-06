@@ -196,11 +196,11 @@ exports.getUserCheckoutDetails = async (req, res, next) => {
         IsDirectPayment: false,
         ServiceCharge: 0,
         TotalAmount: 0,
-        CurrencyIso: "AED",
+        CurrencyIso: "KWD",
         ImageUrl:
           "https://portal.myfatoorah.com/imgs/payment-methods/uaecc.png",
         IsEmbeddedSupported: true,
-        PaymentCurrencyIso: "AED",
+        PaymentCurrencyIso: "KWD",
       },
     ];
 

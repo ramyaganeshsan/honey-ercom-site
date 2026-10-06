@@ -41,15 +41,15 @@ export default function ReportsPage() {
     { label: 'Orders', value: totals.orders != null ? orderCount : null },
     {
       label: 'Revenue',
-      value: totals.revenue != null ? formatMoney(revenue, 'AED') : null,
+      value: totals.revenue != null ? formatMoney(revenue, 'KWD') : null,
     },
     {
       label: 'Tax',
-      value: totals.tax != null ? formatMoney(Number(totals.tax) || 0, 'AED') : null,
+      value: totals.tax != null ? formatMoney(Number(totals.tax) || 0, 'KWD') : null,
     },
     {
       label: 'Avg order',
-      value: avgOrder != null ? formatMoney(avgOrder, 'AED') : null,
+      value: avgOrder != null ? formatMoney(avgOrder, 'KWD') : null,
     },
   ]
 
@@ -116,13 +116,13 @@ export default function ReportsPage() {
                 render: (r) =>
                   formatMoney(
                     r.revenue ?? r.amount ?? r.total ?? 0,
-                    'AED'
+                    'KWD'
                   ),
               },
               {
                 key: 'tax',
                 header: 'Tax',
-                render: (r) => formatMoney(r.tax ?? 0, 'AED'),
+                render: (r) => formatMoney(r.tax ?? 0, 'KWD'),
               },
             ]}
             rows={rows}

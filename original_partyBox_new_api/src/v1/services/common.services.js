@@ -92,8 +92,8 @@ const DUMMY_SITE_SETTINGS = {
   android_page: "",
   iphone_page: "",
   youtube_url: "",
-  currency_symbol: "SAR",
-  currency_code: "SAR",
+  currency_symbol: "KWD",
+  currency_code: "KWD",
   time_zone: "Asia/Riyadh",
   pagination_count: 12,
   latitude: "0",
@@ -264,8 +264,8 @@ exports.addCountriesAndStateInfo = async (countriesAndStates) => {
         country_name_french: countryDetails?.name?.replace(/[']+/g, "") || "",
         country_code: "971",
         country_status: 1,
-        currency_symbol: "UAD",
-        currency_code: "UAD",
+        currency_symbol: "KWD",
+        currency_code: "KWD",
       });
 
       const states = countryDetails["states"] || [];

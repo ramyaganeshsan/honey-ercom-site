@@ -45,8 +45,8 @@ exports.createCountry = async (req, res) => {
       country_code: String(body.country_code || ""),
       country_url: String(body.country_url || slugify(country_name)),
       country_status: body.country_status !== undefined ? Number(body.country_status) : 1,
-      currency_symbol: String(body.currency_symbol || "AED"),
-      currency_code: String(body.currency_code || "AED"),
+      currency_symbol: String(body.currency_symbol || "KWD"),
+      currency_code: String(body.currency_code || "KWD"),
       ISO_country_code: String(body.ISO_country_code || body.country_code || ""),
     });
     return res.send(ok(item, "Country created"));

@@ -10,8 +10,8 @@ const countrySchema = new mongoose.Schema(
     country_name_french: optionalString,
     country_code: optionalString,
     country_status: { type: Number, required: true, default: 1 },
-    currency_symbol: { type: String, default: "AED" },
-    currency_code: { type: String, default: "AED" },
+    currency_symbol: { type: String, default: "KWD" },
+    currency_code: { type: String, default: "KWD" },
     ISO_country_code: optionalString,
   },
   {

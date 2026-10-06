@@ -9,7 +9,7 @@ const logger = require("../utils/logger");
 const axios = require("axios");
 
 let token = process.env.TOKEN;
-let currencyIso = "AED";
+let currencyIso = "KWD";
 let headers = {
   Accept: "application/json",
   Authorization: `Bearer ${token}`,
@@ -26,10 +26,10 @@ const FALLBACK_PAYMENT_METHODS = [
     IsDirectPayment: false,
     ServiceCharge: 0,
     TotalAmount: 0,
-    CurrencyIso: "AED",
+    CurrencyIso: "KWD",
     ImageUrl: "https://portal.myfatoorah.com/imgs/payment-methods/uaecc.png",
     IsEmbeddedSupported: true,
-    PaymentCurrencyIso: "AED",
+    PaymentCurrencyIso: "KWD",
   },
 ];
 

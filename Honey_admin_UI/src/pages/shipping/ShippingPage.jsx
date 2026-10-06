@@ -17,7 +17,7 @@ const EMPTY = {
     country_name_french: '',
     country_code: '',
     currency_code: 'KWD',
-    currency_symbol: 'KD',
+    currency_symbol: 'KWD',
     country_status: 1,
   },
   states: {

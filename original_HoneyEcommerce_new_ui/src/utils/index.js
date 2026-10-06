@@ -452,7 +452,7 @@ export const calculateProductTotalPrice = (
   };
 };
 
-export const currencyFormatter = (totalAmount, currency = "UAD") => {
+export const currencyFormatter = (totalAmount, currency = "KWD") => {
   let formatter = new Intl.NumberFormat("en-US", {
     currency: currency,
   });

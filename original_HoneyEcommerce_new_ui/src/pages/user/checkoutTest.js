@@ -604,7 +604,7 @@ const CheckoutTest = () => {
         let paymentData = {
           payment: {
             amount: String(state?.totalWithShipping),
-            currency: "AED",
+            currency: "KWD",
             buyer: {
               phone: data.phone_number,
               email: data.email,
@@ -721,21 +721,21 @@ const CheckoutTest = () => {
         let requestDataTamara = {
           total_amount: {
             amount: state?.totalWithShipping,
-            currency: "AED",
+            currency: "KWD",
           },
           shipping_amount: {
             amount: Number(state.shippingCost),
-            currency: "AED",
+            currency: "KWD",
           },
           tax_amount: {
             amount: Number(state?.totalTax),
-            currency: "AED",
+            currency: "KWD",
           },
           order_reference_id: state?.cartId.toString(),
           items: itemsDetails,
           total_amount: {
             amount: state?.totalWithShipping,
-            currency: "AED",
+            currency: "KWD",
           },
           consumer: {
             email: data.email,

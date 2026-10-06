@@ -223,7 +223,7 @@ exports.getCurrentDate = () => {
 //   return Number(fotmatter.format(totalAmount));
 // };
 
-exports.currencyFormatter = (totalAmount, currency = "USD") => {
+exports.currencyFormatter = (totalAmount, currency = "KWD") => {
   let formatter = new Intl.NumberFormat("en-US", {
     currency: currency,
   });
