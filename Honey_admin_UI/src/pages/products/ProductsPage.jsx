@@ -28,6 +28,8 @@ const BULK_COLUMNS = [
   'Original Price',
   'Discount Price',
   'Stock',
+  'Image_1 (main)',
+  'Image_2 … Image_8',
 ]
 
 function emptyImageSlots() {
@@ -450,12 +452,6 @@ export default function ProductsPage() {
       setBulkError('Choose an Excel (.xlsx) file')
       return
     }
-    if (!bulkZip) {
-      setBulkError(
-        'Images ZIP is required — name files like GOZO-001_1.jpg … GOZO-001_8.png (min 1, max 8 per product)'
-      )
-      return
-    }
     setBulkUploading(true)
     setBulkError('')
     setBulkResult(null)
@@ -850,7 +846,7 @@ export default function ProductsPage() {
               type="button"
               className="btn btn-primary"
               onClick={runBulkUpload}
-              disabled={bulkUploading || !bulkReady || !bulkExcel || !bulkZip}
+              disabled={bulkUploading || !bulkReady || !bulkExcel}
             >
               {bulkUploading ? 'Uploading…' : 'Upload & import'}
             </button>
@@ -859,8 +855,8 @@ export default function ProductsPage() {
       >
         <div className="flow-steps compact">
           <span className={bulkCategoryId ? 'done' : 'active'}>1. Category</span>
-          <span className={bulkCategoryId ? (bulkExcel && bulkZip ? 'done' : 'active') : ''}>
-            2. Excel + images ZIP
+          <span className={bulkCategoryId ? (bulkExcel ? 'active' : 'active') : ''}>
+            2. Excel with photos
           </span>
         </div>
 
@@ -891,13 +887,11 @@ export default function ProductsPage() {
         </div>
 
         <div className={`bulk-format-box ${bulkReady ? '' : 'is-disabled'}`}>
-          <h3>Excel format (EN + AR)</h3>
+          <h3>Excel format (EN + AR + photos)</h3>
           <p>
-            The website shows products in English and Arabic, so fill both languages in the
-            sheet (product name and description). You can upload up to about 100 products at
-            a time. Item No# is the product code you give each item — keep it unique. If an
-            Item No# is already in Products, that row is skipped and only new products are
-            added.
+            Each row is one product. Fill English and Arabic name/description. Photos go in
+            the same row under Image_1 … Image_8 — same idea as Add product gallery (Image 1 =
+            main). That is how we know which photos belong to which product.
           </p>
           <ul className="bulk-columns">
             {BULK_COLUMNS.map((col) => (
@@ -905,9 +899,9 @@ export default function ProductsPage() {
             ))}
           </ul>
           <p className="field-hint">
-            Images are not in the Excel sheet. Upload a ZIP (required) with files named like{' '}
-            {'{ItemNo}_1.jpg'} … {'{ItemNo}_8.png'} — at least 1 and at most 8 images per
-            product.
+            In Excel/LibreOffice: click Image_1 cell → Insert → Image / Picture, place the
+            photo in that column on the product’s row. Min 1, max 8 photos per product. Do not
+            paste links.
           </p>
           <div className="bulk-actions">
             <button
@@ -928,13 +922,13 @@ export default function ProductsPage() {
             className="full"
             hint={
               bulkReady
-                ? 'Required — use the template columns above (no image columns)'
+                ? 'Required — product text + pictures inserted in Image_1…Image_8'
                 : 'Select a Category first to enable upload'
             }
           >
             <input
               type="file"
-              accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               disabled={!bulkReady || bulkUploading}
               onChange={(e) => {
                 setBulkExcel(e.target.files?.[0] || null)
@@ -946,10 +940,9 @@ export default function ProductsPage() {
             ) : null}
           </Field>
           <Field
-            label="Images ZIP"
-            required
+            label="Images ZIP (optional backup)"
             className="full"
-            hint="Required. Inside the ZIP: GOZO-001_1.jpg, GOZO-001_2.png … up to _8 (min 1 image per product)"
+            hint="Only if needed: GOZO-001_1.jpg … GOZO-001_8.png. Prefer pictures inside the Excel sheet."
           >
             <input
               type="file"

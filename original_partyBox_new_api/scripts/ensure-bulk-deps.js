@@ -6,7 +6,7 @@
 const { execSync } = require("child_process");
 const path = require("path");
 
-const REQUIRED = ["xlsx", "adm-zip"];
+const REQUIRED = ["exceljs", "adm-zip"];
 
 function missingDeps() {
   return REQUIRED.filter((name) => {
