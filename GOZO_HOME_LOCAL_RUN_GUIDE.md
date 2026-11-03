@@ -1,136 +1,172 @@
-# GOZO HOME — Local run guide (from scratch)
+# GOZO HOME — Full local run guide
 
-Picture-style guide to install and run **API**, **Website**, and **Admin** on a developer machine (Windows / macOS / Linux).
+This is the **only guide you need**. It explains, in plain writing, how to install and run all three parts of the GOZO HOME project on your own computer:
 
-Brand: **GOZO HOME** — THE JOY OF DECORS CRAFTED.
+1. **API** (backend server + database)
+2. **Website** (customer shop / storefront)
+3. **Admin** (staff control panel)
+
+Follow the sections in order the first time. After that, use **Section 6 (Everyday start)** only.
 
 ---
 
-## 0) What you have
+## How the system works (simple explanation)
 
-After unzipping the source package you should see:
+Think of three separate programs that talk to each other:
+
+- The **API** is the brain. It stores products, users, orders, and images in **MongoDB**. It listens on port **5000**.
+- The **Website** is what customers see. It asks the API for data. It opens at http://localhost:3000
+- The **Admin** is what staff use to manage products, orders, banners, and settings. It opens at http://localhost:3001
+
+Important rule: **start MongoDB first, then the API, then Website and/or Admin.**  
+If the API is not running, both Website and Admin will fail to load data or login.
+
+You will normally keep **three terminal / command windows** open (one for API, one for Website, one for Admin). MongoDB usually runs in the background as a Windows/macOS/Linux service.
+
+---
+
+## Folder map (what is in the source)
+
+After you unzip or clone the project, you should see these important folders/files:
 
 ```text
-GOZO_HOME_LOCAL_RUN_GUIDE.md  ← THIS FILE (single guide — open it)
-docs/client-guide/images/     ← diagrams used below
-original_partyBox_new_api/    ← API (backend)
-original_HoneyEcommerce_new_ui/  ← Website (storefront)
-Honey_admin_UI/               ← Admin panel
-scripts/make-client-source-zip.sh
+GOZO_HOME_LOCAL_RUN_GUIDE.md          ← this written guide
+original_partyBox_new_api/            ← API (backend)
+original_HoneyEcommerce_new_ui/       ← Website (storefront)
+Honey_admin_UI/                       ← Admin panel
 ```
 
-![How the three apps connect](docs/client-guide/images/architecture_local.jpg)
+| App | Folder name | Local address | Purpose |
+|-----|-------------|---------------|---------|
+| API | `original_partyBox_new_api` | http://localhost:5000 | Backend JSON API + uploaded images |
+| Website | `original_HoneyEcommerce_new_ui` | http://localhost:3000 | Customer shopping site |
+| Admin | `Honey_admin_UI` | http://localhost:3001 | Staff management panel |
 
-| # | App | Folder | Port | Opens in browser |
-|---|-----|--------|------|------------------|
-| 1 | **API** | `original_partyBox_new_api` | **5000** | Health/JSON only (not a website) |
-| 2 | **Website** | `original_HoneyEcommerce_new_ui` | **3000** | http://localhost:3000 |
-| 3 | **Admin** | `Honey_admin_UI` | **3001** | http://localhost:3001 |
-
-You need **three terminals** once everything is installed (API + Website + Admin). MongoDB runs as a background service.
-
-![Recommended run order](docs/client-guide/images/run_order_steps.jpg)
+Opening http://localhost:5000 in a browser is **not** the shop. The shop is port **3000**. The admin panel is port **3001**.
 
 ---
 
-## 1) What to install (once per computer)
+## Section 1 — Install software on your computer (one time)
 
-### 1.1 Node.js — **required version: 22 or newer**
+Do this once per computer before running any app.
 
-All three projects declare `"engines": { "node": ">=22" }`.
+### 1.1 Install Node.js version 22 or newer
 
-| Item | Version |
-|------|---------|
-| **Node.js** | **22 LTS** (recommended) or any **≥ 22** |
-| **npm** | Comes with Node (npm **10.x** is fine) |
+All three apps require **Node.js 22+**.
 
-**Check:**
+| Software | Required version | Notes |
+|----------|------------------|-------|
+| Node.js | **22 LTS** (or any version 22 and above) | Do not use Node 18 or 20 |
+| npm | Comes with Node (usually 10.x) | Used to install and start apps |
+
+**Check your version** (open Terminal / Command Prompt / PowerShell):
 
 ```bash
-node -v    # must show v22.x or higher (example: v22.23.4)
-npm -v     # example: 10.9.9
+node -v
+npm -v
 ```
 
-**Install:**
+You want something like `v22.23.4` for Node. If you see `v18` or `v20`, upgrade.
 
-- Windows / macOS: download **Node.js 22 LTS** from https://nodejs.org/
-- macOS (Homebrew): `brew install node@22`
-- Ubuntu/Debian:
+**How to install:**
+
+- Windows or macOS: download **Node.js 22 LTS** from https://nodejs.org/ and run the installer.
+- macOS with Homebrew:
 
 ```bash
-# Example using NodeSource / nvm — pick one approach your team prefers
-# With nvm:
+brew install node@22
+```
+
+- Linux (example with nvm):
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-# restart terminal, then:
+# close and reopen terminal, then:
 nvm install 22
 nvm use 22
 ```
 
-> Do **not** use Node 18 or 20 for this project. Vite 8 (admin) and current dependencies expect Node 22+.
+### 1.2 Install MongoDB Community
 
-### 1.2 MongoDB Community — **required**
+The API stores all data in MongoDB.
 
-| Item | Version |
-|------|---------|
-| **MongoDB Server** | **7.0** Community (recommended). **6.0** or **8.0** also work |
-| **Default listen** | `127.0.0.1:27017` |
-| **Database name** | `honey_ecommerce` (created automatically on first seed) |
+| Item | Value |
+|------|--------|
+| Recommended version | MongoDB Community **7.0** (6.0 or 8.0 also fine) |
+| Default address | `127.0.0.1` port **27017** |
+| Database name used by this project | `honey_ecommerce` (created automatically when you seed) |
 
-**Check:**
+**How to install:**
+
+- Windows: download MongoDB Community from https://www.mongodb.com/try/download/community  
+  During setup, keep **Install MongoDB as a Service** checked so it starts automatically.
+- macOS:
 
 ```bash
-# service should be running; either works depending on install:
+brew tap mongodb/brew
+brew install mongodb-community@7.0
+brew services start mongodb-community@7.0
+```
+
+- Ubuntu/Linux: install MongoDB Community 7 using MongoDB’s official docs, then start it:
+
+```bash
+sudo systemctl start mongod
+sudo systemctl enable mongod
+```
+
+**Check MongoDB is running:**
+
+```bash
 mongosh --eval "db.runCommand({ ping: 1 })"
-# or older:
+```
+
+If `mongosh` is not found, try:
+
+```bash
 mongo --eval "db.runCommand({ ping: 1 })"
 ```
 
-**Install (pick your OS):**
+A successful ping means MongoDB is ready.
 
-- Windows: MongoDB Community MSI — https://www.mongodb.com/try/download/community  
-  Keep “Install as a Service” checked.
-- macOS: `brew tap mongodb/brew && brew install mongodb-community@7.0 && brew services start mongodb-community@7.0`
-- Ubuntu: follow MongoDB 7.0 Community install docs, then `sudo systemctl start mongod`
+Optional: install **MongoDB Compass** (a visual tool) from the same download page if you want to browse data later.
 
-Optional GUI: **MongoDB Compass** (same download page) — useful to see collections after seed.
+### 1.3 Redis — not required for local use
 
-### 1.3 Redis — **optional (skip for local)**
+You do **not** need Redis for local development.  
+When `NODE_ENV=development`, the API skips Redis automatically.
 
-Local `NODE_ENV=development` **skips Redis** automatically. You do **not** need to install Redis for the demo.
+### 1.4 Optional tools
 
-Only set `SKIP_REDIS=1` if you run with `NODE_ENV=production` locally without Redis.
-
-### 1.4 Git (optional)
-
-Only needed if you clone from GitHub instead of using the zip. Any recent Git is fine.
-
-### 1.5 Code editor (optional)
-
-VS Code / Cursor — not required to run.
+- **Git** — only if you clone from GitHub instead of using a zip.
+- **VS Code / Cursor** — nice for editing, not required just to run.
 
 ---
 
-## 2) API — `original_partyBox_new_api`
+## Section 2 — API setup and run (`original_partyBox_new_api`)
 
-Backend: **Express + Mongoose**, Node **≥ 22**, MongoDB.
+This is the backend. Website and Admin both depend on it.
 
-### Versions used by this app
+### What this app uses
 
-| Dependency | Declared / used |
-|------------|-----------------|
-| Node | `>=22` |
-| Express | `^4.19` |
-| Mongoose | `^8.9` |
-| Excel bulk upload | `exceljs`, `xlsx`, `adm-zip`, `multer`, `sharp` |
+| Piece | Version / note |
+|-------|----------------|
+| Node.js | 22 or newer |
+| Express | 4.x |
+| Mongoose (MongoDB driver) | 8.x |
+| Default port | **5000** |
+| Database | MongoDB `honey_ecommerce` |
 
-### 2.1 Create `.env`
+### Step 2.1 — Create the API environment file
+
+Open a terminal and go into the API folder:
 
 ```bash
 cd original_partyBox_new_api
 cp .env.example .env
 ```
 
-Minimum local `.env` (already matches `.env.example`):
+Open the new `.env` file and make sure it contains at least:
 
 ```env
 PORT=5000
@@ -145,91 +181,103 @@ APP_SECRECT_KEY=local-dev-secret
 TOKEN=
 ```
 
-**Rules:**
+**Read these rules carefully:**
 
-- `API_URL` and `DASHBOARD_URL` must be the **API** host (`http://localhost:5000/`), **not** the admin or website URL.
-- Do **not** end `API_URL` with `/public`.
-- `APP_SECRECT_KEY` must match the Website `VITE_SECRECT_KEY` (same string).
-- `JWT_SECRECT` is required — without it, login may succeed with HTTP 200 but return **no token**.
+1. `API_URL` and `DASHBOARD_URL` must point to the **API** (`http://localhost:5000/`), not to Admin or Website.
+2. Do not put `/public` at the end of `API_URL`.
+3. `APP_SECRECT_KEY` must be the **same string** as the Website’s `VITE_SECRECT_KEY`.
+4. `JWT_SECRECT` must be set. If it is missing, login may look successful but return **no token**, and Admin/Website login will fail.
 
-### 2.2 Install packages
+### Step 2.2 — Install API packages
+
+Still inside `original_partyBox_new_api`:
 
 ```bash
-cd original_partyBox_new_api
 npm install
 ```
 
-`prestart` / `predev` also ensure bulk-upload packages (`xlsx`, etc.) are present.
+Wait until it finishes without errors.
 
-### 2.3 Seed demo data (first time only)
+### Step 2.3 — Load demo data (first time only)
 
 MongoDB must already be running.
 
 ```bash
-npm run seed:demo      # catalog + demo customer + admin + sample images
-npm run seed:admin     # safe upsert if admin login fails later
-# If product/banner images 404 later:
-npm run seed:images    # copies placeholders into cloud/uploads (does not wipe DB)
+npm run seed:demo
 ```
 
-After seed:
+What this does:
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@gozohome.com` | `Admin@123` |
-| Customer (website) | `demo@gozohome.com` | `Demo@123` |
+- Creates categories, products, banners, settings, and related demo data
+- Creates the admin user and a demo customer
+- Copies sample product/banner images into `cloud/uploads`
 
-Uploads live under `original_partyBox_new_api/cloud/uploads/` (gitignored). Seed creates them locally.
-
-### 2.4 Start the API
+Useful extra commands:
 
 ```bash
-npm run dev      # nodemon — auto-reload (recommended for local)
-# or
-npm start        # plain node app.js
+npm run seed:admin      # recreate/fix admin login only
+npm run seed:images     # restore placeholder images only (does not wipe database)
 ```
 
-**Success:** process listens on **port 5000**. Leave this terminal open.
+### Demo logins created by seed
 
-Quick check:
+| Where to use | Email | Password |
+|--------------|-------|----------|
+| Admin panel | `admin@gozohome.com` | `Admin@123` |
+| Website (customer) | `demo@gozohome.com` | `Demo@123` |
+
+### Step 2.4 — Start the API
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5000/
-# or open any known API path your team uses; browser to :5000 alone is not the shop
+npm run dev
 ```
 
-### 2.5 API scripts reference
+(`npm run dev` restarts automatically when code changes. You can also use `npm start`.)
 
-| Command | Purpose |
+Leave this terminal window open. The API should now listen on port **5000**.
+
+You should see a message that the server started / is listening. If it crashes, check:
+
+- MongoDB is running
+- `.env` exists and `MONGODB_URI` is correct
+- Port 5000 is not already used by another program
+
+### API commands cheat sheet
+
+| Command | Meaning |
 |---------|---------|
-| `npm run dev` | Dev server with reload |
-| `npm start` | Production-style start |
-| `npm run seed:demo` | Full demo catalog + users |
-| `npm run seed:admin` | Upsert admin user only |
-| `npm run seed:images` | Restore placeholder upload images |
-| `npm run seed:essentials` | Minimal settings/geo essentials |
+| `npm install` | Install dependencies |
+| `npm run dev` | Start API in development mode (port 5000) |
+| `npm start` | Start API normally |
+| `npm run seed:demo` | Full demo catalog + users + sample images |
+| `npm run seed:admin` | Create/update admin user only |
+| `npm run seed:images` | Put placeholder images back into `cloud/uploads` |
 
 ---
 
-## 3) Website (storefront) — `original_HoneyEcommerce_new_ui`
+## Section 3 — Website setup and run (`original_HoneyEcommerce_new_ui`)
 
-Customer-facing shop: **React 18 + Vite 6**, Node **≥ 22**.
+This is the customer-facing shop.
 
-### Versions used by this app
+### What this app uses
 
-| Dependency | Declared / used |
-|------------|-----------------|
-| Node | `>=22` |
-| React | `^18.2` |
-| Vite | `^6.0` |
-| Dev server port | **3000** (see `vite.config.js`) |
+| Piece | Version / note |
+|-------|----------------|
+| Node.js | 22 or newer |
+| React | 18.x |
+| Vite | 6.x |
+| Default port | **3000** |
 
-### 3.1 Create `.env`
+### Step 3.1 — Create the Website environment file
+
+Open a **new** terminal (keep the API terminal running):
 
 ```bash
 cd original_HoneyEcommerce_new_ui
 cp .env.example .env
 ```
+
+Make sure `.env` contains:
 
 ```env
 VITE_BASE_URL=http://localhost:5000/api
@@ -245,216 +293,288 @@ VITE_FRONT_END_BASE_URL=http://localhost:3000
 
 **Rules:**
 
-- `VITE_BASE_URL` **must** end with `/api` (wrong value → broken home API calls).
-- `VITE_SECRECT_KEY` must equal API `APP_SECRECT_KEY`.
-- Theme CSS/icons load from the Vite `public/` folder; product/banner files come from the API `cloud/uploads`.
+1. `VITE_BASE_URL` must end with `/api` exactly: `http://localhost:5000/api`
+2. `VITE_SECRECT_KEY` must match API `APP_SECRECT_KEY` (both `local-dev-secret` for local)
+3. Product/banner images come from the API. Theme icons/CSS come from the Website `public` folder.
 
-### 3.2 Install and start
+### Step 3.2 — Install and start the Website
 
 ```bash
-cd original_HoneyEcommerce_new_ui
 npm install
 npm run dev
-# aliases: npm start  (also runs vite)
 ```
 
-**Open:** http://localhost:3000  
+Then open your browser to:
 
-**Demo customer:** `demo@gozohome.com` / `Demo@123`
+**http://localhost:3000**
 
-### 3.3 Website scripts reference
+Customer demo login:
 
-| Command | Purpose |
+- Email: `demo@gozohome.com`
+- Password: `Demo@123`
+
+### Website commands cheat sheet
+
+| Command | Meaning |
 |---------|---------|
-| `npm run dev` / `npm start` | Vite dev server on **3000** |
-| `npm run build` | Production build → `build/` |
+| `npm install` | Install dependencies |
+| `npm run dev` or `npm start` | Start Website on port 3000 |
+| `npm run build` | Build production files into `build/` |
 | `npm run preview` | Preview the production build |
 
 ---
 
-## 4) Admin panel — `Honey_admin_UI`
+## Section 4 — Admin setup and run (`Honey_admin_UI`)
 
-Staff panel: **React 19 + Vite 8**, Node **≥ 22**.
+This is the staff panel for products, orders, banners, settings, etc.
 
-### Versions used by this app
+### What this app uses
 
-| Dependency | Declared / used |
-|------------|-----------------|
-| Node | `>=22` |
-| React | `^19.2` |
-| Vite | `^8.2` |
-| Dev server port | **3001** (see `vite.config.js`) |
+| Piece | Version / note |
+|-------|----------------|
+| Node.js | 22 or newer |
+| React | 19.x |
+| Vite | 8.x |
+| Default port | **3001** |
 
-### 4.1 Create `.env`
+### Step 4.1 — Create the Admin environment file
+
+Open another **new** terminal:
 
 ```bash
 cd Honey_admin_UI
 cp .env.example .env
 ```
 
+Make sure `.env` contains:
+
 ```env
 VITE_API_BASE=http://localhost:5000/api/admin
 VITE_SECRECT_KEY=local-dev-secret
 ```
 
+Optional line (usually not needed locally):
+
+```env
+VITE_DASHBOARD_URL=http://localhost:5000/
+```
+
 **Rules:**
 
-- `VITE_API_BASE` **must** end with `/api/admin`.
-- Optional: `VITE_DASHBOARD_URL=http://localhost:5000/` for image host override.
-- After changing env for a **production build**, run `npm run build` again (Vite bakes env at build time).
+1. `VITE_API_BASE` must end with `/api/admin`
+2. The API must already be running on port 5000 before you try to log in
+3. If you change env values and later use `npm run build`, rebuild after changing env (Vite bakes values at build time)
 
-### 4.2 Install and start
+### Step 4.2 — Install and start Admin
 
 ```bash
-cd Honey_admin_UI
 npm install
 npm run dev
 ```
 
-**Open:** http://localhost:3001  
+Open your browser to:
 
-**Admin login:** `admin@gozohome.com` / `Admin@123`
+**http://localhost:3001**
 
-If login says **Invalid admin credentials**, on the API folder run:
+Admin login:
+
+- Email: `admin@gozohome.com`
+- Password: `Admin@123`
+
+If login says **Invalid admin credentials**, go to the API folder and run:
 
 ```bash
+cd original_partyBox_new_api
 npm run seed:admin
 ```
 
-### 4.3 Admin scripts reference
+Then try logging in again.
 
-| Command | Purpose |
+### What you can manage in Admin
+
+After login you can use modules such as: Dashboard, Users, Categories, Products (including Excel bulk upload), Orders, Transactions, Promocodes, CMS, Banners, Reviews, Settings, Shipping, Contact, Reports.
+
+### Admin commands cheat sheet
+
+| Command | Meaning |
 |---------|---------|
-| `npm run dev` | Vite on **3001** |
-| `npm run build` | Production build |
-| `npm run preview` | Preview build |
-| `npm run lint` | Oxlint |
-
-Admin modules (once logged in): Dashboard, Users, Categories, Products (incl. Excel bulk upload), Orders, Transactions, Promocodes, CMS, Banners, Reviews, Settings, Shipping, Contact, Reports.
+| `npm install` | Install dependencies |
+| `npm run dev` | Start Admin on port 3001 |
+| `npm run build` | Build production files |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | Run Oxlint checks |
 
 ---
 
-## 5) Everyday local workflow
+## Section 5 — First-time checklist (do once)
 
-![Ports and demo logins](docs/client-guide/images/ports_urls_cheat.jpg)
+Use this checklist the first time you set up a machine:
 
-**Terminal A — API**
+1. Install Node.js **22+** and confirm with `node -v`
+2. Install MongoDB and confirm it is running
+3. In API folder: copy `.env`, run `npm install`, run `npm run seed:demo`, run `npm run dev`
+4. In Website folder: copy `.env`, run `npm install`, run `npm run dev`, open http://localhost:3000
+5. In Admin folder: copy `.env`, run `npm install`, run `npm run dev`, open http://localhost:3001
+6. Log into Admin with `admin@gozohome.com` / `Admin@123`
+7. Log into Website with `demo@gozohome.com` / `Demo@123`
+
+If all of that works, setup is complete.
+
+---
+
+## Section 6 — Everyday start (after first setup)
+
+Every later day, start in this order:
+
+**1. Make sure MongoDB is running** (service should already be on).
+
+**2. Terminal A — API**
 
 ```bash
 cd original_partyBox_new_api
 npm run dev
 ```
 
-**Terminal B — Website**
+**3. Terminal B — Website**
 
 ```bash
 cd original_HoneyEcommerce_new_ui
 npm run dev
 ```
 
-**Terminal C — Admin**
+**4. Terminal C — Admin**
 
 ```bash
 cd Honey_admin_UI
 npm run dev
 ```
 
-| Open | URL |
-|------|-----|
+**5. Open in browser**
+
+| App | URL |
+|-----|-----|
 | Website | http://localhost:3000 |
 | Admin | http://localhost:3001 |
-| API | http://localhost:5000 |
+| API (backend only) | http://localhost:5000 |
 
-Stop any app with `Ctrl+C` in its terminal.
+To stop an app: click that terminal and press `Ctrl+C`.
+
+You do **not** need to run `seed:demo` again every day unless you wiped the database.
 
 ---
 
-## 6) Version summary (print / share with IT)
+## Section 7 — Version summary for IT / developers
 
 | Software | Required version | Used by |
 |----------|------------------|---------|
-| Node.js | **≥ 22** (22 LTS recommended) | API, Website, Admin |
-| npm | **10.x** (bundled with Node 22) | all |
-| MongoDB | **7.x** recommended (6/8 OK) | API only |
-| Redis | not required locally | API (skipped in development) |
-| Vite (Website) | 6.x | storefront |
-| Vite (Admin) | 8.x | admin |
-| React (Website) | 18.x | storefront |
-| React (Admin) | 19.x | admin |
-| Express / Mongoose | 4.x / 8.x | API |
+| Node.js | 22 or newer (22 LTS recommended) | API, Website, Admin |
+| npm | 10.x (comes with Node 22) | All three |
+| MongoDB | 7.x recommended (6 or 8 OK) | API only |
+| Redis | Not required locally | Skipped in development |
+| Express | 4.x | API |
+| Mongoose | 8.x | API |
+| React | 18.x on Website, 19.x on Admin | Frontends |
+| Vite | 6.x on Website, 8.x on Admin | Frontends |
 
 ---
 
-## 7) Troubleshooting (picture-guide style)
+## Section 8 — Troubleshooting (written fixes)
 
-### “Cannot connect” / empty shop / admin login fails
+### Shop is empty / Admin cannot log in / “network error”
+
+Check in this order:
 
 1. Is MongoDB running? (`mongosh` ping)
-2. Is API running on **5000**? (`npm run dev` in API folder)
+2. Is the API running in a terminal on port 5000?
 3. Did you run `npm run seed:demo` at least once?
-4. Website `.env` → `VITE_BASE_URL=http://localhost:5000/api`
-5. Admin `.env` → `VITE_API_BASE=http://localhost:5000/api/admin`
+4. Website `.env` has `VITE_BASE_URL=http://localhost:5000/api`
+5. Admin `.env` has `VITE_API_BASE=http://localhost:5000/api/admin`
 
 ### Port already in use
 
+Something else is using 5000, 3000, or 3001.
+
+Linux/macOS:
+
 ```bash
-# Linux/macOS examples — find and stop the old process
 lsof -i :5000
 lsof -i :3000
 lsof -i :3001
 ```
 
-On Windows use Resource Monitor / `netstat -ano` and Task Manager.
+Windows: use Task Manager, or `netstat -ano` in Command Prompt, then end the old process.
 
-### Product / banner images 404
+### Product or banner images show broken / 404
 
-Uploads are **not** in git. On the API machine:
+Image files live in `original_partyBox_new_api/cloud/uploads/` and are **not** stored in git.
+
+Fix:
 
 ```bash
 cd original_partyBox_new_api
 npm run seed:images
 ```
 
-Confirm `DASHBOARD_URL=http://localhost:5000/` in API `.env`.
+Also confirm API `.env` has:
 
-### Login returns no token
+```env
+DASHBOARD_URL=http://localhost:5000/
+```
 
-Set `JWT_SECRECT` in API `.env`, restart API.
+Then restart the API.
 
-### CORS errors in browser console
+### Login succeeds but no token / Admin says no token returned
 
-With default local URLs this should not happen. If you changed hosts/ports, set API:
+In API `.env`, set:
+
+```env
+JWT_SECRECT=local-dev-jwt-secret
+```
+
+Restart the API and try again.
+
+### Browser console shows CORS errors
+
+With the default localhost ports this should not happen. If you changed hosts or ports, add this to API `.env` and restart API:
 
 ```env
 CORS_ORIGINS=http://localhost:3000,http://localhost:3001
 ```
 
-### Wrong Node version
+### Wrong Node version errors during install/start
 
 ```bash
-node -v   # must be v22+
+node -v
 ```
 
-Upgrade Node, delete `node_modules`, run `npm install` again in each app folder.
+Must be v22 or higher. After upgrading Node:
 
-### Admin credentials invalid after re-seed
+1. Delete the `node_modules` folder in that app
+2. Run `npm install` again
+3. Start the app again
+
+### Admin password stopped working
 
 ```bash
 cd original_partyBox_new_api
 npm run seed:admin
 ```
 
+Then login again with `admin@gozohome.com` / `Admin@123`.
+
 ---
 
-## 8) Staging URLs (already deployed demo)
+## Section 9 — Staging demo URLs (already online)
+
+If you only need to view the hosted demo (no local install):
 
 | App | URL |
 |-----|-----|
-| Storefront | https://ecdemo.indiprotechnologies.com/ |
+| Website | https://ecdemo.indiprotechnologies.com/ |
 | Admin | https://ecadmin.indiprotechnologies.com/ |
 | API | https://ecdemoapi.indiprotechnologies.com/ |
 
-Env templates for servers (not for local zip demo):
+Server env templates (for deployment teams, not needed for local laptop setup):
 
 - API: `original_partyBox_new_api/.env.staging.example`
 - Admin: `Honey_admin_UI/.env.staging.example`
@@ -462,18 +582,41 @@ Env templates for servers (not for local zip demo):
 
 ---
 
-## 9) Rebuild the client source zip
+## Section 10 — Make a clean source zip (for developers)
 
-From the repo root (developers packaging a handoff):
+From the project root:
 
 ```bash
 bash scripts/make-client-source-zip.sh
 ```
 
-Creates `dist/gozo-home-source.zip` including:
+This creates `dist/gozo-home-source.zip` with:
 
-- this guide + diagrams  
-- the three app folders  
-- **excluding** `node_modules`, `.env`, `cloud/uploads`, build outputs  
+- this written guide
+- the three app folders
 
-Recipient: unzip → open **`GOZO_HOME_LOCAL_RUN_GUIDE.md`** → follow sections 1–5 above.
+It excludes:
+
+- `node_modules`
+- real `.env` secret files
+- `cloud/uploads`
+- build output folders
+
+Recipient instructions: unzip the package, open **`GOZO_HOME_LOCAL_RUN_GUIDE.md`**, and follow Sections 1 to 6.
+
+---
+
+## Quick reference card
+
+| Need | Answer |
+|------|--------|
+| Node version | 22+ |
+| MongoDB | Running on port 27017 |
+| Start order | MongoDB → API → Website/Admin |
+| API folder / port | `original_partyBox_new_api` / 5000 |
+| Website folder / port | `original_HoneyEcommerce_new_ui` / 3000 |
+| Admin folder / port | `Honey_admin_UI` / 3001 |
+| First-time seed | `npm run seed:demo` inside API folder |
+| Admin login | `admin@gozohome.com` / `Admin@123` |
+| Website login | `demo@gozohome.com` / `Demo@123` |
+| Stop an app | `Ctrl+C` in that terminal |
