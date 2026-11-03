@@ -19,7 +19,6 @@ INCLUDE=(
   CLIENT_LOCAL_RUN.md
   ADMIN_PANEL.md
   MIGRATION_MONGO_VITE_NODE22.md
-  docs/client-guide
   scripts/make-client-source-zip.sh
   original_partyBox_new_api
   original_HoneyEcommerce_new_ui

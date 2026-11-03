@@ -1,7 +1,7 @@
 # GOZO HOME — Start here
 
-**Single guide file (open this):**
+Open the single written guide:
 
-→ **[GOZO_HOME_LOCAL_RUN_GUIDE.md](GOZO_HOME_LOCAL_RUN_GUIDE.md)**
+**[GOZO_HOME_LOCAL_RUN_GUIDE.md](GOZO_HOME_LOCAL_RUN_GUIDE.md)**
 
-That one file covers API + Website + Admin: what to install, versions, `.env`, seed, start commands, ports, logins, and troubleshooting.
+It covers API, Website, and Admin in plain documentation: what to install, versions, environment files, how to start, logins, and troubleshooting. No images required.
