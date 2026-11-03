@@ -1,8 +1,6 @@
 # Local run notes
 
-This file is kept for older links. Use the current client handoff pack instead:
+**Single guide:** **[GOZO_HOME_LOCAL_RUN_GUIDE.md](GOZO_HOME_LOCAL_RUN_GUIDE.md)**
 
-1. **[START_HERE.md](START_HERE.md)** — entry point  
-2. **[CLIENT_LOCAL_RUN.md](CLIENT_LOCAL_RUN.md)** — full from-scratch guide (API / Website / Admin, versions, ports, seed, troubleshooting)  
-3. Diagrams under `docs/client-guide/images/`  
-4. Rebuild delivery zip: `bash scripts/make-client-source-zip.sh`
+Diagrams: `docs/client-guide/images/`  
+Rebuild zip: `bash scripts/make-client-source-zip.sh`

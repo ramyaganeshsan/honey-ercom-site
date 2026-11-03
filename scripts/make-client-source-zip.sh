@@ -14,6 +14,7 @@ rm -f "$OUT" "$LATEST"
 
 # Paths relative to repo root included in the zip
 INCLUDE=(
+  GOZO_HOME_LOCAL_RUN_GUIDE.md
   START_HERE.md
   CLIENT_LOCAL_RUN.md
   ADMIN_PANEL.md
